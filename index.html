@@ -24,11 +24,16 @@
       object-fit: cover;
     }
 
-    .tiago-button {
+    .story-buttons {
       position: fixed;
       top: 38vh;
       left: 58vw;
       transform: translate(-50%, -50%);
+      display: flex;
+      gap: 12px;
+    }
+
+    .story-button {
       width: 72px;
       height: 72px;
       border: 3px solid rgba(255, 255, 255, 0.78);
@@ -40,14 +45,14 @@
       transition: box-shadow 160ms ease, transform 160ms ease;
     }
 
-    .tiago-button:hover,
-    .tiago-button:focus-visible {
+    .story-button:hover,
+    .story-button:focus-visible {
       box-shadow: 0 18px 42px rgba(0, 0, 0, 0.42);
-      transform: translate(-50%, -50%) scale(1.06);
+      transform: scale(1.06);
       outline: none;
     }
 
-    .tiago-icon {
+    .story-icon {
       display: block;
       width: 100%;
       height: 100%;
@@ -55,9 +60,13 @@
     }
 
     @media (max-width: 700px) {
-      .tiago-button {
+      .story-buttons {
         top: 35vh;
         left: 61vw;
+        gap: 9px;
+      }
+
+      .story-button {
         width: 58px;
         height: 58px;
       }
@@ -66,8 +75,13 @@
 </head>
 <body>
   <img class="front-page" src="front%20page.png" alt="">
-  <a class="tiago-button" href="Tiago%20K/00story/Ai%202.jpg" aria-label="Open Tiago story">
-    <img class="tiago-icon" src="Tiago-Photoroom.png" alt="">
-  </a>
+  <div class="story-buttons">
+    <a class="story-button" href="Tiago%20K/00story/Ai%202.jpg" aria-label="Open Tiago story">
+      <img class="story-icon" src="Tiago-Photoroom.png" alt="">
+    </a>
+    <a class="story-button" href="Tiago%20K/Book%202/1.2%20Alan%20Turing.jpg" aria-label="Open Tiago K story">
+      <img class="story-icon" src="Tiago%20K-Photoroom.png" alt="">
+    </a>
+  </div>
 </body>
 </html>
