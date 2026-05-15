@@ -26,24 +26,24 @@
 
     .story-buttons {
       position: fixed;
-      top: calc(50vh - 72px);
+      top: calc(48.5vh - 56px);
       left: 51vw;
       transform: translateX(-50%);
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     .story-button {
       display: grid;
-      flex: 0 0 72px;
+      flex: 0 0 56px;
       place-items: center;
-      width: 72px;
-      height: 72px;
-      border: 3px solid rgba(255, 255, 255, 0.78);
+      width: 56px;
+      height: 56px;
+      border: 2px solid rgba(255, 255, 255, 0.78);
       border-radius: 50%;
       background: #111114;
-      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.34);
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.34);
       cursor: pointer;
       overflow: hidden;
       line-height: 0;
@@ -52,7 +52,7 @@
 
     .story-button:hover,
     .story-button:focus-visible {
-      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.42);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.42);
       transform: scale(1.06);
       outline: none;
     }
@@ -66,15 +66,15 @@
 
     @media (max-width: 700px) {
       .story-buttons {
-        top: calc(47vh - 58px);
+        top: calc(45.5vh - 46px);
         left: 53vw;
-        gap: 9px;
+        gap: 8px;
       }
 
       .story-button {
-        flex-basis: 58px;
-        width: 58px;
-        height: 58px;
+        flex-basis: 46px;
+        width: 46px;
+        height: 46px;
       }
     }
   </style>
