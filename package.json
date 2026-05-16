@@ -1,0 +1,13 @@
+{
+  "name": "project-stories",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:local": "node scripts/build.mjs --allow-local-fallback"
+  },
+  "dependencies": {
+    "@vercel/blob": "2.3.3"
+  }
+}
