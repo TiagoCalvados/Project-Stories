@@ -1,0 +1,9 @@
+.env.local
+node_modules/
+dist/
+New folder/
+Tiago/
+Tiago K/**
+!Tiago K/
+!Tiago K/Narrative slides/
+!Tiago K/Narrative slides/tree icon.jpg
