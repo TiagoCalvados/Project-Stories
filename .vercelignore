@@ -1,5 +1,6 @@
 .env.local
 node_modules/
+.codex_deps/
 dist/
 New folder/
 Tiago/
@@ -18,6 +19,7 @@ Tiago K/Tiago real/
 Tiago K/Tiago sara diagrams/
 Tiago K/Narrative slides/*
 !Tiago K/Narrative slides/tiago k collage.jpg
+!Tiago K/Narrative slides/tiago-k-collage-no-woman.jpg
 !Tiago K/Narrative slides/tree icon.jpg
 !Tiago K/Narrative slides/slide22may.jpg
 !Tiago K/Narrative slides/slide9may.jpg

@@ -1,5 +1,6 @@
 .vercel
 dist
 node_modules
+.codex_deps
 
 .env*.local
