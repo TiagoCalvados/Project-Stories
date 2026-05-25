@@ -31,6 +31,9 @@ if (!token && !allowLocalFallback) {
 const htmlFiles = (await readdir(root))
   .filter((file) => file.toLowerCase().endsWith(".html"))
   .sort();
+const cssFiles = (await readdir(root))
+  .filter((file) => file.toLowerCase().endsWith(".css"))
+  .sort();
 
 const assetCache = new Map();
 let put;
@@ -48,7 +51,12 @@ for (const htmlFile of htmlFiles) {
   await writeFile(path.join(dist, htmlFile), rewritten);
 }
 
+for (const cssFile of cssFiles) {
+  await copyFile(path.join(root, cssFile), path.join(dist, cssFile));
+}
+
 console.log(`Built ${htmlFiles.length} HTML file(s) into dist.`);
+console.log(`Copied ${cssFiles.length} CSS file(s) into dist.`);
 console.log(token ? "Image references point to Vercel Blob URLs." : "Local fallback copied image files into dist.");
 
 async function rewriteHtmlAssets(source, htmlFile) {
