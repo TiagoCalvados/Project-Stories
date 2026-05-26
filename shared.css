@@ -94,6 +94,7 @@ body {
 
   .enter-button-building-center {
     top: 40vh;
+    bottom: auto;
   }
 
   .enter-button-bottom-right {
