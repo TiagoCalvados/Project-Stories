@@ -58,6 +58,23 @@ body {
   bottom: max(130px, 18vh);
 }
 
+.enter-button-top-right {
+  top: max(24px, env(safe-area-inset-top));
+  right: max(24px, env(safe-area-inset-right));
+  bottom: auto;
+  left: auto;
+  transform: none;
+}
+
+.enter-button-top-right:hover,
+.enter-button-top-right:focus-visible {
+  transform: translateY(-2px);
+}
+
+.enter-button-top-right:active {
+  transform: none;
+}
+
 @media (max-width: 700px) {
   .enter-button {
     bottom: max(18px, env(safe-area-inset-bottom));
@@ -69,5 +86,11 @@ body {
 
   .enter-button-above-caption {
     bottom: max(104px, 16vh);
+  }
+
+  .enter-button-top-right {
+    top: max(16px, env(safe-area-inset-top));
+    right: max(16px, env(safe-area-inset-right));
+    bottom: auto;
   }
 }
