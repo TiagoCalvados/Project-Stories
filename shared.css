@@ -58,6 +58,11 @@ body {
   bottom: max(130px, 18vh);
 }
 
+.enter-button-building-center {
+  top: clamp(220px, 40vh, 340px);
+  bottom: auto;
+}
+
 .enter-button-bottom-right {
   right: max(24px, env(safe-area-inset-right));
   bottom: max(24px, env(safe-area-inset-bottom));
@@ -85,6 +90,10 @@ body {
 
   .enter-button-above-caption {
     bottom: max(104px, 16vh);
+  }
+
+  .enter-button-building-center {
+    top: 40vh;
   }
 
   .enter-button-bottom-right {
