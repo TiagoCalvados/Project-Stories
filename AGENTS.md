@@ -7,6 +7,5 @@
 
 \# what to do when Codex opens this project
 
-* if the page is not running yet, start it from this folder with `node serve-project.mjs`
-* bring up the Project Stories main page: http://localhost:8765/
-* if the in-app browser blocks local pages, open the same address in the system browser
+* bring up the live Project Stories main page in the in-app browser: https://project-stories-eta.vercel.app/
+* only use the local page for development checks: start `node serve-project.mjs` and open http://localhost:8765/
