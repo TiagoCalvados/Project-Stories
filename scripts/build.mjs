@@ -6,10 +6,9 @@ import { fileURLToPath } from "node:url";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const dist = path.join(root, "dist");
 const allowLocalFallback = process.argv.includes("--allow-local-fallback");
-const deploymentOnlySkippedHtmlFiles = new Set(["slide22may.html", "tiagok2.html"]);
+const deploymentOnlySkippedHtmlFiles = new Set(["slide22may.html"]);
 const deploymentOnlyRemovedLinks = new Map([
   ["tiagok.html", ["tiagok2.html"]],
-  ["tiago-link1.html", ["tiagok2.html"]],
 ]);
 
 if (!allowLocalFallback) {
