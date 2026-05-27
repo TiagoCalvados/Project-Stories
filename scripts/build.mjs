@@ -6,10 +6,17 @@ import { fileURLToPath } from "node:url";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const dist = path.join(root, "dist");
 const allowLocalFallback = process.argv.includes("--allow-local-fallback");
+const deploymentOnlySkippedHtmlFiles = new Set(["slide22may.html", "tiagok2.html"]);
+const deploymentOnlyRemovedLinks = new Map([
+  ["tiagok.html", ["tiagok2.html"]],
+  ["tiago-link1.html", ["tiagok2.html"]],
+]);
 
-await loadLocalEnv();
+if (!allowLocalFallback) {
+  await loadLocalEnv();
+}
 
-const token = process.env.BLOB_READ_WRITE_TOKEN;
+const token = allowLocalFallback ? undefined : process.env.BLOB_READ_WRITE_TOKEN;
 
 const imageExtensions = new Set([".avif", ".gif", ".jpeg", ".jpg", ".png", ".svg", ".webp"]);
 const mimeTypes = new Map([
@@ -30,6 +37,7 @@ if (!token && !allowLocalFallback) {
 
 const htmlFiles = (await readdir(root))
   .filter((file) => file.toLowerCase().endsWith(".html"))
+  .filter((file) => !deploymentOnlySkippedHtmlFiles.has(file.toLowerCase()))
   .sort();
 const cssFiles = (await readdir(root))
   .filter((file) => file.toLowerCase().endsWith(".css"))
@@ -46,7 +54,7 @@ await rm(dist, { force: true, recursive: true });
 await mkdir(dist, { recursive: true });
 
 for (const htmlFile of htmlFiles) {
-  const source = await readFile(path.join(root, htmlFile), "utf8");
+  const source = removeDeploymentOnlyLinks(await readFile(path.join(root, htmlFile), "utf8"), htmlFile);
   const rewritten = await rewriteHtmlAssets(source, htmlFile);
   await writeFile(path.join(dist, htmlFile), rewritten);
 }
@@ -86,6 +94,30 @@ async function rewriteHtmlAssets(source, htmlFile) {
   }
 
   return output;
+}
+
+function removeDeploymentOnlyLinks(source, htmlFile) {
+  const targets = deploymentOnlyRemovedLinks.get(htmlFile.toLowerCase());
+
+  if (!targets) {
+    return source;
+  }
+
+  let output = source;
+
+  for (const target of targets) {
+    const linkPattern = new RegExp(
+      `\\r?\\n\\s*<a\\b[^>]*\\bhref=(["'])${escapeRegExp(target)}\\1[^>]*>[^<]*<\\/a>`,
+      "g"
+    );
+    output = output.replace(linkPattern, "");
+  }
+
+  return output;
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function resolveLocalImage(value, htmlFile) {
