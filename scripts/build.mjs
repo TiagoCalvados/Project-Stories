@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const dist = path.join(root, "dist");
+const blobManifestPath = path.join(root, "blob-manifest.json");
 const allowLocalFallback = process.argv.includes("--allow-local-fallback");
 const deploymentOnlySkippedHtmlFiles = new Set(["slide22may.html"]);
 const deploymentOnlyRemovedLinks = new Map([
@@ -30,7 +31,7 @@ const mimeTypes = new Map([
 
 if (!token && !allowLocalFallback) {
   throw new Error(
-    "BLOB_READ_WRITE_TOKEN is required for deployment builds. Run `npm run build:local` for a local preview without Blob uploads."
+    "BLOB_READ_WRITE_TOKEN is required for deployment builds. Run `npm run build` for a local preview without Blob uploads."
   );
 }
 
@@ -43,6 +44,10 @@ const cssFiles = (await readdir(root))
   .sort();
 
 const assetCache = new Map();
+const blobManifest = await loadBlobManifest();
+let blobManifestDirty = false;
+let blobManifestReuseCount = 0;
+let blobUploadCount = 0;
 let put;
 
 if (token) {
@@ -62,9 +67,22 @@ for (const cssFile of cssFiles) {
   await copyFile(path.join(root, cssFile), path.join(dist, cssFile));
 }
 
+if (token && blobManifestDirty) {
+  if (process.env.VERCEL) {
+    console.warn(
+      "Blob manifest has new entries inside Vercel only. Run `npm run build:deploy` locally and commit blob-manifest.json to avoid repeated uploads."
+    );
+  } else {
+    await saveBlobManifest(blobManifest);
+  }
+}
+
 console.log(`Built ${htmlFiles.length} HTML file(s) into dist.`);
 console.log(`Copied ${cssFiles.length} CSS file(s) into dist.`);
 console.log(token ? "Image references point to Vercel Blob URLs." : "Local fallback copied image files into dist.");
+if (token) {
+  console.log(`Blob manifest reused ${blobManifestReuseCount} asset(s); uploaded ${blobUploadCount} asset(s).`);
+}
 
 async function rewriteHtmlAssets(source, htmlFile) {
   const replacements = [];
@@ -168,16 +186,26 @@ async function publishAsset(filePath, relativePath, originalValue) {
   let publicUrl;
 
   if (token) {
-    const blob = await put(`project-stories/assets/${hash}/${safeName}`, buffer, {
-      access: "public",
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      cacheControlMaxAge: 31536000,
-      contentType: mimeTypes.get(extension) || "application/octet-stream",
-      token,
-    });
+    const manifestEntry = blobManifest.assets[relativePath];
 
-    publicUrl = blob.url;
+    if (manifestEntry?.hash === hash && manifestEntry.url) {
+      publicUrl = manifestEntry.url;
+      blobManifestReuseCount += 1;
+    } else {
+      const blob = await put(`project-stories/assets/${hash}/${safeName}`, buffer, {
+        access: "public",
+        addRandomSuffix: false,
+        allowOverwrite: true,
+        cacheControlMaxAge: 31536000,
+        contentType: mimeTypes.get(extension) || "application/octet-stream",
+        token,
+      });
+
+      publicUrl = blob.url;
+      blobManifest.assets[relativePath] = { hash, url: publicUrl };
+      blobManifestDirty = true;
+      blobUploadCount += 1;
+    }
   } else {
     publicUrl = originalValue;
     const target = path.join(dist, ...relativePath.split("/"));
@@ -199,6 +227,37 @@ function sanitizePathSegment(segment) {
     .toLowerCase();
 
   return `${safeName || "asset"}${extension.toLowerCase()}`;
+}
+
+async function loadBlobManifest() {
+  try {
+    const manifest = JSON.parse(await readFile(blobManifestPath, "utf8"));
+
+    return {
+      version: manifest.version || 1,
+      assets: manifest.assets && typeof manifest.assets === "object" ? manifest.assets : {},
+    };
+  } catch (error) {
+    if (error.code !== "ENOENT") {
+      throw error;
+    }
+  }
+
+  return {
+    version: 1,
+    assets: {},
+  };
+}
+
+async function saveBlobManifest(manifest) {
+  const sortedAssets = Object.fromEntries(
+    Object.entries(manifest.assets).sort(([left], [right]) => left.localeCompare(right))
+  );
+
+  await writeFile(
+    blobManifestPath,
+    `${JSON.stringify({ version: manifest.version || 1, assets: sortedAssets }, null, 2)}\n`
+  );
 }
 
 async function loadLocalEnv() {
