@@ -9,3 +9,8 @@
 
 * bring up the live Project Stories main page in the in-app browser: https://project-stories-eta.vercel.app/
 * only use the local page for development checks: start `node serve-project.mjs` and open http://localhost:8765/
+
+\# icon button routing notes
+
+* narrative slides always belong under the tree icon button, even if a slide name or file name includes "Tiago K"
+* before adding or changing a link, confirm which icon button it belongs to so duplicate paths do not get created
