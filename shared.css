@@ -68,8 +68,15 @@ body {
 
 .enter-button-over-dancers {
   position: absolute;
-  top: 40.5%;
+  top: 37%;
   bottom: auto;
+  min-width: 96px;
+  min-height: 36px;
+  padding: 0 20px;
+  background: rgba(8, 8, 10, 0.52);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.34);
   transform: translate(-50%, -50%);
 }
 
@@ -109,6 +116,14 @@ body {
 
   .enter-button-above-caption {
     bottom: max(104px, 16vh);
+  }
+
+  .enter-button-over-dancers {
+    top: 37%;
+    min-width: 88px;
+    min-height: 34px;
+    padding: 0 16px;
+    font-size: 11px;
   }
 
   .enter-button-bottom-right {
