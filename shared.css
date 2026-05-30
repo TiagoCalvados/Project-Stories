@@ -54,11 +54,6 @@ body {
   transform: translateX(-50%) translateY(0);
 }
 
-.enter-button-top {
-  top: max(28px, env(safe-area-inset-top));
-  bottom: auto;
-}
-
 .enter-button-above-caption {
   bottom: max(130px, 18vh);
 }
@@ -90,10 +85,6 @@ body {
 
   .enter-button-above-caption {
     bottom: max(104px, 16vh);
-  }
-
-  .enter-button-top {
-    top: max(18px, env(safe-area-inset-top));
   }
 
   .enter-button-bottom-right {
