@@ -18,6 +18,14 @@ body {
   object-fit: contain;
 }
 
+.story-frame {
+  position: relative;
+  display: inline-grid;
+  max-width: 100%;
+  max-height: 100vh;
+  place-items: center;
+}
+
 .enter-button {
   position: fixed;
   z-index: 2;
@@ -56,6 +64,22 @@ body {
 
 .enter-button-above-caption {
   bottom: max(130px, 18vh);
+}
+
+.enter-button-over-dancers {
+  position: absolute;
+  top: 40.5%;
+  bottom: auto;
+  transform: translate(-50%, -50%);
+}
+
+.enter-button-over-dancers:hover,
+.enter-button-over-dancers:focus-visible {
+  transform: translate(-50%, calc(-50% - 2px));
+}
+
+.enter-button-over-dancers:active {
+  transform: translate(-50%, -50%);
 }
 
 .enter-button-bottom-right {
