@@ -68,15 +68,16 @@ body {
 
 .enter-button-over-dancers {
   position: absolute;
-  top: 37%;
+  top: 41%;
   bottom: auto;
-  min-width: 96px;
-  min-height: 36px;
-  padding: 0 20px;
-  background: rgba(8, 8, 10, 0.52);
-  font-size: 12px;
+  min-width: 88px;
+  min-height: 32px;
+  padding: 0 16px;
+  border-color: rgba(255, 255, 255, 0.62);
+  background: rgba(8, 8, 10, 0.44);
+  font-size: 11px;
   letter-spacing: 0.06em;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.34);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
   transform: translate(-50%, -50%);
 }
 
@@ -119,11 +120,11 @@ body {
   }
 
   .enter-button-over-dancers {
-    top: 37%;
-    min-width: 88px;
-    min-height: 34px;
-    padding: 0 16px;
-    font-size: 11px;
+    top: 41%;
+    min-width: 80px;
+    min-height: 30px;
+    padding: 0 14px;
+    font-size: 10px;
   }
 
   .enter-button-bottom-right {
