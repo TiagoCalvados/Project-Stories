@@ -119,12 +119,22 @@ body {
     bottom: max(104px, 16vh);
   }
 
+  .enter-button-neon-mobile {
+    bottom: max(190px, 27vh);
+  }
+
   .enter-button-over-dancers {
     top: 44.5%;
-    min-width: 80px;
-    min-height: 30px;
-    padding: 0 14px;
-    font-size: 10px;
+    bottom: auto;
+    left: 50%;
+    min-width: 60px;
+    min-height: 24px;
+    padding: 0 9px;
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(8, 8, 10, 0.36);
+    font-size: 8px;
+    letter-spacing: 0.04em;
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.24);
   }
 
   .enter-button-bottom-right {
