@@ -68,7 +68,7 @@ body {
 
 .enter-button-over-dancers {
   position: absolute;
-  top: 46%;
+  top: 44.5%;
   bottom: auto;
   min-width: 88px;
   min-height: 32px;
@@ -120,7 +120,7 @@ body {
   }
 
   .enter-button-over-dancers {
-    top: 46%;
+    top: 44.5%;
     min-width: 80px;
     min-height: 30px;
     padding: 0 14px;
