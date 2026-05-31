@@ -106,6 +106,22 @@ body {
   transform: none;
 }
 
+.enter-button-over-date {
+  position: absolute;
+  left: 75%;
+  bottom: 10%;
+  transform: translateX(-50%);
+}
+
+.enter-button-over-date:hover,
+.enter-button-over-date:focus-visible {
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.enter-button-over-date:active {
+  transform: translateX(-50%);
+}
+
 @media (max-width: 700px) {
   .enter-button {
     bottom: max(18px, env(safe-area-inset-bottom));
@@ -140,5 +156,10 @@ body {
   .enter-button-bottom-right {
     right: max(16px, env(safe-area-inset-right));
     bottom: max(16px, env(safe-area-inset-bottom));
+  }
+
+  .enter-button-over-date {
+    left: 75%;
+    bottom: 10%;
   }
 }
