@@ -6,6 +6,11 @@ slide22may.html
 tiagok link1.jpg
 New folder/
 Tiago/
+!Tiago/
+Tiago/*
+!Tiago/diagrams/
+Tiago/diagrams/*
+!Tiago/diagrams/tiagooverview.png
 Tiago K/00story/*
 !Tiago K/00story/tiago amsterdam.jpg
 Tiago K/01Lina/
