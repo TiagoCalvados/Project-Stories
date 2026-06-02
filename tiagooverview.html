@@ -19,10 +19,16 @@
     }
 
     .enter-button-tiago-overview {
-      top: max(24px, env(safe-area-inset-top));
-      right: max(24px, env(safe-area-inset-right));
+      position: absolute;
+      top: 4.8%;
+      right: 5.2%;
       bottom: auto;
       left: auto;
+      min-width: 86px;
+      min-height: 32px;
+      padding: 0 16px;
+      font-size: 11px;
+      letter-spacing: 0.06em;
       transform: none;
     }
 
@@ -37,8 +43,13 @@
 
     @media (max-width: 700px) {
       .enter-button-tiago-overview {
-        top: max(16px, env(safe-area-inset-top));
-        right: max(16px, env(safe-area-inset-right));
+        top: 4.8%;
+        right: 4.6%;
+        min-width: 66px;
+        min-height: 24px;
+        padding: 0 10px;
+        font-size: 8px;
+        letter-spacing: 0.04em;
       }
     }
 
