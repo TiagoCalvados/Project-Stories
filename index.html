@@ -55,17 +55,19 @@
 
     .story-buttons {
       position: fixed;
-      top: calc(48.5vh - 56px);
+      top: calc(48.5vh - 122px);
       left: 51vw;
       transform: translateX(-50%);
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(3, 56px);
+      grid-template-rows: repeat(2, 56px);
       align-items: center;
+      justify-items: center;
       gap: 10px;
     }
 
     .story-button {
       display: grid;
-      flex: 0 0 56px;
       place-items: center;
       width: 56px;
       height: 56px;
@@ -93,6 +95,30 @@
       object-fit: cover;
     }
 
+    .story-button-graphic-novel {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .story-button-tiago {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .story-button-tree {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    .story-button-tiago-k {
+      grid-column: 3;
+      grid-row: 2;
+    }
+
+    .story-icon-graphic-novel {
+      object-position: center top;
+    }
+
     .story-icon-tree {
       object-position: 78% center;
       filter: brightness(0.84) contrast(1.34) saturate(1.08);
@@ -118,13 +144,14 @@
       }
 
       .story-buttons {
-        top: calc(45.5vh - 46px);
+        top: calc(45.5vh - 100px);
         left: 53vw;
+        grid-template-columns: repeat(3, 46px);
+        grid-template-rows: repeat(2, 46px);
         gap: 8px;
       }
 
       .story-button {
-        flex-basis: 46px;
         width: 46px;
         height: 46px;
       }
@@ -138,13 +165,16 @@
     <p class="main-page-description">Where ideas, images, memories, music, machines, past, present, and future fold into one another. AI, anchors, visual rhythm, emotional architecture, and the strange creative leaps that connect everything.</p>
   </section>
   <div class="story-buttons">
-    <a class="story-button" href="tiago.html" aria-label="Open Tiago story">
+    <a class="story-button story-button-graphic-novel" href="Tiago%20K/04Tiago%20K%20NGR/tiagok1.png" aria-label="Open Tiago K graphic novel">
+      <img class="story-icon story-icon-graphic-novel" src="Tiago%20K/04Tiago%20K%20NGR/tiagokstroryicon.png" alt="">
+    </a>
+    <a class="story-button story-button-tiago" href="tiago.html" aria-label="Open Tiago story">
       <img class="story-icon" src="Tiago-Photoroom.png" alt="">
     </a>
-    <a class="story-button" href="firstslide.html" aria-label="Open first slide">
+    <a class="story-button story-button-tree" href="firstslide.html" aria-label="Open first slide">
       <img class="story-icon story-icon-tree" src="Tiago%20K/Narrative%20slides/tree%20icon.jpg" alt="">
     </a>
-    <a class="story-button" href="tiagok.html" aria-label="Open Tiago K story">
+    <a class="story-button story-button-tiago-k" href="tiagok.html" aria-label="Open Tiago K story">
       <img class="story-icon" src="Tiago%20K-Photoroom.png" alt="">
     </a>
   </div>
