@@ -88,6 +88,15 @@
       outline: none;
     }
 
+    .story-button:disabled {
+      cursor: default;
+    }
+
+    .story-button:disabled:hover {
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.34);
+      transform: none;
+    }
+
     .story-icon {
       display: block;
       width: 100%;
@@ -165,9 +174,9 @@
     <p class="main-page-description">Where ideas, images, memories, music, machines, past, present, and future fold into one another. AI, anchors, visual rhythm, emotional architecture, and the strange creative leaps that connect everything.</p>
   </section>
   <div class="story-buttons">
-    <a class="story-button story-button-graphic-novel" href="Tiago%20K/04Tiago%20K%20NGR/tiagok1.png" aria-label="Open Tiago K graphic novel">
+    <button class="story-button story-button-graphic-novel" type="button" aria-label="Tiago K graphic novel coming later" disabled>
       <img class="story-icon story-icon-graphic-novel" src="Tiago%20K/04Tiago%20K%20NGR/tiagokstroryicon.png" alt="">
-    </a>
+    </button>
     <a class="story-button story-button-tiago" href="tiago.html" aria-label="Open Tiago story">
       <img class="story-icon" src="Tiago-Photoroom.png" alt="">
     </a>
