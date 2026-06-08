@@ -86,7 +86,7 @@ if (token) {
 
 async function rewriteHtmlAssets(source, htmlFile) {
   const replacements = [];
-  const attributePattern = /\b(src|href)=(["'])([^"']+)\2/g;
+  const attributePattern = /\b(src|href|content)=(["'])([^"']+)\2/g;
   let match;
 
   while ((match = attributePattern.exec(source)) !== null) {
