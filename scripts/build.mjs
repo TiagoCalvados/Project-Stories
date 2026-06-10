@@ -2,6 +2,10 @@ import { createHash } from "node:crypto";
 import { mkdir, readdir, readFile, rm, writeFile, copyFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  auditedPut,
+  getBlobAdvancedOperationRunSummary,
+} from "./blob-advanced-operations.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const dist = path.join(root, "dist");
@@ -48,11 +52,6 @@ const blobManifest = await loadBlobManifest();
 let blobManifestDirty = false;
 let blobManifestReuseCount = 0;
 let blobUploadCount = 0;
-let put;
-
-if (token) {
-  ({ put } = await import("@vercel/blob"));
-}
 
 await rm(dist, { force: true, recursive: true });
 await mkdir(dist, { recursive: true });
@@ -82,6 +81,11 @@ console.log(`Copied ${cssFiles.length} CSS file(s) into dist.`);
 console.log(token ? "Image references point to Vercel Blob URLs." : "Local fallback copied image files into dist.");
 if (token) {
   console.log(`Blob manifest reused ${blobManifestReuseCount} asset(s); uploaded ${blobUploadCount} asset(s).`);
+  const auditSummary = getBlobAdvancedOperationRunSummary();
+  const auditDestination = auditSummary.localLogPath || "structured Vercel build logs";
+  console.log(
+    `Advanced-operation audit: ${auditSummary.attempts} attempted, ${auditSummary.succeeded} succeeded, ${auditSummary.failed} failed; ${auditDestination}.`
+  );
 }
 
 async function rewriteHtmlAssets(source, htmlFile) {
@@ -192,14 +196,30 @@ async function publishAsset(filePath, relativePath, originalValue) {
       publicUrl = manifestEntry.url;
       blobManifestReuseCount += 1;
     } else {
-      const blob = await put(`project-stories/assets/${hash}/${safeName}`, buffer, {
-        access: "public",
-        addRandomSuffix: false,
-        allowOverwrite: true,
-        cacheControlMaxAge: 31536000,
-        contentType: mimeTypes.get(extension) || "application/octet-stream",
-        token,
-      });
+      if (process.env.VERCEL) {
+        throw new Error(
+          `Refusing unlogged Vercel Blob upload for "${relativePath}". Run \`npm run build:deploy\` locally, then commit blob-manifest.json before deploying.`
+        );
+      }
+
+      const blob = await auditedPut(
+        `project-stories/assets/${hash}/${safeName}`,
+        buffer,
+        {
+          access: "public",
+          addRandomSuffix: false,
+          allowOverwrite: true,
+          cacheControlMaxAge: 31536000,
+          contentType: mimeTypes.get(extension) || "application/octet-stream",
+          token,
+        },
+        {
+          assetPath: relativePath,
+          contentHash: hash,
+          reason: manifestEntry ? "content-hash-changed" : "manifest-entry-missing",
+          previousContentHash: manifestEntry?.hash,
+        }
+      );
 
       publicUrl = blob.url;
       blobManifest.assets[relativePath] = { hash, url: publicUrl };

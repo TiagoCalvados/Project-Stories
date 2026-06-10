@@ -6,7 +6,8 @@
   "scripts": {
     "build": "node scripts/build.mjs --allow-local-fallback",
     "build:deploy": "node scripts/build.mjs",
-    "build:local": "node scripts/build.mjs --allow-local-fallback"
+    "build:local": "node scripts/build.mjs --allow-local-fallback",
+    "blob:operations": "node scripts/report-blob-operations.mjs"
   },
   "dependencies": {
     "@vercel/blob": "2.3.3"

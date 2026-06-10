@@ -2,6 +2,7 @@
 node_modules/
 .codex_deps/
 dist/
+logs/
 slide22may.html
 tiagok link1.jpg
 New folder/

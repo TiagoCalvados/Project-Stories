@@ -4,3 +4,4 @@ node_modules
 .codex_deps
 
 .env*.local
+logs/
