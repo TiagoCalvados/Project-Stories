@@ -35,6 +35,11 @@ body {
   gap: clamp(7px, 1vw, 10px);
 }
 
+.story-nav.story-nav-first-panel-bottom {
+  top: auto;
+  bottom: 70.5%;
+}
+
 .story-nav-button {
   display: grid;
   width: clamp(34px, 4.4vh, 50px);
