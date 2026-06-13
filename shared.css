@@ -55,6 +55,12 @@ body {
   transform: none;
 }
 
+.story-nav.story-nav-westpoort-panel {
+  top: auto;
+  right: clamp(10px, 3.7%, 32px);
+  bottom: 53.5%;
+}
+
 .story-nav-button {
   display: grid;
   width: clamp(34px, 4.4vh, 50px);
