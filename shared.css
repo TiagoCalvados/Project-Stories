@@ -40,6 +40,13 @@ body {
   bottom: 70.5%;
 }
 
+.story-nav.story-nav-below-chapter-title {
+  top: 26%;
+  right: auto;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 .story-nav-button {
   display: grid;
   width: clamp(34px, 4.4vh, 50px);
