@@ -55,6 +55,14 @@ body {
   transform: none;
 }
 
+.story-nav.story-nav-bottom-left {
+  top: auto;
+  right: auto;
+  bottom: clamp(10px, 2.8%, 28px);
+  left: clamp(10px, 3.7%, 32px);
+  transform: none;
+}
+
 .story-nav.story-nav-westpoort-panel {
   top: auto;
   right: clamp(10px, 3.7%, 32px);
