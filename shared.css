@@ -65,9 +65,15 @@ body {
   top: 10.5%;
 }
 
-.story-nav.story-nav-overview-line {
-  top: 13%;
+.story-nav.story-nav-overview-top {
+  top: 0;
   right: clamp(10px, 3.7%, 32px);
+}
+
+.story-nav-overview-top .story-nav-button {
+  width: 34px;
+  min-width: 34px;
+  font-size: 21px;
 }
 
 .story-nav-button {
@@ -115,6 +121,10 @@ body {
     top: max(10px, 2.8%);
     right: max(10px, 3.7%);
     gap: 7px;
+  }
+
+  .story-nav.story-nav-overview-top {
+    top: -44px;
   }
 
   .story-nav-button {
