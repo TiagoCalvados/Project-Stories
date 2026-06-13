@@ -65,6 +65,11 @@ body {
   top: 10.5%;
 }
 
+.story-nav.story-nav-top-left {
+  right: auto;
+  left: clamp(10px, 3.7%, 32px);
+}
+
 .story-nav.story-nav-overview-top {
   top: 0;
   right: clamp(10px, 3.7%, 32px);
