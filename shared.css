@@ -55,6 +55,14 @@ body {
   transform: none;
 }
 
+.story-nav.story-nav-bottom-middle {
+  top: auto;
+  right: auto;
+  bottom: clamp(10px, 2.8%, 28px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 .story-nav.story-nav-bottom-left {
   top: auto;
   right: auto;
