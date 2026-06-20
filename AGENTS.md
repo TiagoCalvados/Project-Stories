@@ -5,6 +5,12 @@
 * add, commit and push
 * deploy on vercel (cli is available)
 
+\# task confirmation rule
+
+* before starting any task, restate what you think the user wants and ask for confirmation
+* only begin making changes, running task commands, committing, pushing, or deploying after the user explicitly says something like "make the changes", "go ahead", "yes", or "do it"
+* questions, brainstorming, and discussion are safe to answer without turning them into implementation work
+
 \# what to do when checking this project
 
 * only use the local page for development checks: start `node serve-project.mjs` and open http://localhost:8765/
