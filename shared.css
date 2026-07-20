@@ -16,6 +16,8 @@ body {
   max-width: 100%;
   max-height: 100vh;
   object-fit: contain;
+  transform: scale(var(--story-image-scale, 1.03));
+  transform-origin: center;
 }
 
 .story-frame {
@@ -23,7 +25,17 @@ body {
   display: inline-grid;
   max-width: 100%;
   max-height: 100vh;
+  overflow: hidden;
   place-items: center;
+  background: #08080a;
+}
+
+.story-frame-edge-trim-medium {
+  --story-image-scale: 1.06;
+}
+
+.story-frame-edge-trim-wide {
+  --story-image-scale: 1.2;
 }
 
 .story-nav {
