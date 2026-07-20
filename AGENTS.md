@@ -5,6 +5,11 @@
 * add, commit and push
 * deploy on vercel (cli is available)
 
+\# story picture folder updates
+
+* whenever any story page or story picture is added, replaced, edited, or reordered, also update the matching file in `C:\Users\audio\OneDrive\Documents\youtube-music-downloader\project-stories-recovered\tiago-k-story-online-pics`
+* keep that folder as the ordered snapshot of the pictures that are online; for example NGR7 is `10-b4ngr7.png`
+
 \# task confirmation rule
 
 * before starting any task, restate what you think the user wants and ask for confirmation
