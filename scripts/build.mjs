@@ -52,6 +52,7 @@ const blobManifest = await loadBlobManifest();
 let blobManifestDirty = false;
 let blobManifestReuseCount = 0;
 let blobUploadCount = 0;
+let missingLocalAssetFallbackCount = 0;
 
 await rm(dist, { force: true, recursive: true });
 await mkdir(dist, { recursive: true });
@@ -79,6 +80,9 @@ if (token && blobManifestDirty) {
 console.log(`Built ${htmlFiles.length} HTML file(s) into dist.`);
 console.log(`Copied ${cssFiles.length} CSS file(s) into dist.`);
 console.log(token ? "Image references point to Vercel Blob URLs." : "Local fallback copied image files into dist.");
+if (missingLocalAssetFallbackCount) {
+  console.log(`Used Blob manifest URLs for ${missingLocalAssetFallbackCount} missing local asset(s).`);
+}
 if (token) {
   console.log(`Blob manifest reused ${blobManifestReuseCount} asset(s); uploaded ${blobUploadCount} asset(s).`);
   const auditSummary = getBlobAdvancedOperationRunSummary();
@@ -182,7 +186,24 @@ async function publishAsset(filePath, relativePath, originalValue) {
     return assetCache.get(relativePath);
   }
 
-  const buffer = await readFile(filePath);
+  const manifestEntry = blobManifest.assets[relativePath];
+  let buffer;
+
+  try {
+    buffer = await readFile(filePath);
+  } catch (error) {
+    if (error.code === "ENOENT" && manifestEntry?.url) {
+      missingLocalAssetFallbackCount += 1;
+      if (token) {
+        blobManifestReuseCount += 1;
+      }
+      assetCache.set(relativePath, manifestEntry.url);
+      return manifestEntry.url;
+    }
+
+    throw error;
+  }
+
   const hash = createHash("sha256").update(buffer).digest("hex").slice(0, 16);
   const extension = path.extname(relativePath).toLowerCase();
   const safeName = sanitizePathSegment(path.basename(relativePath));
@@ -190,8 +211,6 @@ async function publishAsset(filePath, relativePath, originalValue) {
   let publicUrl;
 
   if (token) {
-    const manifestEntry = blobManifest.assets[relativePath];
-
     if (manifestEntry?.hash === hash && manifestEntry.url) {
       publicUrl = manifestEntry.url;
       blobManifestReuseCount += 1;
