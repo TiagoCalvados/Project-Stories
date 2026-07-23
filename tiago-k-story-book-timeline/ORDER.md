@@ -102,34 +102,42 @@ Images exported from the online Project Stories assets in story order.
    Page: b4fubar3.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/01198812eaf0a105/fubar3.png
 
-26. 26-b4inside-data-center.png
+26. 26-b4lab9.jpg
+   Page: b4lab9.html
+   Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/0cbfbfe3f29e160b/lab9.jpg
+
+27. 27-b4lab10.jpg
+   Page: b4lab10.html
+   Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/312207fbbf96882d/lab10.jpg
+
+28. 28-b4inside-data-center.png
    Page: b4inside-data-center.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/8b08c407d316b893/10.1.png
 
-27. 27-b4inside-data-center-2.png
+29. 29-b4inside-data-center-2.png
    Page: b4inside-data-center-2.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/1067e54e74f82abb/10.2.png
 
-28. 28-b4c3.jpg
+30. 30-b4c3.jpg
    Page: b4c3.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/077f96d6a18fff41/c3.jpg
 
-29. 29-b4inside-network.png
+31. 31-b4inside-network.png
    Page: b4inside-network.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/b39be715e3b254e5/c3.1.png
 
-30. 30-b4inside-network-2.png
+32. 32-b4inside-network-2.png
    Page: b4inside-network-2.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/ef551b8111fb83c6/c3.2.png
 
-31. 31-b4first-door.png
+33. 33-b4first-door.png
    Page: b4first-door.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/b190126dc92ffbaf/c3.3.png
 
-32. 32-b4first-door-2.png
+34. 34-b4first-door-2.png
    Page: b4first-door-2.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/eb503fdb4e07b95b/c3.4.png
 
-33. 33-b4first-door-3.png
+35. 35-b4first-door-3.png
    Page: b4first-door-3.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/596c9806caac7c25/c3.5.png
