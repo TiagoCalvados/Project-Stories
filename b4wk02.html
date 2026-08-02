@@ -8,15 +8,31 @@
   <style>
     * { box-sizing: border-box; }
     html, body { width: 100%; height: 100%; margin: 0; background: #08080a; }
+
+    .story-image-nav-link {
+      position: absolute;
+      z-index: 2;
+      bottom: 1.2%;
+      width: 8.2%;
+      height: 5.6%;
+    }
+
+    .story-image-nav-back { left: 1.8%; }
+    .story-image-nav-next { right: 1.8%; }
+
+    .story-image-nav-link:focus-visible {
+      outline: 3px solid #fff;
+      outline-offset: 2px;
+    }
   </style>
 </head>
 <body>
   <main class="story-stage">
     <div class="story-frame">
       <img class="story-stage-image" src="Tiago%20K/Book%201/wk02.jpg" alt="">
-      <nav class="story-nav" aria-label="Story navigation">
-        <a class="story-nav-button" href="b4wk01.html" aria-label="Back to Sara's first workshop page">&larr;</a>
-        <a class="story-nav-button story-nav-next" href="b4wk03.html" aria-label="Continue to Sara's third workshop page">&rarr;</a>
+      <nav aria-label="Story navigation">
+        <a class="story-image-nav-link story-image-nav-back" href="b4wk01.html" aria-label="Back to Sara's first workshop page"></a>
+        <a class="story-image-nav-link story-image-nav-next" href="b4wk03.html" aria-label="Continue to Sara's third workshop page"></a>
       </nav>
     </div>
   </main>
