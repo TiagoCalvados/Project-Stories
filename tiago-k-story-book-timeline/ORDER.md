@@ -90,90 +90,102 @@ Images exported from the online Project Stories assets in story order.
    Page: b4wk06.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/1f736044161ed0c8/wk06.jpg
 
-23. 23-b4first-data-center-view.png
+23. 23-b4f1.png
+   Page: b4f1.html
+   Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/c7cf72c781590f4e/f1.png
+
+24. 24-b4f2.png
+   Page: b4f2.html
+   Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/a188a36476db2e0f/f2.png
+
+25. 25-b4f3.png
+   Page: b4f3.html
+   Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/a12ab1db27fee110/f3.png
+
+26. 26-b4first-data-center-view.png
    Page: b4first-data-center-view.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/604f62c7d63213d3/1.1.png
 
-24. 24-b4first-data-center-view-2.png
+27. 27-b4first-data-center-view-2.png
    Page: b4first-data-center-view-2.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/1439e23628f2025c/1.2.png
 
-25. 25-b4back-from-data-center.jpg
+28. 28-b4back-from-data-center.jpg
    Page: b4back-from-data-center.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/dcb7331b8559a65c/6---back-from-data-center.jpg
 
-26. 26-b4lab7.jpg
+29. 29-b4lab7.jpg
    Page: b4lab7.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/1df1cf8b8df55d6c/lab7.jpg
 
-27. 27-b4lab8.jpg
+30. 30-b4lab8.jpg
    Page: b4lab8.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/39bc40bac4db8f4e/lab8.jpg
 
-28. 28-b4fubar0.png
+31. 31-b4fubar0.png
    Page: b4fubar0.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/ecf2a0e044575651/fubar0.png
 
-29. 29-b4fubar1.png
+32. 32-b4fubar1.png
    Page: b4fubar1.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/b9b88aad06407db5/fubar1.png
 
-30. 30-b4fubar2.png
+33. 33-b4fubar2.png
    Page: b4fubar2.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/e625f686b48cd93d/fubar2.1.png
 
-31. 31-b4fubar3.png
+34. 34-b4fubar3.png
    Page: b4fubar3.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/01198812eaf0a105/fubar3.png
 
-32. 32-b4lab9.jpg
+35. 35-b4lab9.jpg
    Page: b4lab9.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/0cbfbfe3f29e160b/lab9.jpg
 
-33. 33-b4lab10.jpg
+36. 36-b4lab10.jpg
    Page: b4lab10.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/312207fbbf96882d/lab10.jpg
 
-34. 34-b4datacenter1.jpg
+37. 37-b4datacenter1.jpg
    Page: b4datacenter1.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/2c52c48e302ea3cf/datacenter1.jpg
 
-35. 35-b4datacenter2.jpg
+38. 38-b4datacenter2.jpg
    Page: b4datacenter2.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/a832a0ae06e22d9c/datacenter2.jpg
 
-36. 36-b4datacenter3.jpg
+39. 39-b4datacenter3.jpg
    Page: b4datacenter3.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/74433f59e5fc7e58/datacenter3.jpg
 
-37. 37-b4inside-data-center.png
+40. 40-b4inside-data-center.png
    Page: b4inside-data-center.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/8b08c407d316b893/10.1.png
 
-38. 38-b4inside-data-center-2.png
+41. 41-b4inside-data-center-2.png
    Page: b4inside-data-center-2.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/1067e54e74f82abb/10.2.png
 
-39. 39-b4c3.jpg
+42. 42-b4c3.jpg
    Page: b4c3.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/077f96d6a18fff41/c3.jpg
 
-40. 40-b4inside-network.png
+43. 43-b4inside-network.png
    Page: b4inside-network.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/b39be715e3b254e5/c3.1.png
 
-41. 41-b4inside-network-2.png
+44. 44-b4inside-network-2.png
    Page: b4inside-network-2.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/ef551b8111fb83c6/c3.2.png
 
-42. 42-b4first-door.png
+45. 45-b4first-door.png
    Page: b4first-door.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/b190126dc92ffbaf/c3.3.png
 
-43. 43-b4first-door-2.png
+46. 46-b4first-door-2.png
    Page: b4first-door-2.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/eb503fdb4e07b95b/c3.4.png
 
-44. 44-b4first-door-3.png
+47. 47-b4first-door-3.png
    Page: b4first-door-3.html
    Source: https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/596c9806caac7c25/c3.5.png
