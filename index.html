@@ -20,72 +20,247 @@
   <meta name="twitter:image" content="social-preview.png">
   <link rel="stylesheet" href="shared.css">
   <style>
-    * { box-sizing: border-box; }
-    html, body { width: 100%; min-height: 100%; margin: 0; background: #111114; }
-    body { color: #fff; font-family: Georgia, "Times New Roman", serif; }
-    .front-page { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-    .main-page-copy { position: relative; margin: 0 auto; padding: 28px 22px 0; max-width: 680px; text-align: center; text-shadow: 0 2px 16px rgba(0,0,0,.65); }
-    .main-page-title { margin: 0 0 12px; font-size: clamp(26px, 3.2vw, 40px); font-weight: 400; line-height: 1.12; }
-    .main-page-description { margin: 0 auto; max-width: 590px; font-size: clamp(14px, 1.35vw, 17px); line-height: 1.5; }
-    .story-buttons { position: relative; display: flex; flex-direction: column; align-items: center; gap: 26px; margin: 26px auto 0; padding: 0 16px 40px; }
-    .story-entry { display: flex; flex-direction: column; align-items: center; gap: 9px; text-align: center; }
-    .story-button { display: grid; place-items: center; width: 56px; height: 56px; border: 2px solid rgba(255,255,255,.78); border-radius: 50%; background: #111114; box-shadow: 0 10px 26px rgba(0,0,0,.34); overflow: hidden; line-height: 0; transition: box-shadow 160ms ease, transform 160ms ease; }
-    .story-button:hover { transform: scale(1.06); box-shadow: 0 14px 34px rgba(0,0,0,.42); }
-    .story-button:focus-visible { outline: 3px solid white; outline-offset: 5px; }
-    .story-icon { display: block; width: 100%; height: 100%; object-fit: cover; }
-    .story-icon-graphic-novel { object-position: center top; }
-    .story-icon-tree { object-position: 78% center; filter: brightness(.84) contrast(1.34) saturate(1.08); transform: translateY(-2px) scale(1.68); transform-origin: center; }
-    .story-entry-caption { font-size: 14px; line-height: 1.3; text-shadow: 0 2px 10px rgba(0,0,0,.85); }
-    .story-personal-row { display: grid; grid-template-columns: repeat(3, 140px); gap: 12px; align-items: start; }
-    .main-page-copy { position: relative; margin: 0; padding: 76px 0 40px; left: 4vw; width: 27vw; max-width: 340px; text-align: left; }
-    .main-page-title { font-family: Georgia, "Times New Roman", serif; font-size: clamp(30px, 3.2vw, 44px); font-weight: 700; line-height: 1.12; color: #ffffff; text-shadow: 0 2px 8px rgba(0,25,55,.6); }
-    .main-page-title span { color: #ffe36b; }
-    .main-page-description { font-family: Georgia, "Times New Roman", serif; font-size: 18px; line-height: 1.5; color: #fff9e9; text-shadow: 0 2px 6px rgba(0,20,45,.8); }
-    .story-buttons { position: absolute; top: 76px; left: 50.8%; transform: translateX(-50%); width: 440px; margin: 0; padding: 0 0 32px; gap: 18px; }
-    .story-entry { gap: 7px; min-width: 0; }
-    .story-button { width: 50px; height: 50px; }
-    .story-entry-caption { font-size: 13px; color: #fff9e9; }
-    .story-personal-row { width: 100%; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; }
-    .story-personal-row .story-entry:nth-child(3) { grid-column: 4; }
-    @media (max-width: 1000px) {
-      .main-page-copy { left: auto; width: auto; max-width: 480px; margin: 0 auto; padding: max(52px, env(safe-area-inset-top)) 22px 0; text-align: center; }
-      .main-page-title { font-size: clamp(28px, 6.5vw, 36px); margin-bottom: 12px; }
-      .main-page-description { max-width: none; font-size: 15px; line-height: 1.45; }
-      .story-buttons { position: relative; top: auto; left: auto; transform: none; width: calc(100% - 24px); max-width: 440px; margin: 28px auto 0; padding-bottom: max(32px, env(safe-area-inset-bottom)); gap: 18px; }
-      .story-button { width: 46px; height: 46px; }
-      .story-entry-caption { font-size: 12px; }
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      background: #111114;
+    }
+
+    .front-page {
+      display: block;
+      width: 100%;
+      height: 100vh;
+      object-fit: cover;
+    }
+
+    .main-page-copy {
+      position: fixed;
+      z-index: 1;
+      top: clamp(34px, 7vh, 72px);
+      left: clamp(22px, 6vw, 88px);
+      max-width: min(620px, 78vw);
+      color: rgba(255, 255, 255, 0.94);
+      font-family: Georgia, "Times New Roman", serif;
+      text-shadow: 0 2px 16px rgba(0, 0, 0, 0.42);
+    }
+
+    .main-page-title {
+      margin: 0 0 10px;
+      font-size: clamp(24px, 3.2vw, 44px);
+      font-weight: 400;
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .main-page-description {
+      margin: 0;
+      max-width: 560px;
+      font-size: clamp(14px, 1.35vw, 18px);
+      font-weight: 400;
+      line-height: 1.42;
+      letter-spacing: 0;
+    }
+
+    .story-buttons {
+      position: fixed;
+      top: calc(48.5vh - 122px);
+      left: 51vw;
+      transform: translateX(-50%);
+      display: grid;
+      grid-template-columns: repeat(4, 56px);
+      grid-template-rows: repeat(2, 56px);
+      align-items: center;
+      justify-items: center;
+      gap: 10px;
+    }
+
+    .story-button {
+      display: grid;
+      place-items: center;
+      width: 56px;
+      height: 56px;
+      border: 2px solid rgba(255, 255, 255, 0.78);
+      border-radius: 50%;
+      background: #111114;
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.34);
+      cursor: pointer;
+      overflow: hidden;
+      line-height: 0;
+      transition: box-shadow 160ms ease, transform 160ms ease;
+    }
+
+    .story-button:hover,
+    .story-button:focus-visible {
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.42);
+      transform: scale(1.06);
+      outline: none;
+    }
+
+    .story-button:disabled {
+      cursor: default;
+    }
+
+    .story-button:disabled:hover {
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.34);
+      transform: none;
+    }
+
+    .story-icon {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .story-entry-graphic-novel {
+      position: relative;
+      top: -30px;
+      grid-column: 2 / span 2;
+      grid-row: 1;
+      width: 56px;
+      height: 56px;
+    }
+
+    .story-entry-caption {
+      position: absolute;
+      top: calc(100% + 7px);
+      left: 50%;
+      width: max-content;
+      color: rgba(255, 255, 255, 0.94);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 14px;
+      line-height: 1;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.68);
+      transform: translateX(-50%);
+    }
+
+    .story-entry-padel {
+      position: relative;
+      grid-column: 1;
+      grid-row: 2;
+      transform: translateY(-14px);
+    }
+
+    .story-label-entry { position: relative; }
+    .story-label-entry .story-entry-caption { text-align: center; line-height: 1.2; }
+    .story-button-tree .story-entry-caption { top: calc(100% + 42px); }
+
+    .story-button-tiago {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    .story-button-tree {
+      grid-column: 3;
+      grid-row: 2;
+    }
+
+    .story-button-tiago-k {
+      grid-column: 4;
+      grid-row: 2;
+    }
+
+    .story-icon-graphic-novel {
+      object-position: center top;
+    }
+
+    .story-icon-tree {
+      object-position: 78% center;
+      filter: brightness(0.84) contrast(1.34) saturate(1.08);
+      transform: translateY(-2px) scale(1.68);
+      transform-origin: center;
+    }
+
+    @media (max-width: 700px) {
+      .main-page-copy {
+        top: 28px;
+        left: 22px;
+        max-width: calc(100vw - 44px);
+      }
+
+      .main-page-title {
+        margin-bottom: 8px;
+        font-size: 24px;
+      }
+
+      .main-page-description {
+        font-size: 14px;
+        line-height: 1.34;
+      }
+
+      .story-buttons {
+        top: calc(45.5vh - 100px);
+        left: 53vw;
+        grid-template-columns: repeat(4, 46px);
+        grid-template-rows: repeat(2, 46px);
+        gap: 8px;
+      }
+
+      .story-button {
+        width: 46px;
+        height: 46px;
+      }
+
+      .story-entry-graphic-novel {
+        top: -26px;
+        width: 46px;
+        height: 46px;
+      }
+
+      .story-entry-padel {
+        transform: translateY(-10px);
+      }
+
+      .story-entry-caption {
+        top: calc(100% + 6px);
+        font-size: 12px;
+      }
     }
   </style>
 </head>
 <body>
   <img class="front-page" src="front%20page.png" alt="">
   <section class="main-page-copy" aria-label="Project description">
-    <h1 class="main-page-title">A hybrid <span>inner landscape</span></h1>
+    <h1 class="main-page-title">A hybrid inner landscape</h1>
     <p class="main-page-description">Where ideas, images, memories, music, machines, past, present, and future fold into one another. AI, anchors, visual rhythm, emotional architecture, and the strange creative leaps that connect everything.</p>
   </section>
-  <nav class="story-buttons" aria-label="Explore Project Stories">
-    <div class="story-entry">
-      <a class="story-button" href="b4intro.html" aria-label="Open Tiago K Story"><img class="story-icon story-icon-graphic-novel" src="Tiago%20K/04Tiago%20K%20NGR/tiagokstroryicon.png" alt=""></a>
+  <div class="story-buttons">
+    <div class="story-entry-graphic-novel">
+      <a class="story-button story-button-graphic-novel" href="b4intro.html" aria-label="Open Tiago K Story">
+        <img class="story-icon story-icon-graphic-novel" src="Tiago%20K/04Tiago%20K%20NGR/tiagokstroryicon.png" alt="">
+      </a>
       <span class="story-entry-caption">Tiago K Story</span>
     </div>
-    <div class="story-entry">
-      <a class="story-button" href="firstslide.html" aria-label="Open Inner Landscape Architecture"><img class="story-icon story-icon-tree" src="Tiago%20K/Narrative%20slides/tree%20icon.jpg" alt=""></a>
+    <div class="story-entry-padel">
+      <a class="story-button" href="padel.html" aria-label="Open Padel picture">
+        <img class="story-icon" src="padel-racket-icon.png" alt="Padel racket">
+      </a>
+      <span class="story-entry-caption">Padel</span>
+    </div>
+    <div class="story-label-entry story-button-tiago">
+    <a class="story-button" href="tiago.html" aria-label="Open Tiago K Calvados">
+      <img class="story-icon" src="Tiago-Photoroom.png" alt="">
+    </a>
+      <span class="story-entry-caption">Tiago K<br>Calvados</span>
+    </div>
+    <div class="story-label-entry story-button-tree">
+    <a class="story-button" href="firstslide.html" aria-label="Open Inner Landscape Architecture">
+      <img class="story-icon story-icon-tree" src="Tiago%20K/Narrative%20slides/tree%20icon.jpg" alt="">
+    </a>
       <span class="story-entry-caption">Inner Landscape<br>Architecture</span>
     </div>
-    <div class="story-personal-row">
-      <div class="story-entry">
-        <a class="story-button" href="padel.html" aria-label="Open Padel"><img class="story-icon" src="padel-racket-icon.png" alt=""></a>
-        <span class="story-entry-caption">Padel</span>
-      </div>
-      <div class="story-entry">
-        <a class="story-button" href="tiago.html" aria-label="Open Tiago K Calvados"><img class="story-icon" src="Tiago-Photoroom.png" alt=""></a>
-        <span class="story-entry-caption">Tiago K Calvados</span>
-      </div>
-      <div class="story-entry">
-        <a class="story-button" href="tiagok.html" aria-label="Open Tiago K"><img class="story-icon" src="Tiago%20K-Photoroom.png" alt=""></a>
-        <span class="story-entry-caption">Tiago K</span>
-      </div>
+    <div class="story-label-entry story-button-tiago-k">
+    <a class="story-button" href="tiagok.html" aria-label="Open Tiago K">
+      <img class="story-icon" src="Tiago%20K-Photoroom.png" alt="">
+    </a>
+      <span class="story-entry-caption">Tiago K</span>
     </div>
-  </nav>
+  </div>
 </body>
 </html>
