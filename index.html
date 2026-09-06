@@ -37,12 +37,22 @@
     .story-icon-tree { object-position: 78% center; filter: brightness(.84) contrast(1.34) saturate(1.08); transform: translateY(-2px) scale(1.68); transform-origin: center; }
     .story-entry-caption { font-size: 14px; line-height: 1.3; text-shadow: 0 2px 10px rgba(0,0,0,.85); }
     .story-personal-row { display: grid; grid-template-columns: repeat(3, 140px); gap: 12px; align-items: start; }
+    .main-page-copy { position: absolute; top: 42px; left: 4vw; width: 28vw; max-width: 340px; margin: 0; padding: 0; text-align: left; }
+    .main-page-title { font-size: clamp(24px, 2.6vw, 36px); }
+    .main-page-description { font-size: 15px; line-height: 1.45; }
+    .story-buttons { position: absolute; top: 34px; left: 55%; transform: translateX(-50%); margin: 0; padding: 0; gap: 12px; }
+    .story-entry { gap: 5px; }
+    .story-button { width: 50px; height: 50px; }
+    .story-entry-caption { font-size: 13px; }
+    .story-personal-row { grid-template-columns: repeat(3, 110px); gap: 4px; transform: translateX(-57px); }
     @media (max-width: 600px) {
-      .main-page-copy { padding-top: 24px; }
-      .main-page-description { max-width: 390px; }
-      .story-buttons { gap: 24px; margin-top: 24px; }
-      .story-personal-row { grid-template-columns: repeat(3, minmax(0, 1fr)); width: min(100%, 420px); gap: 8px; }
-      .story-entry-caption { font-size: 13px; }
+      .main-page-copy { top: 18px; left: 20px; width: calc(100% - 40px); max-width: none; }
+      .main-page-title { font-size: 24px; margin-bottom: 7px; }
+      .main-page-description { max-width: none; font-size: 12px; line-height: 1.35; }
+      .story-buttons { top: 150px; left: 60%; gap: 10px; }
+      .story-button { width: 46px; height: 46px; }
+      .story-personal-row { grid-template-columns: repeat(3, 94px); gap: 2px; transform: translateX(-48px); }
+      .story-entry-caption { font-size: 12px; }
     }
   </style>
 </head>
