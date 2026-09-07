@@ -17,13 +17,32 @@
       margin: 0;
       background: #08080a;
     }
+    .story-frame {
+      max-height: none;
+    }
+
+    .story-picture {
+      overflow: hidden;
+    }
+
+    .story-stage-image {
+      max-height: calc(100svh - 64px);
+    }
+
+    .story-nav.story-nav-f5 {
+      position: static;
+      justify-self: end;
+      padding: 14px 18px;
+    }
   </style>
 </head>
 <body>
   <main class="story-stage">
     <div class="story-frame">
-      <img class="story-stage-image" src="Tiago%20K/Fubar/f5.png" alt="">
-      <nav class="story-nav story-nav-bottom-right" aria-label="Story navigation">
+      <div class="story-picture">
+        <img class="story-stage-image" src="Tiago%20K/Fubar/f5.png" alt="">
+      </div>
+      <nav class="story-nav story-nav-f5" aria-label="Story navigation">
         <a class="story-nav-button" href="b4f4.html" aria-label="Back to F4">&larr;</a>
         <a class="story-nav-button story-nav-next" href="b4f6.html" aria-label="Continue to F6">&rarr;</a>
       </nav>
