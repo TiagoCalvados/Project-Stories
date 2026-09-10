@@ -18,12 +18,75 @@
       background: #08080a;
     }
 
+    .intro-copy {
+      position: absolute;
+      z-index: 1;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      height: 37%;
+      padding: clamp(8px, min(1.8vw, 1.8vh), 14px);
+      overflow: hidden;
+      border-radius: 0 0 clamp(14px, min(4vw, 4vh), 28px) clamp(14px, min(4vw, 4vh), 28px);
+      background: #f2efeb;
+      color: #111;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: clamp(11px, min(2.5vw, 1.6vh), 13px);
+      line-height: 1.17;
+    }
+
+    .intro-kicker,
+    .intro-title {
+      margin: 0;
+      font-size: 1.34em;
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: 0.01em;
+    }
+
+    .intro-title {
+      margin: 0.2em 0 0.6em;
+    }
+
+    .intro-copy p {
+      margin: 0 0 0.55em;
+    }
+
+    .intro-copy p:last-child {
+      margin-bottom: 0;
+    }
+
+    @media (max-width: 700px) {
+      .intro-copy {
+        height: 45%;
+        padding: 8px;
+        font-size: clamp(10px, 2.82vw, 11px);
+        line-height: 1.1;
+      }
+
+      .intro-title {
+        margin: 0.15em 0 0.35em;
+      }
+
+      .intro-copy p {
+        margin-bottom: 0.3em;
+      }
+    }
+
   </style>
 </head>
 <body>
   <main class="story-stage">
-    <div class="story-frame">
+    <div class="story-frame intro-frame">
       <img class="story-stage-image" src="Tiago%20K/04Tiago%20K%20NGR/intro.jpg" alt="">
+      <section class="intro-copy" aria-label="Introduction">
+        <p class="intro-kicker">INTRO</p>
+        <h1 class="intro-title">TIAGO K - THE BEGINNING</h1>
+        <p>It starts on a real street in Amsterdam West. A wall, a canal, a Keith Haring drawing, and one strange idea after watching Arco: what if the city I already knew could grow one future layer on top?</p>
+        <p>From there, Tiago K slowly appears. First inside NGR, surrounded by machines, rockets, pressure, noise, cables and systems. Then Sara enters the story, not as decoration, but as the person who helps translate the human layer inside all that machinery.</p>
+        <p>On the surface, they build a life that looks almost normal: art, music, work, records, pictures, a workshop, small jokes, and a lot of strange logic. Underneath it, there is something else: a hidden lab, a plan, and one question they cannot leave alone.</p>
+        <p>What would happen if Tiago K tried to upload his living memories into a data center?</p>
+      </section>
       <nav class="story-nav" aria-label="Story navigation">
         <a class="story-nav-button" href="index.html" aria-label="Back to the main page">&larr;</a>
         <a class="story-nav-button story-nav-next" href="b4intro1.html" aria-label="Continue to Intro 1">&rarr;</a>
