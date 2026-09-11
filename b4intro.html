@@ -24,7 +24,7 @@
       right: 0;
       bottom: 0;
       left: 0;
-      height: 37%;
+      height: 39%;
       padding: clamp(8px, min(1.8vw, 1.8vh), 14px);
       overflow: hidden;
       border-radius: 0 0 clamp(14px, min(4vw, 4vh), 28px) clamp(14px, min(4vw, 4vh), 28px);
@@ -54,6 +54,21 @@
 
     .intro-copy p:last-child {
       margin-bottom: 0;
+    }
+
+    .intro-frame .story-nav {
+      position: static;
+    }
+
+    .intro-frame .story-nav-button {
+      position: absolute;
+      top: clamp(10px, 2.8%, 28px);
+      left: clamp(10px, 3.7%, 32px);
+    }
+
+    .intro-frame .story-nav-next {
+      right: clamp(10px, 3.7%, 32px);
+      left: auto;
     }
 
     @media (max-width: 700px) {
