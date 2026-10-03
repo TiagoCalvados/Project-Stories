@@ -73,11 +73,12 @@
       left: 51vw;
       transform: translateX(-50%);
       display: grid;
-      grid-template-columns: repeat(4, 56px);
+      grid-template-columns: repeat(5, 56px);
       grid-template-rows: repeat(2, 56px);
       align-items: center;
       justify-items: center;
-      gap: 10px;
+      column-gap: 18px;
+      row-gap: 10px;
     }
 
     .story-button {
@@ -88,6 +89,7 @@
       border: 2px solid rgba(255, 255, 255, 0.78);
       border-radius: 50%;
       background: #111114;
+      padding: 0;
       box-shadow: 0 10px 26px rgba(0, 0, 0, 0.34);
       cursor: pointer;
       overflow: hidden;
@@ -121,7 +123,7 @@
     .story-entry-graphic-novel {
       position: relative;
       top: -30px;
-      grid-column: 2 / span 2;
+      grid-column: 3;
       grid-row: 1;
       width: 56px;
       height: 56px;
@@ -147,18 +149,48 @@
       transform: translateY(-14px);
     }
 
+    .story-label-entry {
+      position: relative;
+      width: 56px;
+      height: 56px;
+    }
+
+    .story-label-entry .story-entry-caption {
+      top: calc(100% + 7px);
+      width: max-content;
+      max-width: 64px;
+      text-align: center;
+      line-height: 1.05;
+      pointer-events: none;
+    }
+
     .story-button-tiago {
       grid-column: 2;
       grid-row: 2;
     }
 
-    .story-button-tree {
+    .story-button-audiovisual {
       grid-column: 3;
       grid-row: 2;
     }
 
-    .story-button-tiago-k {
+    .story-button-audiovisual .story-entry-caption {
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .story-button-tree {
       grid-column: 4;
+      grid-row: 2;
+    }
+
+    .story-button-tree .story-entry-caption {
+      max-width: 60px;
+      font-size: 12px;
+    }
+
+    .story-button-tiago-k {
+      grid-column: 5;
       grid-row: 2;
     }
 
@@ -193,9 +225,10 @@
       .story-buttons {
         top: calc(45.5vh - 100px);
         left: 53vw;
-        grid-template-columns: repeat(4, 46px);
+        grid-template-columns: repeat(5, 46px);
         grid-template-rows: repeat(2, 46px);
-        gap: 8px;
+        column-gap: 14px;
+        row-gap: 8px;
       }
 
       .story-button {
@@ -211,6 +244,24 @@
 
       .story-entry-padel {
         transform: translateY(-10px);
+      }
+
+      .story-label-entry {
+        width: 46px;
+        height: 46px;
+      }
+
+      .story-label-entry .story-entry-caption {
+        max-width: 56px;
+      }
+
+      .story-button-audiovisual .story-entry-caption {
+        font-size: 10px;
+      }
+
+      .story-button-tree .story-entry-caption {
+        max-width: 56px;
+        font-size: 11px;
       }
 
       .story-entry-caption {
@@ -239,15 +290,30 @@
       </a>
       <span class="story-entry-caption">Padel</span>
     </div>
-    <a class="story-button story-button-tiago" href="tiago.html" aria-label="Open Tiago story">
-      <img class="story-icon" src="Tiago-Photoroom.png" alt="">
-    </a>
-    <a class="story-button story-button-tree" href="firstslide.html" aria-label="Open first slide">
-      <img class="story-icon story-icon-tree" src="Tiago%20K/Narrative%20slides/tree%20icon.jpg" alt="">
-    </a>
-    <a class="story-button story-button-tiago-k" href="tiagok.html" aria-label="Open Tiago K story">
-      <img class="story-icon" src="Tiago%20K-Photoroom.png" alt="">
-    </a>
+    <div class="story-label-entry story-button-tiago">
+      <a class="story-button" href="tiago.html" aria-label="Open Tiago story">
+        <img class="story-icon" src="Tiago-Photoroom.png" alt="">
+      </a>
+      <span class="story-entry-caption">Tiago</span>
+    </div>
+    <div class="story-label-entry story-button-audiovisual">
+      <button class="story-button" type="button" aria-label="Audiovisual section" disabled>
+        <img class="story-icon" src="audiovisual-icon.png?v=neutral-ripples" alt="">
+      </button>
+      <span class="story-entry-caption">Audiovisual</span>
+    </div>
+    <div class="story-label-entry story-button-tree">
+      <a class="story-button" href="firstslide.html" aria-label="Open Inner Landscape">
+        <img class="story-icon story-icon-tree" src="Tiago%20K/Narrative%20slides/tree%20icon.jpg" alt="">
+      </a>
+      <span class="story-entry-caption">Inner Landscape</span>
+    </div>
+    <div class="story-label-entry story-button-tiago-k">
+      <a class="story-button" href="tiagok.html" aria-label="Open Tiago K story">
+        <img class="story-icon" src="Tiago%20K-Photoroom.png" alt="">
+      </a>
+      <span class="story-entry-caption">Tiago K</span>
+    </div>
   </div>
 </body>
 </html>

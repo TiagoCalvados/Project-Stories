@@ -1,6 +1,10 @@
 {
   "version": 1,
   "assets": {
+    "audiovisual-icon.png": {
+      "hash": "c382739688d06ba9",
+      "url": "https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/c382739688d06ba9/audiovisual-icon.png"
+    },
     "b4-amsterdam-morning.jpg": {
       "hash": "1d7ac8b8ce1a3204",
       "url": "https://cn8nqkjugqadmonn.public.blob.vercel-storage.com/project-stories/assets/1d7ac8b8ce1a3204/b4-amsterdam-morning.jpg"
