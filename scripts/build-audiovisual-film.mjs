@@ -43,12 +43,18 @@ async function buildProfile(profile) {
       const inputPath = path.join(sourceDirectory, sourceFile);
       const outputPath = path.join(segmentDirectory, `${String(index + 1).padStart(2, "0")}.mp4`);
       const duration = readDuration(inputPath);
-      const videoFilter = [
-        "[0:v]fps=30,split=2[background][foreground]",
-        `[background]scale=${profile.width}:${profile.height}:force_original_aspect_ratio=increase,crop=${profile.width}:${profile.height},gblur=sigma=32,eq=brightness=-0.14:saturation=0.78[blurred]`,
-        `[foreground]scale=${profile.width}:${profile.height}:force_original_aspect_ratio=decrease[contained]`,
-        "[blurred][contained]overlay=(W-w)/2:(H-h)/2,format=yuv420p,setsar=1,setpts=N/(30*TB)[video]",
-      ].join(";");
+      const useCleanDesktopCanvas = profile.name === "desktop" && index < 3;
+      const videoFilter = useCleanDesktopCanvas
+        ? `fps=30,scale=${profile.width}:${profile.height}:force_original_aspect_ratio=decrease,pad=${profile.width}:${profile.height}:(ow-iw)/2:(oh-ih)/2:color=0x08080a,format=yuv420p,setsar=1,setpts=N/(30*TB)`
+        : [
+            "[0:v]fps=30,split=2[background][foreground]",
+            `[background]scale=${profile.width}:${profile.height}:force_original_aspect_ratio=increase,crop=${profile.width}:${profile.height},gblur=sigma=32,eq=brightness=-0.14:saturation=0.78[blurred]`,
+            `[foreground]scale=${profile.width}:${profile.height}:force_original_aspect_ratio=decrease[contained]`,
+            "[blurred][contained]overlay=(W-w)/2:(H-h)/2,format=yuv420p,setsar=1,setpts=N/(30*TB)[video]",
+          ].join(";");
+      const videoArguments = useCleanDesktopCanvas
+        ? ["-vf", videoFilter, "-map", "0:v:0"]
+        : ["-filter_complex", videoFilter, "-map", "[video]"];
 
       console.log(
         `Normalizing ${sourceFile} for ${profile.name} (${index + 1}/${sourceFiles.length}, ${duration.toFixed(2)}s)...`
@@ -62,10 +68,7 @@ async function buildProfile(profile) {
         "+genpts",
         "-i",
         inputPath,
-        "-filter_complex",
-        videoFilter,
-        "-map",
-        "[video]",
+        ...videoArguments,
         "-map",
         "0:a:0",
         "-af",

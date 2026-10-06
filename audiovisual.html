@@ -37,37 +37,16 @@
       object-fit: cover;
       object-position: center;
     }
-
-    .sound-toggle {
-      position: absolute;
-      z-index: 3;
-      top: max(18px, env(safe-area-inset-top));
-      right: max(18px, env(safe-area-inset-right));
-      min-height: 44px;
-      padding: 0 18px;
-      border: 1px solid rgba(255, 255, 255, 0.72);
-      border-radius: 999px;
-      color: #fff;
-      background: rgba(8, 8, 10, 0.72);
-      font: inherit;
-      cursor: pointer;
-      backdrop-filter: blur(8px);
-    }
-
-    .sound-toggle[hidden] {
-      display: none;
-    }
   </style>
 </head>
 <body>
   <main class="story-stage">
     <div class="story-frame audiovisual-frame">
-      <video class="audiovisual-video" controls autoplay muted playsinline preload="metadata" controlslist="nodownload noplaybackrate">
+      <video class="audiovisual-video" controls autoplay playsinline preload="metadata" controlslist="nodownload noplaybackrate">
         <source src="audiovisual/web/audiovisual-film-mobile.mp4" type="video/mp4" media="(orientation: portrait)">
         <source src="audiovisual/web/audiovisual-film-desktop.mp4" type="video/mp4">
         Your browser does not support HTML video.
       </video>
-      <button class="sound-toggle" type="button">Sound on</button>
       <nav class="story-nav story-nav-top-left" aria-label="Audiovisual navigation">
         <a class="story-nav-button" href="index.html" aria-label="Back to the main page">&larr;</a>
       </nav>
@@ -75,7 +54,6 @@
   </main>
   <script>
     const video = document.querySelector(".audiovisual-video");
-    const soundToggle = document.querySelector(".sound-toggle");
     const portraitSource = video.querySelector('source[media="(orientation: portrait)"]');
     const desktopSource = video.querySelector("source:not([media])");
     const portraitOrientation = window.matchMedia("(orientation: portrait)");
@@ -103,22 +81,6 @@
       }, { once: true });
       video.src = nextSource;
       video.load();
-    });
-
-    soundToggle.addEventListener("click", async () => {
-      try {
-        video.muted = false;
-        await video.play();
-        soundToggle.hidden = true;
-      } catch {
-        video.muted = true;
-      }
-    });
-
-    video.addEventListener("volumechange", () => {
-      if (!video.muted && video.volume > 0) {
-        soundToggle.hidden = true;
-      }
     });
   </script>
 </body>
