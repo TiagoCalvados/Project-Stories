@@ -21,13 +21,15 @@ if (!allowLocalFallback) {
 }
 
 const token = allowLocalFallback ? undefined : process.env.BLOB_READ_WRITE_TOKEN;
+const disableMultipartUpload = process.env.BLOB_DISABLE_MULTIPART === "1";
 
-const imageExtensions = new Set([".avif", ".gif", ".jpeg", ".jpg", ".png", ".svg", ".webp"]);
+const assetExtensions = new Set([".avif", ".gif", ".jpeg", ".jpg", ".mp4", ".png", ".svg", ".webp"]);
 const mimeTypes = new Map([
   [".avif", "image/avif"],
   [".gif", "image/gif"],
   [".jpeg", "image/jpeg"],
   [".jpg", "image/jpeg"],
+  [".mp4", "video/mp4"],
   [".png", "image/png"],
   [".svg", "image/svg+xml"],
   [".webp", "image/webp"],
@@ -79,7 +81,7 @@ if (token && blobManifestDirty) {
 
 console.log(`Built ${htmlFiles.length} HTML file(s) into dist.`);
 console.log(`Copied ${cssFiles.length} CSS file(s) into dist.`);
-console.log(token ? "Image references point to Vercel Blob URLs." : "Local fallback copied image files into dist.");
+console.log(token ? "Asset references point to Vercel Blob URLs." : "Local fallback copied asset files into dist.");
 if (missingLocalAssetFallbackCount) {
   console.log(`Used Blob manifest URLs for ${missingLocalAssetFallbackCount} missing local asset(s).`);
 }
@@ -99,7 +101,7 @@ async function rewriteHtmlAssets(source, htmlFile) {
 
   while ((match = attributePattern.exec(source)) !== null) {
     const [fullMatch, name, quote, value] = match;
-    const asset = resolveLocalImage(value, htmlFile);
+    const asset = resolveLocalAsset(value, htmlFile);
 
     if (!asset) {
       continue;
@@ -145,7 +147,7 @@ function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function resolveLocalImage(value, htmlFile) {
+function resolveLocalAsset(value, htmlFile) {
   if (/^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i.test(value)) {
     return undefined;
   }
@@ -153,7 +155,7 @@ function resolveLocalImage(value, htmlFile) {
   const [pathname] = value.split(/[?#]/);
   const extension = path.extname(pathname).toLowerCase();
 
-  if (!imageExtensions.has(extension)) {
+  if (!assetExtensions.has(extension)) {
     return undefined;
   }
 
@@ -230,6 +232,7 @@ async function publishAsset(filePath, relativePath, originalValue) {
           allowOverwrite: true,
           cacheControlMaxAge: 31536000,
           contentType: mimeTypes.get(extension) || "application/octet-stream",
+          multipart: !disableMultipartUpload && buffer.byteLength >= 100 * 1024 * 1024,
           token,
         },
         {

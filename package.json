@@ -1,15 +1,19 @@
 {
   "name": "project-stories",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs --allow-local-fallback",
     "build:deploy": "node scripts/build.mjs",
     "build:local": "node scripts/build.mjs --allow-local-fallback",
-    "blob:operations": "node scripts/report-blob-operations.mjs"
+    "blob:operations": "node scripts/report-blob-operations.mjs",
+    "video:build-audiovisual": "node scripts/build-audiovisual-film.mjs"
   },
   "dependencies": {
     "@vercel/blob": "2.3.3"
+  },
+  "devDependencies": {
+    "ffmpeg-static": "5.2.0"
   }
 }

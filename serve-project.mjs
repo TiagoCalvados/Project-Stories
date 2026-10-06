@@ -10,6 +10,7 @@ const types = {
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
   ".png": "image/png",
+  ".mp4": "video/mp4",
   ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
 };
