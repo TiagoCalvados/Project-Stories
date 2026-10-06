@@ -34,7 +34,8 @@
       width: 100%;
       height: 100%;
       background: #08080a;
-      object-fit: contain;
+      object-fit: cover;
+      object-position: center;
     }
 
     .sound-toggle {
@@ -61,8 +62,9 @@
 <body>
   <main class="story-stage">
     <div class="story-frame audiovisual-frame">
-      <video class="audiovisual-video" controls autoplay muted playsinline preload="auto">
-        <source src="audiovisual/web/audiovisual-film.mp4" type="video/mp4">
+      <video class="audiovisual-video" controls autoplay muted playsinline preload="metadata" controlslist="nodownload noplaybackrate">
+        <source src="audiovisual/web/audiovisual-film-mobile.mp4" type="video/mp4" media="(orientation: portrait)">
+        <source src="audiovisual/web/audiovisual-film-desktop.mp4" type="video/mp4">
         Your browser does not support HTML video.
       </video>
       <button class="sound-toggle" type="button">Sound on</button>
@@ -74,6 +76,34 @@
   <script>
     const video = document.querySelector(".audiovisual-video");
     const soundToggle = document.querySelector(".sound-toggle");
+    const portraitSource = video.querySelector('source[media="(orientation: portrait)"]');
+    const desktopSource = video.querySelector("source:not([media])");
+    const portraitOrientation = window.matchMedia("(orientation: portrait)");
+
+    portraitOrientation.addEventListener("change", () => {
+      const nextSource = portraitOrientation.matches ? portraitSource.src : desktopSource.src;
+
+      if (video.currentSrc === nextSource) {
+        return;
+      }
+
+      const previousTime = video.currentTime;
+      const shouldResume = !video.paused;
+
+      video.addEventListener("loadedmetadata", async () => {
+        video.currentTime = Math.min(previousTime, video.duration || previousTime);
+
+        if (shouldResume) {
+          try {
+            await video.play();
+          } catch {
+            // Browser autoplay policy can require another user gesture.
+          }
+        }
+      }, { once: true });
+      video.src = nextSource;
+      video.load();
+    });
 
     soundToggle.addEventListener("click", async () => {
       try {
