@@ -45,6 +45,7 @@ if (!token && !allowLocalFallback) {
 const htmlFiles = (await readdir(root))
   .filter((file) => file.toLowerCase().endsWith(".html"))
   .filter((file) => !deploymentOnlySkippedHtmlFiles.has(file.toLowerCase()))
+  .concat(path.join("Interviews", "interviews-intro(20261008-170615).html"))
   .sort();
 const cssFiles = (await readdir(root))
   .filter((file) => file.toLowerCase().endsWith(".css"))
@@ -66,6 +67,7 @@ await mkdir(dist, { recursive: true });
 for (const htmlFile of htmlFiles) {
   const source = removeDeploymentOnlyLinks(await readFile(path.join(root, htmlFile), "utf8"), htmlFile);
   const rewritten = await rewriteHtmlAssets(source, htmlFile);
+  await mkdir(path.dirname(path.join(dist, htmlFile)), { recursive: true });
   await writeFile(path.join(dist, htmlFile), rewritten);
 }
 
