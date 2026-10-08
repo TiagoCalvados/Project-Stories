@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import ffmpegPath from "ffmpeg-static";
@@ -12,6 +12,7 @@ const profiles = [
   { name: "mobile", width: 540, height: 1170, maxRate: "620k", bufferSize: "1240k" },
 ];
 const joinOnly = process.argv.includes("--join-only");
+const requestedSegment = process.argv.find((argument) => argument.startsWith("--segment="))?.split("=")[1];
 const requestedProfile = process.argv.find((argument) => argument.startsWith("--profile="))?.split("=")[1];
 const activeProfiles = requestedProfile
   ? profiles.filter((profile) => profile.name === requestedProfile)
@@ -23,6 +24,10 @@ if (!ffmpegPath) {
 
 if (requestedProfile && activeProfiles.length === 0) {
   throw new Error(`Unknown profile "${requestedProfile}". Use desktop or mobile.`);
+}
+
+if (requestedSegment && !sourceFiles.includes(`${requestedSegment}.mp4`)) {
+  throw new Error(`Unknown segment "${requestedSegment}". Use a number from 1 to ${sourceFiles.length}.`);
 }
 
 await mkdir(webDirectory, { recursive: true });
@@ -40,17 +45,24 @@ async function buildProfile(profile) {
 
   if (!joinOnly) {
     for (const [index, sourceFile] of sourceFiles.entries()) {
+      if (requestedSegment && sourceFile !== `${requestedSegment}.mp4`) {
+        continue;
+      }
+
       const inputPath = path.join(sourceDirectory, sourceFile);
       const outputPath = path.join(segmentDirectory, `${String(index + 1).padStart(2, "0")}.mp4`);
       const duration = readDuration(inputPath);
       const useCleanDesktopCanvas = profile.name === "desktop" && index < 3;
+      // Keep source timestamps: Movie 4 changes resolution, which reinitializes
+      // the filters. A frame-count setpts expression resets at that point and
+      // drops pictures while the uninterrupted dialogue continues.
       const videoFilter = useCleanDesktopCanvas
-        ? `fps=30,scale=${profile.width}:${profile.height}:force_original_aspect_ratio=decrease,pad=${profile.width}:${profile.height}:(ow-iw)/2:(oh-ih)/2:color=0x08080a,format=yuv420p,setsar=1,setpts=N/(30*TB)`
+        ? `fps=30,scale=${profile.width}:${profile.height}:force_original_aspect_ratio=decrease,pad=${profile.width}:${profile.height}:(ow-iw)/2:(oh-ih)/2:color=0x08080a,format=yuv420p,setsar=1`
         : [
             "[0:v]fps=30,split=2[background][foreground]",
             `[background]scale=${profile.width}:${profile.height}:force_original_aspect_ratio=increase,crop=${profile.width}:${profile.height},gblur=sigma=32,eq=brightness=-0.14:saturation=0.78[blurred]`,
             `[foreground]scale=${profile.width}:${profile.height}:force_original_aspect_ratio=decrease[contained]`,
-            "[blurred][contained]overlay=(W-w)/2:(H-h)/2,format=yuv420p,setsar=1,setpts=N/(30*TB)[video]",
+            "[blurred][contained]overlay=(W-w)/2:(H-h)/2,format=yuv420p,setsar=1[video]",
           ].join(";");
       const videoArguments = useCleanDesktopCanvas
         ? ["-vf", videoFilter, "-map", "0:v:0"]
@@ -108,6 +120,12 @@ async function buildProfile(profile) {
         outputPath,
       ]);
     }
+  }
+
+  // Check every segment, including reused ones, before publishing a joined film.
+  for (const [index, sourceFile] of sourceFiles.entries()) {
+    const segmentPath = path.join(segmentDirectory, `${String(index + 1).padStart(2, "0")}.mp4`);
+    await validateSegmentTiming(segmentPath, readDuration(path.join(sourceDirectory, sourceFile)));
   }
 
   const concatList = sourceFiles
@@ -179,4 +197,77 @@ function readDuration(inputPath) {
   }
 
   return Number(match[1]) * 3600 + Number(match[2]) * 60 + Number(match[3]);
+}
+
+async function validateSegmentTiming(segmentPath, expectedDuration) {
+  const buffer = await readFile(segmentPath);
+  const moov = mp4Boxes(buffer).find((box) => box.type === "moov");
+  const durations = {};
+
+  for (const track of mp4Boxes(moov?.data).filter((box) => box.type === "trak")) {
+    const media = mp4Boxes(track.data).find((box) => box.type === "mdia");
+    const mediaBoxes = mp4Boxes(media?.data);
+    const handler = mediaBoxes.find((box) => box.type === "hdlr");
+    const header = mediaBoxes.find((box) => box.type === "mdhd");
+
+    if (!handler || !header) {
+      continue;
+    }
+
+    const kind = handler.data.toString("ascii", 8, 12);
+    const version = header.data[0];
+    const timescale = header.data.readUInt32BE(version === 1 ? 20 : 12);
+    const ticks = version === 1
+      ? Number(header.data.readBigUInt64BE(24))
+      : header.data.readUInt32BE(16);
+    durations[kind] = ticks / timescale;
+  }
+
+  const { vide: videoDuration, soun: audioDuration } = durations;
+  const tolerance = 0.1; // Allow frame rounding and AAC encoder padding.
+
+  if (
+    !Number.isFinite(videoDuration) || !Number.isFinite(audioDuration) ||
+    Math.abs(videoDuration - expectedDuration) > tolerance ||
+    Math.abs(audioDuration - expectedDuration) > tolerance ||
+    Math.abs(videoDuration - audioDuration) > tolerance
+  ) {
+    throw new Error(
+      `Refusing to join ${path.relative(projectRoot, segmentPath)}: ` +
+      `picture ${videoDuration?.toFixed(3)}s, audio ${audioDuration?.toFixed(3)}s, ` +
+      `source ${expectedDuration.toFixed(3)}s. Rebuild the mismatched segment.`
+    );
+  }
+
+  console.log(`Timing verified for ${path.relative(projectRoot, segmentPath)}: picture ${videoDuration.toFixed(3)}s, audio ${audioDuration.toFixed(3)}s.`);
+}
+
+function mp4Boxes(buffer) {
+  const boxes = [];
+
+  if (!buffer) {
+    return boxes;
+  }
+
+  for (let offset = 0; offset + 8 <= buffer.length;) {
+    const compactSize = buffer.readUInt32BE(offset);
+    const headerSize = compactSize === 1 ? 16 : 8;
+    if (offset + headerSize > buffer.length) {
+      break;
+    }
+    const size = compactSize === 1
+      ? Number(buffer.readBigUInt64BE(offset + 8))
+      : compactSize || buffer.length - offset;
+    if (size < headerSize || offset + size > buffer.length) {
+      break;
+    }
+
+    boxes.push({
+      type: buffer.toString("ascii", offset + 4, offset + 8),
+      data: buffer.subarray(offset + headerSize, offset + size),
+    });
+    offset += size;
+  }
+
+  return boxes;
 }
