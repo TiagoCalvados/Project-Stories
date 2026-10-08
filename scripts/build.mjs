@@ -22,6 +22,7 @@ if (!allowLocalFallback) {
 
 const token = allowLocalFallback ? undefined : process.env.BLOB_READ_WRITE_TOKEN;
 const disableMultipartUpload = process.env.BLOB_DISABLE_MULTIPART === "1";
+const multipartUploadThreshold = 90 * 1024 * 1024;
 
 const assetExtensions = new Set([".avif", ".gif", ".jpeg", ".jpg", ".mp4", ".png", ".svg", ".webp"]);
 const mimeTypes = new Map([
@@ -232,7 +233,7 @@ async function publishAsset(filePath, relativePath, originalValue) {
           allowOverwrite: true,
           cacheControlMaxAge: 31536000,
           contentType: mimeTypes.get(extension) || "application/octet-stream",
-          multipart: !disableMultipartUpload && buffer.byteLength >= 100 * 1024 * 1024,
+          multipart: !disableMultipartUpload && buffer.byteLength >= multipartUploadThreshold,
           token,
         },
         {

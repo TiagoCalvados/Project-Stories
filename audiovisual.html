@@ -37,6 +37,42 @@
       object-fit: cover;
       object-position: center;
     }
+
+    .mobile-timeline {
+      position: absolute;
+      z-index: 4;
+      right: max(14px, env(safe-area-inset-right));
+      bottom: max(14px, env(safe-area-inset-bottom));
+      left: max(14px, env(safe-area-inset-left));
+      display: none;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      min-height: 44px;
+      padding: 8px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      border-radius: 12px;
+      color: #fff;
+      background: rgba(8, 8, 10, 0.82);
+      font: 600 12px/1 Arial, Helvetica, sans-serif;
+      font-variant-numeric: tabular-nums;
+      box-shadow: 0 5px 18px rgba(0, 0, 0, 0.42);
+      backdrop-filter: blur(8px);
+    }
+
+    .mobile-timeline input {
+      width: 100%;
+      min-width: 0;
+      accent-color: #ff3347;
+      cursor: pointer;
+      touch-action: none;
+    }
+
+    @media (max-width: 700px) {
+      .mobile-timeline {
+        display: grid;
+      }
+    }
   </style>
 </head>
 <body>
@@ -47,6 +83,11 @@
         <source src="audiovisual/web/audiovisual-film-desktop.mp4" type="video/mp4">
         Your browser does not support HTML video.
       </video>
+      <div class="mobile-timeline" aria-label="Video timeline">
+        <span class="timeline-current">0:00</span>
+        <input class="timeline-slider" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek through video">
+        <span class="timeline-duration">0:00</span>
+      </div>
       <nav class="story-nav story-nav-top-left" aria-label="Audiovisual navigation">
         <a class="story-nav-button" href="index.html" aria-label="Back to the main page">&larr;</a>
       </nav>
@@ -57,6 +98,55 @@
     const portraitSource = video.querySelector('source[media="(orientation: portrait)"]');
     const desktopSource = video.querySelector("source:not([media])");
     const portraitOrientation = window.matchMedia("(orientation: portrait)");
+    const timelineSlider = document.querySelector(".timeline-slider");
+    const timelineCurrent = document.querySelector(".timeline-current");
+    const timelineDuration = document.querySelector(".timeline-duration");
+    let timelineSeeking = false;
+
+    function formatTime(seconds) {
+      if (!Number.isFinite(seconds)) {
+        return "0:00";
+      }
+
+      const totalSeconds = Math.max(0, Math.floor(seconds));
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const remainingSeconds = totalSeconds % 60;
+
+      return hours > 0
+        ? `${hours}:${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`
+        : `${minutes}:${String(remainingSeconds).padStart(2, "0")}`;
+    }
+
+    function updateTimeline() {
+      const duration = Number.isFinite(video.duration) ? video.duration : 0;
+
+      if (!timelineSeeking) {
+        timelineSlider.value = duration ? Math.round((video.currentTime / duration) * 1000) : 0;
+        timelineCurrent.textContent = formatTime(video.currentTime);
+      }
+
+      timelineDuration.textContent = formatTime(duration);
+    }
+
+    timelineSlider.addEventListener("input", () => {
+      timelineSeeking = true;
+      const previewTime = video.duration * (Number(timelineSlider.value) / 1000);
+      timelineCurrent.textContent = formatTime(previewTime);
+    });
+
+    timelineSlider.addEventListener("change", () => {
+      if (Number.isFinite(video.duration)) {
+        video.currentTime = video.duration * (Number(timelineSlider.value) / 1000);
+      }
+
+      timelineSeeking = false;
+      updateTimeline();
+    });
+
+    video.addEventListener("loadedmetadata", updateTimeline);
+    video.addEventListener("durationchange", updateTimeline);
+    video.addEventListener("timeupdate", updateTimeline);
 
     portraitOrientation.addEventListener("change", () => {
       const nextSource = portraitOrientation.matches ? portraitSource.src : desktopSource.src;
