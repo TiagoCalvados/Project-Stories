@@ -253,5 +253,9 @@ if (!Recognition) {
 }
 
 window.addEventListener("pagehide", stopCamera);
+if (window.matchMedia("(max-width: 520px)").matches) {
+  byId("settings-panel").open = false;
+  byId("sky-panel").open = false;
+}
 refreshSky();
 window.setInterval(refreshSky, 30000);
