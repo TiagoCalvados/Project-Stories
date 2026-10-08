@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c1116">
+<meta name="description" content="Tiago K's evolving collection of audiovisual experiments and short films.">
+<title>Audiovisual — Tiago K</title>
+<style>
+  :root {color-scheme:dark;--bg:#0c1116;--ink:#f3f1eb;--soft:#bac6cb;--muted:#84979e;--line:#2a373b;--accent:#8ddfd9;}
+  * {box-sizing:border-box;}
+  html {background:var(--bg);}
+  body {margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased;}
+  .page {width:min(100%,1000px);margin:auto;padding:22px clamp(15px,4vw,46px) 22px;}
+  a {color:inherit;}
+  .topbar {display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid var(--line);padding-bottom:13px;}
+  .topbar a {font-size:11px;text-decoration:none;color:var(--soft);letter-spacing:.1em;text-transform:uppercase;}
+  .topbar a:hover {color:var(--accent);}
+  .topbar .home {color:var(--accent);font-weight:bold;}
+  .hero {padding:18px 0 19px;border-bottom:1px solid var(--line);}
+  .play-movie {display:inline-flex;align-items:center;justify-content:center;gap:8px;
+     background:var(--accent);color:#071517!important;font-size:11px!important;font-weight:700;
+     letter-spacing:.075em;text-transform:uppercase;padding:10px 16px;text-decoration:none;
+     white-space:nowrap;border-radius:2px;}
+  .play-movie:hover {background:#b9fff9;}
+  .film-source {display:inline-block;margin-top:2px;color:var(--accent);font-size:11px;text-decoration:underline;text-underline-offset:3px;}
+  .film-source:hover {color:#b9fff9;}
+  .eyebrow {font-size:10px;font-weight:bold;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);}
+  .hero-title {display:flex;justify-content:space-between;gap:20px;align-items:center;}
+  .hero-title-main {display:flex;align-items:center;gap:17px;min-width:0;}
+  h1 {font-size:clamp(27px,4.6vw,41px);line-height:1.18;letter-spacing:-.035em;font-weight:500;margin:8px 0 10px;}
+  .hero-count {font-size:12px;font-weight:normal;letter-spacing:.1em;color:var(--muted);white-space:nowrap;}
+  .tagline {color:var(--ink);font:italic clamp(14px,1.65vw,17px)/1.35 Georgia,serif;margin:0 0 9px;}
+  .intro {max-width:850px;margin:0;color:var(--soft);font-size:12px;line-height:1.6;}
+  .sectionbar {display:flex;justify-content:space-between;align-items:center;gap:18px;padding:16px 0 7px;}
+  .sectionbar h2 {font-size:10px;letter-spacing:.16em;color:var(--accent);text-transform:uppercase;margin:0;}
+  .sectionbar span {font-size:10px;color:var(--muted);}
+  .film {border-bottom:1px solid var(--line);}
+  .film:first-child {border-top:1px solid var(--line);}
+  .film summary {cursor:pointer;list-style:none;min-height:66px;display:grid;grid-template-columns:35px minmax(0,1fr) 94px 62px 15px;align-items:center;gap:12px;padding:11px 3px;}
+  .film summary::-webkit-details-marker {display:none;}
+  .film summary:focus-visible {outline:2px solid var(--accent);outline-offset:-3px;}
+  .number {align-self:start;padding-top:2px;color:var(--accent);font-size:12px;font-weight:bold;}
+  .film-name {min-width:0;}
+  .name {font-size:15px;line-height:1.3;font-weight:500;display:block;}
+  .description {color:var(--soft);font-size:11.5px;line-height:1.45;margin-top:3px;display:block;}
+  .year {font-size:11px;color:var(--muted);text-align:right;}
+  .duration {font-size:12px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums;}
+  .plus {font-size:20px;line-height:1;color:var(--accent);font-weight:normal;text-align:center;}
+  details[open] .plus {transform:rotate(45deg);}
+  summary:hover .name {color:var(--accent);}
+  .notes {padding:3px 20px 18px 47px;color:var(--soft);font-size:12px;line-height:1.63;}
+  .notes p {margin:0 0 12px;max-width:770px;}
+  .specs {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;border-top:1px solid var(--line);padding-top:12px;}
+  .specs div {min-width:0;}
+  .specs dt {color:var(--muted);font-size:10px;letter-spacing:.06em;text-transform:uppercase;}
+  .specs dd {color:var(--ink);margin:2px 0 0;font-size:11px;}
+  .credits {font-size:11px;color:var(--muted);margin-top:12px!important;}
+  .credits strong {font-weight:500;color:var(--soft);}
+  .bottom {display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:16px;color:var(--muted);font-size:11px;}
+  @media (max-width:600px){
+    .page {padding:14px 15px 20px;}
+    .topbar {padding-bottom:10px;}
+    .hero {padding:15px 0 16px;}
+    h1 {margin:4px 0 8px;font-size:29px;}
+    .hero-count {display:none;}
+    .hero-title-main {gap:10px;}
+    .tagline {font-size:14px;margin-bottom:7px;}
+    .intro {font-size:11.5px;line-height:1.47;}
+    .sectionbar {padding:12px 0 8px;}
+    .film summary {grid-template-columns:23px minmax(0,1fr) 41px 12px;gap:7px;min-height:68px;padding:10px 0;}
+    .name {font-size:13px;}
+    .description {font-size:10.5px;line-height:1.4;margin-top:2px;}
+    .number {font-size:10px;}
+    .year {display:none;}
+    .duration {font-size:11px;}
+    .plus {font-size:18px;}
+    .notes {padding:2px 2px 15px 30px;}
+    .specs {grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;}
+    .bottom {align-items:flex-end;}
+    .bottom .footnote {max-width:170px;font-size:10px;}
+    .play-movie {padding:9px 11px;font-size:10px!important;}
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <nav class="topbar" aria-label="Main navigation">
+    <a href="/" class="home">Tiago K / The Story</a>
+  </nav>
+  <header class="hero">
+    <span class="eyebrow">Sound · image · experimentation</span>
+    <div class="hero-title"><div class="hero-title-main"><h1>Audiovisual</h1><a class="play-movie" href="audiovisual.html" aria-label="Play the complete movie made of six connected parts">▶ Play movie</a></div><span class="hero-count" id="total">06 films</span></div>
+    <p class="tagline">Different years. Different tools. The same restless curiosity.</p>
+    <p class="intro">It began with simple experiments: a tree moving outside my window, the sound of the wind, and the urge to turn an ordinary moment into something else. Years later, that same instinct keeps resurfacing — through music, movement, memory and new digital possibilities. These films don't follow one genre; they follow curiosity.</p>
+  </header>
+  <section aria-labelledby="film-heading">
+    <div class="sectionbar"><h2 id="film-heading">The films</h2><span>Tap a title for its story and credits</span></div>
+    <div id="films"></div>
+  </section>
+  <footer class="bottom">
+    <span class="footnote">One connected film · Six parts · A growing audiovisual archive.</span>
+
+  </footer>
+</main>
+<script>
+/*
+   AUDIOVISUAL ARCHIVE — EDIT FILMS HERE.
+   These six entries match 1.mp4 through 6.mp4 IN ORDER.
+   All six films play as one sequence through the single PLAY MOVIE button.
+   New film? Add an object to the array, and update the existing playback page.
+   "File modified" dates are computer file dates, not production dates.
+   Film 5/6 names are working titles until confirmed from the original Vimeo pages.
+*/
+const FILMS = [
+  {
+    file:'1.mp4', title:'Amsterdam West — Attic Reflections', year:'2026', duration:'1:36', size:'1920 × 1080', updated:'12 Sep 2026',
+    short:'The street outside, projected light on glass, and M83 on vinyl.',
+    story:'Recorded from my attic in Amsterdam West, looking onto the street. I was playing M83’s album Digital Shades Vol. 1 on vinyl in the background. A small light-projecting gadget created shifting, strobe-like reflections on the window. The street, the glass and the music became a single audiovisual moment.',
+    credits:'Location: Amsterdam West, Netherlands. Sound in the room: M83 — Digital Shades Vol. 1, played on vinyl.'
+  },
+  {
+    file:'2.mp4', title:'Water / Grid / AI / Franky Fugazy', year:'2026', duration:'0:27', size:'960 × 1706', updated:'2 Oct 2026',
+    short:'Portugal’s summer water meets an industrial fan in Amsterdam.',
+    story:'I combined two pieces of footage from completely different places: moving water I filmed in Portugal during summer, and a huge industrial fan operating at my workplace in Amsterdam. The fan creates the apparent grid. These images are layered with guitar from my friend Franky Fugazy’s new album and an AI voice reading conceptual text developed in earlier conversations.',
+    credits:'Footage: Portugal and Amsterdam. Guitar: Franky Fugazy. Spoken voice: AI narration. Concept and visual combination: Tiago.'
+  },
+  {
+    file:'3.mp4', title:'The Beach Boy and the Sun', year:'Summer 2026', duration:'10:54', size:'1080 × 1920', updated:'5 Oct 2026',
+    short:'Jumping in the water and the sun connection as the nervous system regulator.',
+    story:'Summer 2026 — The Beach Boy and the Sun. Jumping in the water and the connection with the sun as a regulator of the nervous system. This is the concept described in the film’s original opening frame.',
+    credits:'Original summer footage and film by Tiago.'
+  },
+  {
+    file:'4.mp4', title:'Into the Digital World', year:'2026', duration:'1:39', size:'1920 × 800', updated:'20 Sep 2026',
+    short:'An entirely AI-created passage into a digital environment.',
+    story:'Unlike the earlier films built from real footage, this piece is created entirely with AI. My fictional character is already digitalized and moving through a constructed digital world — another step in the transition from physical places and layered memories into imagined virtual space.',
+    credits:'Visual world and character created with AI; concept and direction: Tiago.'
+  },
+  {
+    file:'5.mp4', title:'Experience 1', year:'Early work', duration:'6:42', size:'400 × 272', updated:'3 Oct 2026',
+    short:'An early experiment with a tree blowing outside the window.',
+    story:'One of my early Vimeo audiovisual experiments. The starting point was a tree moving outside my window, with the real sound of the wind and tree captured in the recording. The original footage and sound made an everyday scene into an experiment. The film’s original Vimeo description and title still need confirmation.',
+    credits:'Original early Vimeo film; filmed and recorded by Tiago.',
+    source:'https://vimeo.com/4030744', sourceLabel:'Original Vimeo film 5 ↗'
+  },
+  {
+    file:'6.mp4', title:'Fragments: The Unknown War', year:'Early work', duration:'5:45', size:'640 × 480', updated:'3 Oct 2026',
+    short:'A second early audiovisual work preserved from Vimeo.',
+    story:'An earlier audiovisual piece from my original Vimeo archive, created before the recent AI experiments. I previously shared this video when I recovered my old Vimeo account. The original Vimeo page has more information, but its description could not be verified here, so I am leaving the film’s subject and credits open rather than inventing them.',
+    credits:'Original early Vimeo film. Title and complete credits pending verification from the original page.',
+    source:'https://vimeo.com/4078555', sourceLabel:'Original Vimeo film 6 ↗'
+  }
+];
+
+const list=document.getElementById('films');
+document.getElementById('total').textContent=String(FILMS.length).padStart(2,'0')+' films';
+function node(tag, cls, value) {const el=document.createElement(tag);if(cls)el.className=cls;if(value!==undefined)el.textContent=value;return el;}
+FILMS.forEach((f,i)=>{
+  const article=node('article','film');
+  const detail=node('details');
+  const summary=node('summary');
+  summary.append(node('span','number',String(i+1).padStart(2,'0')));
+  const title=node('span','film-name');
+  title.append(node('span','name',f.title),node('span','description',f.short));
+  summary.append(title,node('span','year',f.year),node('span','duration',f.duration),node('span','plus','+'));
+  detail.append(summary);
+  const expanded=node('div','notes');
+  expanded.append(node('p','',f.story));
+  const dl=node('dl','specs');
+  [['File',f.file],['Film length',f.duration],['File modified',f.updated],['Frame size',f.size]].forEach(([key,value])=>{
+    const pair=node('div');pair.append(node('dt','',key),node('dd','',value));dl.append(pair);
+  });
+  expanded.append(dl);
+  if(f.credits){const p=node('p','credits');p.append(node('strong','', 'Notes  '),document.createTextNode(f.credits));expanded.append(p);}
+  if(f.source){const a=node('a','film-source',f.sourceLabel||'Original Vimeo ↗');a.href=f.source;a.target='_blank';a.rel='noopener noreferrer';expanded.append(a);}
+  detail.append(expanded);article.append(detail);list.append(article);
+});
+</script>
+</body>
+</html>
