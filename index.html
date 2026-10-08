@@ -73,7 +73,7 @@
       left: 51vw;
       transform: translateX(-50%);
       display: grid;
-      grid-template-columns: repeat(5, 56px);
+      grid-template-columns: repeat(6, 56px);
       grid-template-rows: repeat(2, 56px);
       align-items: center;
       justify-items: center;
@@ -123,8 +123,9 @@
     .story-entry-graphic-novel {
       position: relative;
       top: -30px;
-      grid-column: 3;
+      grid-column: 3 / span 2;
       grid-row: 1;
+      justify-self: center;
       width: 56px;
       height: 56px;
     }
@@ -169,8 +170,13 @@
       grid-row: 2;
     }
 
-    .story-button-audiovisual {
+    .story-button-interviews {
       grid-column: 3;
+      grid-row: 2;
+    }
+
+    .story-button-audiovisual {
+      grid-column: 4;
       grid-row: 2;
     }
 
@@ -180,7 +186,7 @@
     }
 
     .story-button-tree {
-      grid-column: 4;
+      grid-column: 5;
       grid-row: 2;
     }
 
@@ -190,7 +196,7 @@
     }
 
     .story-button-tiago-k {
-      grid-column: 5;
+      grid-column: 6;
       grid-row: 2;
     }
 
@@ -289,22 +295,22 @@
 
       .story-buttons {
         top: calc(45.5vh - 100px);
-        left: 53vw;
-        grid-template-columns: repeat(5, 46px);
+        left: 50vw;
+        grid-template-columns: repeat(6, clamp(36px, 11.3vw, 42px));
         grid-template-rows: repeat(2, 46px);
-        column-gap: 14px;
+        column-gap: 18px;
         row-gap: 8px;
       }
 
       .story-button {
-        width: 46px;
-        height: 46px;
+        width: clamp(36px, 11.3vw, 42px);
+        height: clamp(36px, 11.3vw, 42px);
       }
 
       .story-entry-graphic-novel {
         top: -26px;
-        width: 46px;
-        height: 46px;
+        width: clamp(36px, 11.3vw, 42px);
+        height: clamp(36px, 11.3vw, 42px);
       }
 
       .story-entry-padel {
@@ -312,8 +318,8 @@
       }
 
       .story-label-entry {
-        width: 46px;
-        height: 46px;
+        width: clamp(36px, 11.3vw, 42px);
+        height: clamp(36px, 11.3vw, 42px);
       }
 
       .story-label-entry .story-entry-caption {
@@ -321,8 +327,10 @@
       }
 
       .story-button-audiovisual .story-entry-caption {
-        font-size: 10px;
+        font-size: 9px;
       }
+
+      .story-button-interviews .story-entry-caption { font-size: 9px; }
 
       .story-button-tree .story-entry-caption {
         max-width: 56px;
@@ -348,6 +356,9 @@
 
       .daao-name { margin-top: 6px; font-size: 10px; }
       .daao-description { font-size: 9px; line-height: 1.2; }
+    }
+    @media (max-width: 360px) {
+      .story-buttons { top: calc(45.5vh - 78px); }
     }
   </style>
 </head>
@@ -375,6 +386,18 @@
         <img class="story-icon" src="Tiago-Photoroom.png" alt="">
       </a>
       <span class="story-entry-caption">Tiago</span>
+    </div>
+    <div class="story-label-entry story-button-interviews">
+      <a class="story-button" href="interviews-intro.html" aria-label="Open Interviews">
+        <svg class="story-icon" viewBox="0 0 56 56" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+          <defs><radialGradient id="interviews-bg"><stop stop-color="#314b64"/><stop offset="1" stop-color="#0b1524"/></radialGradient></defs>
+          <rect width="56" height="56" fill="url(#interviews-bg)"/>
+          <circle cx="28" cy="27" r="20" fill="none" stroke="#79c9d7" stroke-opacity=".42"/>
+          <rect x="24" y="14" width="8" height="19" rx="4" fill="#e4f6f5"/>
+          <path d="M19 27a9 9 0 0 0 18 0M28 36v7m-7 0h14" fill="none" stroke="#e4f6f5" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </a>
+      <span class="story-entry-caption">Interviews</span>
     </div>
     <div class="story-label-entry story-button-audiovisual">
       <a class="story-button" href="audiovisual-intro.html" aria-label="Open Audiovisual">
