@@ -49,6 +49,9 @@ const htmlFiles = (await readdir(root))
 const cssFiles = (await readdir(root))
   .filter((file) => file.toLowerCase().endsWith(".css"))
   .sort();
+const jsFiles = (await readdir(root))
+  .filter((file) => file.toLowerCase().endsWith(".js"))
+  .sort();
 
 const assetCache = new Map();
 const blobManifest = await loadBlobManifest();
@@ -70,6 +73,10 @@ for (const cssFile of cssFiles) {
   await copyFile(path.join(root, cssFile), path.join(dist, cssFile));
 }
 
+for (const jsFile of jsFiles) {
+  await copyFile(path.join(root, jsFile), path.join(dist, jsFile));
+}
+
 if (token && blobManifestDirty) {
   if (process.env.VERCEL) {
     console.warn(
@@ -82,6 +89,7 @@ if (token && blobManifestDirty) {
 
 console.log(`Built ${htmlFiles.length} HTML file(s) into dist.`);
 console.log(`Copied ${cssFiles.length} CSS file(s) into dist.`);
+console.log(`Copied ${jsFiles.length} JavaScript file(s) into dist.`);
 console.log(token ? "Asset references point to Vercel Blob URLs." : "Local fallback copied asset files into dist.");
 if (missingLocalAssetFallbackCount) {
   console.log(`Used Blob manifest URLs for ${missingLocalAssetFallbackCount} missing local asset(s).`);

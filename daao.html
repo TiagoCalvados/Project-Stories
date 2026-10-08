@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#070d18">
+  <title>DAAO | Browser Observatory</title>
+  <meta name="description" content="Explore the sky with DAAO in your browser. Use your camera, location and motion sensors, or choose a direction manually.">
+  <style>
+    :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: #070d18; color: #eef6ff; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; }
+    .shell { width: min(1180px, 100%); margin: 0 auto; padding: 20px clamp(16px, 3vw, 38px) 40px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 24px; }
+    .brand { display: flex; align-items: center; gap: 11px; text-decoration: none; font-size: 12px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
+    .brand-mark { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid #78cbef; border-radius: 50%; color: #94dbf4; font-size: 19px; box-shadow: 0 0 20px #52bce642; }
+    .back { color: #aebed2; font-size: 13px; text-decoration: none; }
+    .back:hover, .back:focus-visible { color: white; text-decoration: underline; }
+    h1, h2, h3, p { margin-top: 0; }
+    .intro { max-width: 760px; margin-bottom: 22px; }
+    .eyebrow { margin: 0 0 10px; color: #7bd2ee; font-size: 11px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; }
+    h1 { margin-bottom: 12px; font-family: Georgia, "Times New Roman", serif; font-weight: 400; font-size: clamp(34px, 5vw, 62px); line-height: 1.04; }
+    .intro p:last-child { color: #aebed2; line-height: 1.6; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(320px, .85fr); gap: 18px; align-items: start; }
+    .panel { border: 1px solid #31445b; border-radius: 22px; background: #101b2b; box-shadow: 0 16px 42px #0004; overflow: hidden; }
+    .viewer { position: relative; min-height: clamp(360px, 56vw, 640px); display: grid; place-items: center; isolation: isolate; background: radial-gradient(circle at 52% 42%, #254161, #0d203a 46%, #071322 75%); }
+    .viewer::before { position: absolute; inset: 0; z-index: -1; background-image: radial-gradient(#d5eaff 1px, transparent 1px), radial-gradient(#cfe9ff 1px, transparent 1px); background-size: 91px 84px, 167px 139px; background-position: 12px 29px, 65px 10px; opacity: .36; content: ""; }
+    .viewer video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .viewer.has-camera::before { opacity: 0; }
+    .shade { position: absolute; inset: 0; background: linear-gradient(#03101caa, transparent 27%, transparent 65%, #03101ccc); pointer-events: none; }
+    .view-label { position: absolute; top: 18px; left: 18px; display: flex; gap: 8px; align-items: center; padding: 8px 11px; border: 1px solid #b9d7f24d; border-radius: 999px; background: #061321aa; color: #dceeff; font-size: 12px; }
+    .view-label::before { width: 7px; height: 7px; border-radius: 50%; background: #6bd5ee; content: ""; }
+    .reticle { width: 44px; height: 44px; border: 1px solid #d4f4ffb0; border-radius: 50%; box-shadow: 0 0 0 22px #e0f6ff12; pointer-events: none; }
+    .reticle::before, .reticle::after { position: absolute; top: 50%; left: 50%; background: #d4f4ffb0; content: ""; transform: translate(-50%, -50%); }
+    .reticle::before { width: 15px; height: 1px; } .reticle::after { width: 1px; height: 15px; }
+    .view-bottom { position: absolute; right: 18px; bottom: 17px; left: 18px; display: flex; justify-content: space-between; align-items: end; gap: 12px; color: #fff; text-shadow: 0 2px 6px #000; }
+    .heading-value { font-family: Georgia, "Times New Roman", serif; font-size: clamp(32px, 5vw, 54px); line-height: 1; }
+    .heading-value small { margin-left: 5px; color: #a5dff4; font: 700 13px system-ui; letter-spacing: .08em; }
+    .altitude-value { color: #dbeeff; font-size: 13px; }
+    .viewer-tools { display: flex; flex-wrap: wrap; gap: 9px; padding: 15px; border-top: 1px solid #31445b; }
+    .action { min-height: 40px; padding: 8px 14px; border: 1px solid #6389a5; border-radius: 11px; background: #173047; color: #f0f9ff; font-size: 13px; font-weight: 650; }
+    .action:hover, .action:focus-visible { border-color: #99ddf2; background: #23425d; }
+    .action.primary { border-color: #8bd8ee; background: #a5e7f3; color: #052231; }
+    .action.primary:hover, .action.primary:focus-visible { background: #d0f6fb; }
+    .sidebar { display: grid; gap: 18px; }
+    .panel-content { padding: 19px; }
+    h2 { margin-bottom: 6px; font-family: Georgia, "Times New Roman", serif; font-size: 24px; font-weight: 400; }
+    .subtle { color: #9eb0c6; font-size: 12px; line-height: 1.5; }
+    .answer { min-height: 84px; margin: 15px 0; padding: 14px 15px; border-left: 2px solid #8bd8ee; border-radius: 0 11px 11px 0; background: #182c42; color: #eff9ff; font-size: 14px; line-height: 1.5; }
+    .ask-row { display: flex; gap: 8px; }
+    .ask-row input { flex: 1; min-width: 0; height: 43px; padding: 0 12px; border: 1px solid #516981; border-radius: 10px; background: #0a1523; color: white; }
+    input:focus-visible { outline: 2px solid #84d7ed; outline-offset: 2px; }
+    .suggestions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+    .suggestions button { padding: 7px 9px; border: 1px solid #475e77; border-radius: 999px; background: transparent; color: #c7d9ec; font-size: 11px; }
+    .suggestions button:hover, .suggestions button:focus-visible { border-color: #8bd8ee; color: white; }
+    .switch { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: #b9cbda; font-size: 12px; }
+    .location-row, .sliders { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    label.field { display: grid; gap: 5px; color: #aebed2; font-size: 11px; }
+    .field input { width: 100%; height: 39px; padding: 8px 10px; border: 1px solid #516981; border-radius: 9px; background: #0a1523; color: #fff; }
+    .field input[type="range"] { padding: 0; accent-color: #8bd8ee; }
+    .setting-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .setting-actions .action { min-height: 36px; }
+    .status { min-height: 20px; margin-top: 12px; color: #a4cbe1; font-size: 12px; line-height: 1.45; }
+    .sliders { margin-top: 13px; }
+    .sliders output { color: #ecfaff; font-size: 12px; }
+    .sky-list { display: grid; gap: 7px; margin: 13px 0 0; padding: 0; list-style: none; }
+    .sky-list li { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-top: 1px solid #2a4056; font-size: 13px; }
+    .sky-list li span:last-child { color: #a7c3d7; white-space: nowrap; }
+    .fine-print { max-width: 900px; margin-top: 20px; color: #91a6bb; font-size: 11px; line-height: 1.55; }
+    @media (max-width: 820px) { .layout { grid-template-columns: 1fr; } .viewer { min-height: min(62vh, 560px); } }
+    @media (max-width: 520px) { .shell { padding-top: 14px; } .topbar { margin-bottom: 18px; } .viewer { min-height: 50vh; } .view-bottom { align-items: end; } .altitude-value { max-width: 100px; text-align: right; } .ask-row { flex-wrap: wrap; } .ask-row input { flex-basis: 100%; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">✧</span><span>DAAO / Browser Observatory</span></div>
+      <a class="back" href="index.html">← Project Stories</a>
+    </div>
+    <header class="intro">
+      <p class="eyebrow">DIY Astronomical Attic Observatory</p>
+      <h1>What would you like to know about the sky?</h1>
+      <p>Explore from your browser. Use your phone’s camera, location, and motion sensors—or choose a direction manually. No desktop receiver or account is needed.</p>
+    </header>
+    <div class="layout">
+      <section class="panel" aria-label="Sky viewer">
+        <div class="viewer" id="viewer">
+          <video id="camera" autoplay playsinline muted hidden aria-label="Live camera view"></video>
+          <div class="shade"></div>
+          <div class="view-label" id="view-label">Sky preview</div>
+          <div class="reticle" aria-hidden="true"></div>
+          <div class="view-bottom">
+            <div class="heading-value"><span id="bearing">—</span><small id="compass-point">DIRECTION</small></div>
+            <div class="altitude-value" id="elevation">Set a direction</div>
+          </div>
+        </div>
+        <div class="viewer-tools">
+          <button class="action primary" id="camera-button" type="button">Start camera</button>
+          <button class="action" id="motion-button" type="button">Use phone motion</button>
+          <button class="action" id="location-button" type="button">Use my location</button>
+        </div>
+      </section>
+      <div class="sidebar">
+        <section class="panel panel-content" aria-labelledby="ask-heading">
+          <h2 id="ask-heading">Ask DAAO</h2>
+          <p class="subtle">Answers come from an approximate sky map, not image recognition.</p>
+          <div class="answer" id="answer" role="status" aria-live="polite">Enter your location and ask about a star, planet, or this direction.</div>
+          <form class="ask-row" id="ask-form">
+            <input id="question" aria-label="Your sky question" autocomplete="off" placeholder="Where is Mars?" required>
+            <button class="action primary" type="submit">Ask</button>
+            <button class="action" id="voice-button" type="button">🎙 Speak</button>
+          </form>
+          <div class="suggestions" aria-label="Example questions">
+            <button type="button" data-question="What is in front of me?">What is in front of me?</button>
+            <button type="button" data-question="Describe the sky">Describe the sky</button>
+            <button type="button" data-question="Where is the Moon?">Where is the Moon?</button>
+            <button type="button" data-question="Where is Mars?">Where is Mars?</button>
+          </div>
+          <label class="switch"><input id="speak-answer" type="checkbox"> Read answers aloud</label>
+        </section>
+        <section class="panel panel-content" aria-labelledby="settings-heading">
+          <h2 id="settings-heading">Your observing spot</h2>
+          <p class="subtle" id="location-summary">Location not set.</p>
+          <div class="location-row">
+            <label class="field">Latitude <input id="latitude" type="number" min="-90" max="90" step="any" inputmode="decimal" placeholder="52.37"></label>
+            <label class="field">Longitude <input id="longitude" type="number" min="-180" max="180" step="any" inputmode="decimal" placeholder="4.90"></label>
+          </div>
+          <div class="setting-actions"><button class="action" id="set-location" type="button">Set coordinates</button><button class="action" id="manual-button" type="button">Manual direction</button></div>
+          <div class="sliders" id="manual-controls">
+            <label class="field">Bearing <output id="bearing-output">180°</output><input id="bearing-input" type="range" min="0" max="359" value="180"></label>
+            <label class="field">Elevation <output id="elevation-output">25°</output><input id="elevation-input" type="range" min="-90" max="90" value="25"></label>
+          </div>
+          <div class="status" id="status" role="status" aria-live="polite">Set coordinates or allow location access to begin.</div>
+        </section>
+        <section class="panel panel-content" aria-labelledby="sky-heading">
+          <h2 id="sky-heading">Above your horizon</h2>
+          <p class="subtle">Bright catalog objects near this direction appear first.</p>
+          <ul class="sky-list" id="sky-list"><li><span>Waiting for location</span></li></ul>
+        </section>
+      </div>
+    </div>
+    <p class="fine-print">Positions are estimates. Browser compass readings vary by device and may differ from true north; use manual direction to calibrate. Voice input may use your browser’s speech service. Never view the Sun through binoculars or a telescope without a purpose-built solar filter.</p>
+  </main>
+  <script type="module" src="daao-app.js"></script>
+</body>
+</html>

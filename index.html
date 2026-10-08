@@ -262,18 +262,12 @@
       line-height: 1.2;
     }
 
-    .daao-description,
-    .daao-status {
+    .daao-description {
       margin: 0;
       color: rgba(255, 255, 255, 0.72);
       font-family: Arial, Helvetica, sans-serif;
       font-size: 11px;
       line-height: 1.4;
-    }
-
-    .daao-status:not(:empty) {
-      margin-top: 8px;
-      color: #bfe8ff;
     }
 
     @media (max-width: 700px) {
@@ -399,21 +393,9 @@
     </div>
   </div>
   <aside class="daao-panel" aria-labelledby="daao-name">
-    <a class="daao-launcher" id="daao-launcher" href="daao://open" aria-label="Open the DAAO desktop application">Open DAAO</a>
+    <a class="daao-launcher" href="daao.html" aria-label="Open DAAO in your browser">Open DAAO</a>
     <h2 class="daao-name" id="daao-name">DIY Astronomical Attic Observatory (DAAO)</h2>
-    <p class="daao-description">A desktop astronomy receiver that combines phone-camera images and orientation sensors with a live compass, attitude HUD, stars, the Sun, and planets.</p>
-    <p class="daao-status" id="daao-status" role="status" aria-live="polite"></p>
+    <p class="daao-description">Explore the sky in your browser with your camera, location, and phone motion—or choose a direction manually. No desktop app needed.</p>
   </aside>
-  <script>
-    const daaoLauncher = document.getElementById("daao-launcher");
-    const daaoStatus = document.getElementById("daao-status");
-
-    daaoLauncher.addEventListener("click", () => {
-      daaoStatus.textContent = "Opening DAAO…";
-      window.setTimeout(() => {
-        daaoStatus.textContent = "If DAAO stays behind the browser, select it from the Windows taskbar.";
-      }, 1400);
-    });
-  </script>
 </body>
 </html>
