@@ -205,11 +205,22 @@
       transform-origin: center;
     }
 
-    .daao-launcher {
+    .daao-panel {
       position: fixed;
       right: 22px;
       bottom: 20px;
       z-index: 2;
+      width: min(320px, calc(100vw - 44px));
+      padding: 15px 16px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 18px;
+      background: rgba(5, 11, 20, 0.66);
+      color: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.32);
+      backdrop-filter: blur(12px);
+    }
+
+    .daao-launcher {
       display: inline-flex;
       align-items: center;
       gap: 9px;
@@ -242,6 +253,27 @@
       background: rgba(5, 18, 32, 0.78);
       outline: none;
       transform: translateY(-2px);
+    }
+
+    .daao-name {
+      margin: 12px 0 5px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 15px;
+      line-height: 1.2;
+    }
+
+    .daao-description,
+    .daao-status {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.72);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .daao-status:not(:empty) {
+      margin-top: 8px;
+      color: #bfe8ff;
     }
 
     @media (max-width: 700px) {
@@ -308,9 +340,14 @@
         font-size: 12px;
       }
 
-      .daao-launcher {
+      .daao-panel {
         right: 14px;
         bottom: 14px;
+        width: min(280px, calc(100vw - 28px));
+        padding: 12px 13px;
+      }
+
+      .daao-launcher {
         padding: 9px 12px;
         font-size: 12px;
       }
@@ -361,6 +398,22 @@
       <span class="story-entry-caption">Tiago K</span>
     </div>
   </div>
-  <a class="daao-launcher" href="daao://open" aria-label="Open the DAAO desktop application">Open DAAO</a>
+  <aside class="daao-panel" aria-labelledby="daao-name">
+    <a class="daao-launcher" id="daao-launcher" href="daao://open" aria-label="Open the DAAO desktop application">Open DAAO</a>
+    <h2 class="daao-name" id="daao-name">DIY Astronomical Attic Observatory (DAAO)</h2>
+    <p class="daao-description">A desktop astronomy receiver that combines phone-camera images and orientation sensors with a live compass, attitude HUD, stars, the Sun, and planets.</p>
+    <p class="daao-status" id="daao-status" role="status" aria-live="polite"></p>
+  </aside>
+  <script>
+    const daaoLauncher = document.getElementById("daao-launcher");
+    const daaoStatus = document.getElementById("daao-status");
+
+    daaoLauncher.addEventListener("click", () => {
+      daaoStatus.textContent = "Opening DAAO…";
+      window.setTimeout(() => {
+        daaoStatus.textContent = "If DAAO stays behind the browser, select it from the Windows taskbar.";
+      }, 1400);
+    });
+  </script>
 </body>
 </html>
