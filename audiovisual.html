@@ -79,8 +79,6 @@
   <main class="story-stage">
     <div class="story-frame audiovisual-frame">
       <video class="audiovisual-video" controls autoplay playsinline preload="metadata" controlslist="nodownload noplaybackrate">
-        <source src="audiovisual/web/audiovisual-film-mobile.mp4" type="video/mp4" media="(orientation: portrait)">
-        <source src="audiovisual/web/audiovisual-film-desktop.mp4" type="video/mp4">
         Your browser does not support HTML video.
       </video>
       <div class="mobile-timeline" aria-label="Video timeline">
@@ -93,11 +91,58 @@
       </nav>
     </div>
   </main>
+  <template data-film="all" data-title="Audiovisual">
+    <source src="audiovisual/web/audiovisual-film-mobile.mp4" type="video/mp4" media="(orientation: portrait)">
+    <source src="audiovisual/web/audiovisual-film-desktop.mp4" type="video/mp4">
+  </template>
+  <template data-film="1" data-title="Amsterdam West — Attic Reflections">
+    <source src="audiovisual/web/segments-mobile/01.mp4" type="video/mp4" media="(orientation: portrait)">
+    <source src="audiovisual/web/segments-desktop/01.mp4" type="video/mp4">
+  </template>
+  <template data-film="2" data-title="Sunday Morning">
+    <source src="audiovisual/web/segments-mobile/sunday-morning.mp4" type="video/mp4" media="(orientation: portrait)">
+    <source src="audiovisual/web/segments-desktop/sunday-morning.mp4" type="video/mp4">
+  </template>
+  <template data-film="3" data-title="Water / Grid / AI / Franky Fugazy">
+    <source src="audiovisual/web/segments-mobile/02.mp4" type="video/mp4" media="(orientation: portrait)">
+    <source src="audiovisual/web/segments-desktop/02.mp4" type="video/mp4">
+  </template>
+  <template data-film="4" data-title="The Beach Boy and the Sun">
+    <source src="audiovisual/web/segments-mobile/03.mp4" type="video/mp4" media="(orientation: portrait)">
+    <source src="audiovisual/web/segments-desktop/03.mp4" type="video/mp4">
+  </template>
+  <template data-film="5" data-title="Into the Digital World">
+    <source src="audiovisual/web/segments-mobile/04.mp4" type="video/mp4" media="(orientation: portrait)">
+    <source src="audiovisual/web/segments-desktop/04.mp4" type="video/mp4">
+  </template>
+  <template data-film="6" data-title="Experience 1">
+    <source src="audiovisual/web/segments-mobile/05.mp4" type="video/mp4" media="(orientation: portrait)">
+    <source src="audiovisual/web/segments-desktop/05.mp4" type="video/mp4">
+  </template>
+  <template data-film="7" data-title="Fragments: The Unknown War">
+    <source src="audiovisual/web/segments-mobile/06.mp4" type="video/mp4" media="(orientation: portrait)">
+    <source src="audiovisual/web/segments-desktop/06.mp4" type="video/mp4">
+  </template>
   <script>
     const video = document.querySelector(".audiovisual-video");
+    const requestedFilm = new URLSearchParams(window.location.search).get("film");
+    const selectedTemplate = /^[1-7]$/.test(requestedFilm)
+      ? document.querySelector(`template[data-film="${requestedFilm}"]`)
+      : document.querySelector('template[data-film="all"]');
+    const singleFilm = selectedTemplate.dataset.film !== "all";
+    video.replaceChildren(selectedTemplate.content.cloneNode(true));
+    if (singleFilm) {
+      document.title = `${selectedTemplate.dataset.title} | Audiovisual`;
+      video.setAttribute("aria-label", selectedTemplate.dataset.title);
+      video.addEventListener("ended", () => {
+        window.location.replace("audiovisual-intro.html");
+      });
+    }
     const portraitSource = video.querySelector('source[media="(orientation: portrait)"]');
     const desktopSource = video.querySelector("source:not([media])");
     const portraitOrientation = window.matchMedia("(orientation: portrait)");
+    video.src = portraitOrientation.matches ? portraitSource.src : desktopSource.src;
+    video.load();
     const timelineSlider = document.querySelector(".timeline-slider");
     const timelineCurrent = document.querySelector(".timeline-current");
     const timelineDuration = document.querySelector(".timeline-duration");
