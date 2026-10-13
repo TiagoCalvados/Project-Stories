@@ -8,6 +8,9 @@ const sourceDirectory = path.join(projectRoot, "audiovisual");
 const webDirectory = path.join(sourceDirectory, "web");
 // Playback numbers follow this order; original source filenames stay intact.
 const sourceFiles = ["1.mp4", "Sunday Morning.mp4", "2.mp4", "3.mp4", "4.mp4", "5.mp4", "6.mp4"];
+// Original 2.mp4 is playback video 3. Its -16.8 LUFS soundtrack needs a
+// 6 dB reduction to match the following film (-22.7 LUFS), keeping dynamics.
+const audioGainDb = new Map([["2.mp4", -6]]);
 const profiles = [
   { name: "desktop", width: 960, height: 540, maxRate: "850k", bufferSize: "1700k" },
   { name: "mobile", width: 540, height: 1170, maxRate: "620k", bufferSize: "1240k" },
@@ -53,6 +56,12 @@ async function buildProfile(profile) {
       const inputPath = path.join(sourceDirectory, sourceFile);
       const outputPath = path.join(segmentDirectory, segmentFilename(sourceFile));
       const duration = readDuration(inputPath);
+      const audioFilter = [
+        "aresample=48000:async=1:first_pts=0",
+        "asetpts=N/SR/TB",
+        ...(audioGainDb.has(sourceFile) ? [`volume=${audioGainDb.get(sourceFile)}dB`] : []),
+        "apad",
+      ].join(",");
       const useCleanDesktopCanvas = profile.name === "desktop" && ["1.mp4", "Sunday Morning.mp4", "2.mp4", "3.mp4"].includes(sourceFile);
       // Keep source timestamps: original 4.mp4 changes resolution, reinitializing
       // the filters. A frame-count setpts expression resets at that point and
@@ -85,7 +94,7 @@ async function buildProfile(profile) {
         "-map",
         "0:a:0",
         "-af",
-        "aresample=48000:async=1:first_pts=0,asetpts=N/SR/TB,apad",
+        audioFilter,
         "-c:v",
         "libx264",
         "-preset",
