@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile, rename } from "node:fs/promises";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import ffmpegPath from "ffmpeg-static";
@@ -8,14 +8,17 @@ const sourceDirectory = path.join(projectRoot, "audiovisual");
 const webDirectory = path.join(sourceDirectory, "web");
 // Playback numbers follow this order; original source filenames stay intact.
 const sourceFiles = ["1.mp4", "Sunday Morning.mp4", "2.mp4", "3.mp4", "4.mp4", "5.mp4", "6.mp4"];
-// Original 2.mp4 is playback video 3. Its -16.8 LUFS soundtrack needs a
-// 6 dB reduction to match the following film (-22.7 LUFS), keeping dynamics.
-const audioGainDb = new Map([["2.mp4", -6]]);
+// Normalize each original soundtrack independently, rather than stacking gains
+// on earlier exports. Match measured loudness and limit brief peaks, leaving
+// headroom for AAC encoding. Verify the actual encoded result before joining.
+const audioTarget = { integrated: -20, peakCeiling: -4 };
+const normalizedAudio = new Map();
 const profiles = [
   { name: "desktop", width: 960, height: 540, maxRate: "850k", bufferSize: "1700k" },
   { name: "mobile", width: 540, height: 1170, maxRate: "620k", bufferSize: "1240k" },
 ];
 const joinOnly = process.argv.includes("--join-only");
+const audioOnly = process.argv.includes("--audio-only");
 const requestedSegment = process.argv.find((argument) => argument.startsWith("--segment="))?.split("=")[1];
 const requestedProfile = process.argv.find((argument) => argument.startsWith("--profile="))?.split("=")[1];
 const activeProfiles = requestedProfile
@@ -30,11 +33,23 @@ if (requestedProfile && activeProfiles.length === 0) {
   throw new Error(`Unknown profile "${requestedProfile}". Use desktop or mobile.`);
 }
 
+if (joinOnly && audioOnly) {
+  throw new Error("Use either --join-only or --audio-only, not both.");
+}
+
 if (requestedSegment && (!/^\d+$/.test(requestedSegment) || Number(requestedSegment) < 1 || Number(requestedSegment) > sourceFiles.length)) {
   throw new Error(`Unknown segment "${requestedSegment}". Use a number from 1 to ${sourceFiles.length}.`);
 }
 
 await mkdir(webDirectory, { recursive: true });
+
+if (!joinOnly) {
+  for (const [index, sourceFile] of sourceFiles.entries()) {
+    if (!requestedSegment || index + 1 === Number(requestedSegment)) {
+      normalizedAudio.set(sourceFile, await normalizeAudio(sourceFile));
+    }
+  }
+}
 
 for (const profile of activeProfiles) {
   await buildProfile(profile);
@@ -56,12 +71,21 @@ async function buildProfile(profile) {
       const inputPath = path.join(sourceDirectory, sourceFile);
       const outputPath = path.join(segmentDirectory, segmentFilename(sourceFile));
       const duration = readDuration(inputPath);
-      const audioFilter = [
-        "aresample=48000:async=1:first_pts=0",
-        "asetpts=N/SR/TB",
-        ...(audioGainDb.has(sourceFile) ? [`volume=${audioGainDb.get(sourceFile)}dB`] : []),
-        "apad",
-      ].join(",");
+
+      if (audioOnly) {
+        await validateSegmentTiming(outputPath, duration);
+        const temporaryPath = outputPath.replace(/\.mp4$/, ".balanced.mp4");
+        console.log(`Updating soundtrack ${index + 1}/${sourceFiles.length} for ${profile.name}...`);
+        runFfmpeg([
+          "-y", "-hide_banner", "-loglevel", "warning",
+          "-i", outputPath, "-i", normalizedAudio.get(sourceFile),
+          "-map", "0:v:0", "-map", "1:a:0", "-c", "copy",
+          "-map_metadata", "-1", "-movflags", "+faststart", temporaryPath,
+        ]);
+        await validateSegmentTiming(temporaryPath, duration);
+        await rename(temporaryPath, outputPath);
+        continue;
+      }
       const useCleanDesktopCanvas = profile.name === "desktop" && ["1.mp4", "Sunday Morning.mp4", "2.mp4", "3.mp4"].includes(sourceFile);
       // Keep source timestamps: original 4.mp4 changes resolution, reinitializing
       // the filters. A frame-count setpts expression resets at that point and
@@ -90,11 +114,11 @@ async function buildProfile(profile) {
         "+genpts",
         "-i",
         inputPath,
+        "-i",
+        normalizedAudio.get(sourceFile),
         ...videoArguments,
         "-map",
-        "0:a:0",
-        "-af",
-        audioFilter,
+        "1:a:0",
         "-c:v",
         "libx264",
         "-preset",
@@ -112,13 +136,7 @@ async function buildProfile(profile) {
         "-pix_fmt",
         "yuv420p",
         "-c:a",
-        "aac",
-        "-b:a",
-        "128k",
-        "-ar",
-        "48000",
-        "-ac",
-        "2",
+        "copy",
         "-fps_mode",
         "cfr",
         "-t",
@@ -181,6 +199,56 @@ async function buildProfile(profile) {
   ]);
 
   console.log(`Built ${path.relative(projectRoot, finalPath)}.`);
+}
+
+async function normalizeAudio(sourceFile) {
+  const inputPath = path.join(sourceDirectory, sourceFile);
+  const duration = readDuration(inputPath);
+  const audioDirectory = path.join(webDirectory, "normalized-audio");
+  await mkdir(audioDirectory, { recursive: true });
+  const outputPath = path.join(audioDirectory, segmentFilename(sourceFile).replace(/\.mp4$/, ".m4a"));
+  const prepare = "aresample=48000:async=1:first_pts=0,asetpts=N/SR/TB,aformat=sample_rates=48000:channel_layouts=stereo";
+  const measured = measureAudio(inputPath, prepare);
+  let gain = audioTarget.integrated - measured.integrated;
+  const limit = 10 ** (audioTarget.peakCeiling / 20);
+  console.log(`Balancing ${sourceFile}: ${measured.integrated} LUFS to ${audioTarget.integrated} LUFS.`);
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    runFfmpeg([
+      "-y", "-hide_banner", "-loglevel", "warning", "-i", inputPath,
+      "-map", "0:a:0", "-vn",
+      "-af", `${prepare},volume=${gain.toFixed(3)}dB,alimiter=limit=${limit}:level=false:latency=true,apad`,
+      "-t", duration.toFixed(3), "-c:a", "aac", "-b:a", "128k", "-ar", "48000", "-ac", "2",
+      "-map_metadata", "-1", "-movflags", "+faststart", outputPath,
+    ]);
+    const result = measureAudio(outputPath);
+    const difference = audioTarget.integrated - result.integrated;
+    if (Math.abs(difference) <= 0.5 && result.truePeak <= -1) {
+      console.log(`Audio verified for ${sourceFile}: ${result.integrated} LUFS, ${result.truePeak} dBTP.`);
+      return outputPath;
+    }
+    if (result.truePeak > -1) {
+      throw new Error(`Encoded audio peak exceeds safe headroom for ${sourceFile}: ${result.truePeak} dBTP.`);
+    }
+    gain += difference;
+  }
+  throw new Error(`Could not match the listening level for ${sourceFile}.`);
+}
+
+function measureAudio(inputPath, prepare = "anull") {
+  const analysis = spawnSync(ffmpegPath, [
+    "-hide_banner", "-i", inputPath, "-map", "0:a:0", "-vn",
+    "-af", `${prepare},ebur128=peak=true`, "-f", "null", "-",
+  ], { encoding: "utf8", maxBuffer: 8 * 1024 * 1024 });
+  if (analysis.error || analysis.status !== 0) {
+    throw analysis.error || new Error(`Audio measurement failed: ${analysis.stderr}`);
+  }
+  const summary = analysis.stderr.slice(analysis.stderr.lastIndexOf("Summary:"));
+  const integrated = Number(summary.match(/I:\s*(-?\d+(?:\.\d+)?|-inf)/)?.[1]);
+  const truePeak = Number(summary.match(/Peak:\s*(-?\d+(?:\.\d+)?|-inf)/)?.[1]);
+  if (!Number.isFinite(integrated) || !Number.isFinite(truePeak)) {
+    throw new Error(`Cannot normalize a silent or invalid soundtrack: ${inputPath}.`);
+  }
+  return { integrated, truePeak };
 }
 
 function segmentFilename(sourceFile) {
