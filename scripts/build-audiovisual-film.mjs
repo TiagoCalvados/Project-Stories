@@ -6,7 +6,8 @@ import ffmpegPath from "ffmpeg-static";
 const projectRoot = process.cwd();
 const sourceDirectory = path.join(projectRoot, "audiovisual");
 const webDirectory = path.join(sourceDirectory, "web");
-const sourceFiles = ["1.mp4", "2.mp4", "3.mp4", "4.mp4", "5.mp4", "6.mp4"];
+// Playback numbers follow this order; original source filenames stay intact.
+const sourceFiles = ["1.mp4", "Sunday Morning.mp4", "2.mp4", "3.mp4", "4.mp4", "5.mp4", "6.mp4"];
 const profiles = [
   { name: "desktop", width: 960, height: 540, maxRate: "850k", bufferSize: "1700k" },
   { name: "mobile", width: 540, height: 1170, maxRate: "620k", bufferSize: "1240k" },
@@ -26,7 +27,7 @@ if (requestedProfile && activeProfiles.length === 0) {
   throw new Error(`Unknown profile "${requestedProfile}". Use desktop or mobile.`);
 }
 
-if (requestedSegment && !sourceFiles.includes(`${requestedSegment}.mp4`)) {
+if (requestedSegment && (!/^\d+$/.test(requestedSegment) || Number(requestedSegment) < 1 || Number(requestedSegment) > sourceFiles.length)) {
   throw new Error(`Unknown segment "${requestedSegment}". Use a number from 1 to ${sourceFiles.length}.`);
 }
 
@@ -45,15 +46,15 @@ async function buildProfile(profile) {
 
   if (!joinOnly) {
     for (const [index, sourceFile] of sourceFiles.entries()) {
-      if (requestedSegment && sourceFile !== `${requestedSegment}.mp4`) {
+      if (requestedSegment && index + 1 !== Number(requestedSegment)) {
         continue;
       }
 
       const inputPath = path.join(sourceDirectory, sourceFile);
-      const outputPath = path.join(segmentDirectory, `${String(index + 1).padStart(2, "0")}.mp4`);
+      const outputPath = path.join(segmentDirectory, segmentFilename(sourceFile));
       const duration = readDuration(inputPath);
-      const useCleanDesktopCanvas = profile.name === "desktop" && index < 3;
-      // Keep source timestamps: Movie 4 changes resolution, which reinitializes
+      const useCleanDesktopCanvas = profile.name === "desktop" && ["1.mp4", "Sunday Morning.mp4", "2.mp4", "3.mp4"].includes(sourceFile);
+      // Keep source timestamps: original 4.mp4 changes resolution, reinitializing
       // the filters. A frame-count setpts expression resets at that point and
       // drops pictures while the uninterrupted dialogue continues.
       const videoFilter = useCleanDesktopCanvas
@@ -123,21 +124,21 @@ async function buildProfile(profile) {
   }
 
   // Check every segment, including reused ones, before publishing a joined film.
-  for (const [index, sourceFile] of sourceFiles.entries()) {
-    const segmentPath = path.join(segmentDirectory, `${String(index + 1).padStart(2, "0")}.mp4`);
+  for (const sourceFile of sourceFiles) {
+    const segmentPath = path.join(segmentDirectory, segmentFilename(sourceFile));
     await validateSegmentTiming(segmentPath, readDuration(path.join(sourceDirectory, sourceFile)));
   }
 
   const concatList = sourceFiles
-    .map((_, index) => {
-      const segmentPath = path.join(segmentDirectory, `${String(index + 1).padStart(2, "0")}.mp4`);
+    .map((sourceFile) => {
+      const segmentPath = path.join(segmentDirectory, segmentFilename(sourceFile));
       return `file '${segmentPath.replaceAll("\\", "/").replaceAll("'", "'\\''")}'`;
     })
     .join("\n");
 
   await writeFile(concatListPath, `${concatList}\n`, "utf8");
 
-  console.log(`Joining the six normalized ${profile.name} parts...`);
+  console.log(`Joining the ${sourceFiles.length} normalized ${profile.name} parts...`);
   runFfmpeg([
     "-y",
     "-hide_banner",
@@ -171,6 +172,13 @@ async function buildProfile(profile) {
   ]);
 
   console.log(`Built ${path.relative(projectRoot, finalPath)}.`);
+}
+
+function segmentFilename(sourceFile) {
+  const stem = path.basename(sourceFile, ".mp4");
+  return /^\d+$/.test(stem)
+    ? `${stem.padStart(2, "0")}.mp4`
+    : `${stem.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.mp4`;
 }
 
 function runFfmpeg(args) {

@@ -112,7 +112,7 @@
   <header class="hero">
     <p class="author">Tiago K. Calvados</p>
     <span class="eyebrow">Sound · image · experimentation</span>
-    <div class="hero-title"><div class="hero-title-main"><h1>Audiovisual</h1><a class="play-movie" href="audiovisual.html" aria-label="Play the complete movie made of six connected parts">▶ Play movie</a></div><span class="hero-count" id="total">06 films</span></div>
+    <div class="hero-title"><div class="hero-title-main"><h1>Audiovisual</h1><a class="play-movie" href="audiovisual.html" aria-label="Play the complete movie made of seven connected parts">▶ Play movie</a></div><span class="hero-count" id="total">07 films</span></div>
     <p class="tagline">Different years. Different tools. The same restless curiosity.</p>
     <p class="intro">It began with simple experiments: a tree moving outside my window, the sound of the wind, and the urge to turn an ordinary moment into something else. Years later, that same instinct keeps resurfacing — through music, movement, memory and new digital possibilities. These films don't follow one genre; they follow curiosity.</p>
   </header>
@@ -121,18 +121,19 @@
     <div id="films"></div>
   </section>
   <footer class="bottom">
-    <span class="footnote">One connected film · Six parts · A growing audiovisual archive.</span>
+    <span class="footnote">One connected film · Seven parts · A growing audiovisual archive.</span>
     <a class="return-home" href="index.html" aria-label="Return to the main page">← Main page</a>
   </footer>
 </main>
 <script>
 /*
    AUDIOVISUAL ARCHIVE — EDIT FILMS HERE.
-   These six entries match 1.mp4 through 6.mp4 IN ORDER.
-   All six films play as one sequence through the single PLAY MOVIE button.
+   Playback order: 1.mp4, Sunday Morning.mp4, then 2.mp4 through 6.mp4.
+   Display numbers are generated from this order; original filenames are preserved.
+   All seven films play as one sequence through the single PLAY MOVIE button.
    New film? Add an object to the array, and update the existing playback page.
    "File modified" dates are computer file dates, not production dates.
-   Films 5 and 6 descriptions and credits are verified against their original Vimeo pages.
+   Films 6 and 7 descriptions and credits are verified against their original Vimeo pages.
 */
 const FILMS = [
   {
@@ -140,6 +141,12 @@ const FILMS = [
     short:'The street outside, projected light on glass, and M83 on vinyl.',
     story:'Recorded from my attic in Amsterdam West, looking onto the street. I was playing M83’s album Digital Shades Vol. 1 on vinyl in the background. A small light-projecting gadget created shifting, strobe-like reflections on the window. The street, the glass and the music became a single audiovisual moment.',
     credits:'Location: Amsterdam West, Netherlands. Sound in the room: M83 — Digital Shades Vol. 1, played on vinyl.'
+  },
+  {
+    file:'Sunday Morning.mp4', title:'Sunday Morning', year:'—', duration:'0:27', size:'540 × 960', updated:'11 Oct 2026',
+    short:'Breakfast, a neighbour’s soft piano, and the Amsterdam weather.',
+    story:'Last night I was making crazy sounds with my bass and guitar. This morning I’m having my breakfast, listening to my downstairs neighbour playing some lovely soft piano while I gaze at the miserable Amsterdam weather.',
+    credits:'Original caption: Tiago (tiago_calvados). Piano heard from the downstairs neighbour.'
   },
   {
     file:'2.mp4', title:'Water / Grid / AI / Franky Fugazy', year:'2026', duration:'0:27', size:'960 × 1706', updated:'2 Oct 2026',
@@ -164,14 +171,14 @@ const FILMS = [
     short:'An audiovisual sound sculpture inspired by Ben Frost’s Theory of Machines.',
     story:'An early audiovisual experience built around a sound sculpture I created, inspired by Ben Frost’s “Theory of Machines”. The video was edited by David Steinberg at Rethaw.com.',
     credits:'Sound sculpture: Tiago (audiopleasures). Video edit: David Steinberg — Rethaw.com.',
-    source:'https://vimeo.com/4030744', sourceLabel:'Original Vimeo film 5 ↗'
+    source:'https://vimeo.com/4030744', sourceLabel:'Original Vimeo film 6 ↗'
   },
   {
     file:'6.mp4', title:'Fragments: The Unknown War', year:'2009 (Vimeo)', duration:'5:45', size:'640 × 480', updated:'3 Oct 2026',
     short:'An experimental short film exploring the uncertainty of war and its victims.',
     story:'An experimental short film exploring the uncertainty of war: when and where conflict might begin, who takes part, who is seen as good or bad, and who becomes a victim. It asks whether we even know which war we are witnessing. Originally uploaded to Vimeo on 9 April 2009.',
     credits:'Direction/editing: Miguel Peres. Filmed footage: Tiago Martins. Archival material: atomic bomb tests. Music composed by Tiago Martins (mOi, Je Veux!).',
-    source:'https://vimeo.com/4078555', sourceLabel:'Original Vimeo film 6 ↗'
+    source:'https://vimeo.com/4078555', sourceLabel:'Original Vimeo film 7 ↗'
   }
 ];
 
@@ -190,7 +197,7 @@ FILMS.forEach((f,i)=>{
   const expanded=node('div','notes');
   expanded.append(node('p','',f.story));
   const dl=node('dl','specs');
-  [['File',f.file],['Film length',f.duration],['File modified',f.updated],['Frame size',f.size]].forEach(([key,value])=>{
+  [['Video',String(i+1).padStart(2,'0')],['Film length',f.duration],['File modified',f.updated],['Frame size',f.size]].forEach(([key,value])=>{
     const pair=node('div');pair.append(node('dt','',key),node('dd','',value));dl.append(pair);
   });
   expanded.append(dl);
