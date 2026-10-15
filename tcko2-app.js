@@ -33,6 +33,7 @@ try {
 
 let context, synthNode, analyser, starting, stopped = false, ready = false, learning = -1, midiAccess, midiInput;
 let keysDown = new Map(), pointers = new Map(), activeNotes = new Set();
+const pendingNotes = new Map();
 const macroElements = [];
 const send = message => synthNode?.port.postMessage(message);
 const announce = message => { byId('audio-status').textContent = message; };
@@ -128,9 +129,12 @@ byId('preset').addEventListener('change', () => {
 });
 
 async function startAudio() {
-  if (starting) return starting;
+  if (isRunning()) return true;
+  if (starting) {
+    if (context?.state === 'suspended') context.resume().catch(() => {});
+    return starting;
+  }
   starting = (async () => {
-    const button = byId('start-audio'); button.disabled = true;
     announce('Starting the sound engine…');
     try {
       if (!context) {
@@ -138,50 +142,85 @@ async function startAudio() {
         if (!AudioContextClass) throw new Error('Web Audio is not available in this browser. Try an up-to-date browser.');
         context = new AudioContextClass({ latencyHint: 'interactive' });
         const resumed = context.resume();
-        if (!context.audioWorklet) { await resumed; throw new Error('AudioWorklet is unavailable. Use this site over HTTPS in an up-to-date browser.'); }
-        await context.audioWorklet.addModule(new URL('./tcko2-worklet.js', import.meta.url));
+        if (!context.audioWorklet) { resumed.catch(() => {}); throw new Error('AudioWorklet is unavailable. Use this site over HTTPS in an up-to-date browser.'); }
+        await Promise.all([resumed, context.audioWorklet.addModule(new URL('./tcko2-worklet.js', import.meta.url))]);
         synthNode = new AudioWorkletNode(context, 'tcko2-synth', { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2], processorOptions: { voiceLimit: compactScreen ? 4 : 8 } });
         analyser = context.createAnalyser(); analyser.fftSize = 512;
         synthNode.connect(analyser); analyser.connect(context.destination);
-        synthNode.port.onmessage = ({ data }) => {
-          if (data.type !== 'meter') return;
-          activeNotes = new Set(data.notes); highlightKeys();
-          const level = Math.min(100, Math.round(data.peak * 160));
-          byId('meter-fill').style.width = `${level}%`; document.querySelector('.meter').setAttribute('aria-valuenow', String(level));
-          byId('signal-light').classList.toggle('active', level > 0);
-          if (data.invalidSamples > 0) announce('An unstable signal was cleared. Press Panic before continuing.');
-        };
-        synthNode.onprocessorerror = () => { ready = false; announce('The sound engine stopped. Reload this page to restart it.'); button.textContent = 'Reload to restart'; };
+        const engineStarted = new Promise((resolve, reject) => {
+          synthNode.port.onmessage = ({ data }) => {
+            if (data.type !== 'meter') return;
+            resolve();
+            activeNotes = new Set(data.notes); highlightKeys();
+            const level = Math.min(100, Math.round(data.peak * 160));
+            byId('meter-fill').style.width = `${level}%`; document.querySelector('.meter').setAttribute('aria-valuenow', String(level));
+            byId('signal-light').classList.toggle('active', level > 0);
+            if (data.invalidSamples > 0) announce('An unstable signal was cleared. Press Panic before continuing.');
+          };
+          synthNode.onprocessorerror = () => {
+            ready = false; pendingNotes.clear();
+            const error = new Error('The sound engine stopped. Reload this page to restart it.');
+            announce(error.message); reject(error);
+          };
+        });
         context.onstatechange = updateAudioStatus;
-        syncEngine(); ready = true;
-        await resumed;
+        syncEngine(); await engineStarted; ready = true;
       } else if (!ready) { throw new Error('The sound engine needs a fresh start. Reload this page.'); }
       await context.resume();
       stopped = false; send({ type: 'stop', value: false });
       byId('stop').textContent = 'Stop'; byId('stop').disabled = false;
       updateAudioStatus();
+      return isRunning();
     } catch (error) {
-      announce(error.message || 'Could not start audio. Try reloading this page.'); button.textContent = 'Try audio again';
+      announce(error.message || 'Could not start audio. Play a key to try again, or reload this page.');
       if (!ready && context) { await context.close().catch(() => {}); context = synthNode = analyser = null; }
-    } finally { button.disabled = false; starting = undefined; }
+      return false;
+    }
   })();
-  return starting;
+  try { return await starting; } finally { starting = undefined; }
 }
 function updateAudioStatus() {
   if (!ready) return;
   const running = context.state === 'running';
-  byId('start-audio').textContent = running ? '✓ Audio ready' : '▶ Resume audio';
-  announce(running ? stopped ? 'Stopped. Press Resume to play again.' : 'Audio ready · play the keys. Start with low speaker volume.' : 'Audio paused. Tap Resume audio to continue.');
+  announce(stopped ? 'Stopped. Press Resume to play again.' : running ? 'Audio ready · play the keys. Start with low speaker volume.' : 'Audio paused. Play a key or tap the synth to continue.');
 }
-byId('start-audio').addEventListener('click', startAudio);
+function wakeAudio() { if (!stopped && !isRunning()) void startAudio(); }
+for (const eventName of ['pointerdown', 'pointerup', 'click', 'keydown']) document.addEventListener(eventName, wakeAudio, { capture: true });
+function playNote(note, velocity, channel) {
+  if (!canPlay()) return;
+  const key = `${channel}:${note}`;
+  if (isRunning()) { pendingNotes.delete(key); send({ type: 'noteOn', note, velocity, channel }); return; }
+  const pending = { channel, released: false };
+  pendingNotes.set(key, pending);
+  void startAudio().then(started => {
+    if (pendingNotes.get(key) !== pending) return;
+    if (!started || stopped || document.hidden) { pendingNotes.delete(key); return; }
+    send({ type: 'noteOn', note, velocity, channel });
+    setTimeout(() => {
+      if (pendingNotes.get(key) !== pending) return;
+      pendingNotes.delete(key);
+      if (pending.released) send({ type: 'noteOff', note, channel });
+    }, 120);
+  });
+}
+function releaseNote(note, channel) {
+  const key = `${channel}:${note}`, pending = pendingNotes.get(key);
+  if (pending) { pending.released = true; return; }
+  pendingNotes.delete(key); send({ type: 'noteOff', note, channel });
+}
+function releaseChannel(channel) {
+  for (const [key, pending] of pendingNotes) if (pending.channel === channel) pendingNotes.delete(key);
+  send({ type: 'release', channel });
+}
 function panic() {
-  keysDown.clear(); pointers.clear(); activeNotes.clear(); learning = -1;
+  pendingNotes.clear(); keysDown.clear(); pointers.clear(); activeNotes.clear(); learning = -1;
   state.hold = state.drone = state.glitch = state.fragments = false;
   send({ type: 'panic' }); renderControls(); highlightKeys(); save();
   announce('Panic: notes, latches and effect tails cleared.');
 }
 byId('panic').addEventListener('click', panic);
 byId('stop').addEventListener('click', () => {
+  if (stopped) { void startAudio(); return; }
   const next = !stopped; panic(); stopped = next; send({ type: 'stop', value: stopped });
   byId('stop').textContent = stopped ? 'Resume' : 'Stop';
   announce(stopped ? 'Stopped. Press Resume to play again.' : 'Sound resumed.');
@@ -204,8 +243,8 @@ function renderKeyboard() {
     key.addEventListener('click', event => {
       if (event.detail !== 0) return;
       if (!canPlay()) return;
-      send({ type: 'noteOn', note, velocity: 100, channel: 17 });
-      setTimeout(() => send({ type: 'noteOff', note, channel: 17 }), 180);
+      playNote(note, 100, 17);
+      setTimeout(() => releaseNote(note, 17), 180);
     });
     keyboard.append(key);
   }
@@ -214,8 +253,8 @@ function renderKeyboard() {
   highlightKeys();
 }
 function canPlay() {
-  if (isRunning()) return true;
-  announce(stopped ? 'Sound is stopped. Press Resume to play.' : 'Tap Start audio or Resume audio first, then play the keys.');
+  if (!stopped) return true;
+  announce('Sound is stopped. Press Resume to play.');
   return false;
 }
 function highlightKeys() {
@@ -224,8 +263,8 @@ function highlightKeys() {
     key.classList.toggle('active', active); key.setAttribute('aria-pressed', String(active));
   });
 }
-function releaseComputer() { keysDown.clear(); send({ type: 'release', channel: 16 }); highlightKeys(); }
-function releasePointers() { pointers.clear(); send({ type: 'release', channel: 17 }); highlightKeys(); }
+function releaseComputer() { keysDown.clear(); releaseChannel(16); highlightKeys(); }
+function releasePointers() { pointers.clear(); releaseChannel(17); highlightKeys(); }
 function changeOctave(amount) { releaseComputer(); releasePointers(); state.octave = clamp(state.octave + amount, 1, 7); renderKeyboard(); save(); }
 byId('octave-down').addEventListener('click', () => changeOctave(-1)); byId('octave-up').addEventListener('click', () => changeOctave(1));
 byId('key-count').addEventListener('change', () => { releaseComputer(); releasePointers(); state.keys = Number(byId('key-count').value); renderKeyboard(); save(); });
@@ -238,9 +277,9 @@ function movePointer(pointerId, note) {
   const old = pointers.get(pointerId);
   if (old === note) return;
   pointers.delete(pointerId);
-  if (old != null && ![...pointers.values()].includes(old)) send({ type: 'noteOff', note: old, channel: 17 });
+  if (old != null && ![...pointers.values()].includes(old)) releaseNote(old, 17);
   if (note != null) {
-    if (![...pointers.values()].includes(note)) send({ type: 'noteOn', note, velocity: 100, channel: 17 });
+    if (![...pointers.values()].includes(note)) playNote(note, 100, 17);
     pointers.set(pointerId, note);
   } else pointers.set(pointerId, null);
   highlightKeys();
@@ -254,7 +293,7 @@ keyboard.addEventListener('pointerdown', event => {
 keyboard.addEventListener('pointermove', event => { if (pointers.has(event.pointerId)) { event.preventDefault(); movePointer(event.pointerId, pointerNote(event)); } });
 function releasePointer(event) {
   const note = pointers.get(event.pointerId); pointers.delete(event.pointerId);
-  if (note != null && ![...pointers.values()].includes(note)) send({ type: 'noteOff', note, channel: 17 });
+  if (note != null && ![...pointers.values()].includes(note)) releaseNote(note, 17);
   highlightKeys();
 }
 keyboard.addEventListener('pointerup', releasePointer); keyboard.addEventListener('pointercancel', releasePointer); keyboard.addEventListener('lostpointercapture', releasePointer);
@@ -266,11 +305,11 @@ window.addEventListener('keydown', event => {
   if (index < 0) return;
   event.preventDefault();
   if (event.repeat || keysDown.has(event.code) || !canPlay()) return;
-  const note = state.octave * 12 + index; keysDown.set(event.code, note); send({ type: 'noteOn', note, velocity: 100, channel: 16 }); highlightKeys();
+  const note = state.octave * 12 + index; keysDown.set(event.code, note); playNote(note, 100, 16); highlightKeys();
 });
 window.addEventListener('keyup', event => {
   if (!keysDown.has(event.code)) return;
-  send({ type: 'noteOff', note: keysDown.get(event.code), channel: 16 }); keysDown.delete(event.code); highlightKeys();
+  releaseNote(keysDown.get(event.code), 16); keysDown.delete(event.code); highlightKeys();
 });
 window.addEventListener('blur', () => { releaseComputer(); releasePointers(); });
 document.addEventListener('visibilitychange', () => {
@@ -281,6 +320,7 @@ window.addEventListener('pagehide', () => { send({ type: 'panic' }); context?.su
 
 function disconnectMidi() {
   if (midiInput) midiInput.onmidimessage = null;
+  for (const [key, pending] of pendingNotes) if (pending.channel < 16) pendingNotes.delete(key);
   for (let channel = 0; channel < 16; channel++) send({ type: 'midi', data: [176 + channel, 123, 0] });
   midiInput = undefined; learning = -1; updateMappings();
 }
@@ -290,8 +330,11 @@ function chooseMidi() {
   if (!midiInput) { byId('midi-status').textContent = 'No MIDI keyboard found. Connect it, then choose it here. Touch and computer keys still work.'; return; }
   midiInput.onmidimessage = event => {
     const data = [...event.data];
-    if (data.length < 3 || !isRunning()) return;
+    if (data.length < 3) return;
     const command = data[0] & 240, channel = data[0] & 15, cc = data[1];
+    if (command === 144 && data[2] > 0) { playNote(cc, data[2], channel); return; }
+    if (command === 128 || command === 144) { releaseNote(cc, channel); return; }
+    if (!isRunning()) return;
     if (command === 176 && ![64,120,121,123].includes(cc)) {
       const mapping = channel * 128 + cc;
       if (learning >= 0) { mappings = mappings.map(value => value === mapping ? -1 : value); mappings[learning] = mapping; learning = -1; updateMappings(); save(); byId('midi-status').textContent = 'Knob assigned. Your mappings stay in this browser.'; }
@@ -299,7 +342,7 @@ function chooseMidi() {
     }
     send({ type: 'midi', data: data.slice(0, 3) });
   };
-  byId('midi-status').textContent = `Connected · ${midiInput.name}. Start audio before playing. Close other apps if the device is unavailable.`;
+  byId('midi-status').textContent = `Connected · ${midiInput.name}. Play your keyboard. If audio is paused, tap the synth once. Close other apps if the device is unavailable.`;
 }
 function refreshMidi() {
   const select = byId('midi-input'), previous = select.value;

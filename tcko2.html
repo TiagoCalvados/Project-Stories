@@ -20,8 +20,7 @@
       <div class="scope" aria-hidden="true"><canvas id="scope" width="500" height="100"></canvas><span>LIVE SIGNAL <i id="signal-light"></i></span></div>
     </header>
     <section class="power-bar" aria-label="Audio and safety controls">
-      <button id="start-audio" class="power-button">▶ Start audio</button>
-      <p id="audio-status" class="status" role="status" aria-live="polite">Start audio, then play. Headphones recommended; begin quietly.</p>
+      <p id="audio-status" class="status" role="status" aria-live="polite">Play a key to begin. Headphones recommended; begin quietly.</p>
       <button id="stop" class="quiet-button" disabled>Stop</button>
       <button id="panic" class="panic-button" title="Clear all notes and effect tails. Shortcut: Escape.">Panic <kbd>Esc</kbd></button>
     </section>
@@ -48,7 +47,7 @@
         <p id="play-hint">Play the keys, or use your computer keyboard.</p>
         <label class="key-count-label" for="key-count">KEYS<select id="key-count"><option value="13">13</option><option value="25" selected>25</option></select></label>
       </div>
-      <div id="keyboard" class="keyboard" aria-label="Piano keys. Start audio before playing."></div>
+      <div id="keyboard" class="keyboard" aria-label="Piano keys. Play a key to begin."></div>
       <div class="keyboard-footer"><span class="desktop-hint">A W S E D F T G Y H U J K O L P ; 1 2 3 4 5 6 7 8 <span>· Z / X octave</span></span><span class="touch-hint">Touch & slide · play several notes together</span><span class="meter" role="meter" aria-label="Output level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="meter-fill"></i></span></div>
     </section>
     <details id="effects-panel" class="panel" open>
@@ -79,7 +78,7 @@
       <summary><span>03 <strong>Connections & field notes</strong></span><span class="summary-note">MIDI / how to play</span></summary>
       <div class="help-content">
         <section><h2>Bring your keyboard</h2><p>Touch and computer keys work without hardware. USB MIDI is optional and depends on browser support. Connect your Akai by USB, switch its internal sounds off, then connect here. Audio comes from this device’s speakers or headphones.</p><div class="midi-controls"><button id="connect-midi">Connect MIDI</button><label for="midi-input" class="sr-only">MIDI input</label><select id="midi-input" disabled><option>No MIDI connected</option></select></div><p id="midi-status" class="muted" role="status">MIDI permission is requested only when you choose Connect MIDI.</p><p class="muted">To assign a knob, press Learn on a sound macro, then turn the physical knob. Sustain pedal and ±2-semitone pitch bend are supported.</p></section>
-        <section><h2>A few starting points</h2><p>Tap Copper Satellites for metal bells. Try Dusty Polaroid for electric piano, or hold Arcade Vapour for an 8-bit arpeggio. The three Drone presets latch notes: tap again to release.</p><p>Sustain holds released notes. Drone toggles each note on or off. Panic clears notes, latches and tails. Slower and Faster change pitch <em>and</em> timing like tape, including echo spacing. Normal restores 1× speed.</p><p>Key clarity keeps upper notes audible with a dark Tone. Heavy glitches and fragments can obscure pitch; turn them off to hear the clean notes. Settings stay in this browser; held notes never restart automatically.</p><p>Desktop has eight voices. The compact mobile layout uses four voices to keep the sound engine lighter. On older devices, use fewer held notes and effects if you hear crackling. Returning from another tab may require Resume audio.</p></section>
+        <section><h2>A few starting points</h2><p>Play a key to start the sound automatically. Tap Copper Satellites for metal bells. Try Dusty Polaroid for electric piano, or hold Arcade Vapour for an 8-bit arpeggio. The three Drone presets latch notes: tap again to release.</p><p>Sustain holds released notes. Drone toggles each note on or off. Panic clears notes, latches and tails. Slower and Faster change pitch <em>and</em> timing like tape, including echo spacing. Normal restores 1× speed.</p><p>Key clarity keeps upper notes audible with a dark Tone. Heavy glitches and fragments can obscure pitch; turn them off to hear the clean notes. Settings stay in this browser; held notes never restart automatically.</p><p>Desktop has eight voices. The compact mobile layout uses four voices to keep the sound engine lighter. On older devices, use fewer held notes and effects if you hear crackling. After returning from another tab, play a key or tap the synth to resume audio. Stop stays muted until you press Resume.</p></section>
       </div>
     </details>
     <footer class="page-footer"><span>TCKO2 SYNTH MODULAR <span>/</span> PROJECT STORIES</span><span>Made to be played. No account. No installation. No microphone.</span></footer>
