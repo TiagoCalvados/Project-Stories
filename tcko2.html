@@ -24,6 +24,22 @@
       <button id="stop" class="quiet-button" disabled>Stop</button>
       <button id="panic" class="panic-button" title="Clear all notes and effect tails. Shortcut: Escape.">Panic <kbd>Esc</kbd></button>
     </section>
+    <section class="recording-panel" aria-label="Record synth takes for TCK03">
+      <div class="recording-toolbar">
+        <span class="section-caption">RECORD / TCK03</span>
+        <button id="record-take" class="record-button" type="button" aria-pressed="false">● Record</button>
+        <button id="stop-recording" type="button" disabled>■ Stop recording</button>
+        <output id="recording-time" aria-label="Recording duration">00:00</output>
+      </div>
+      <p id="recording-status" role="status" aria-live="polite">Record your synth without a microphone. Download each WAV and import it as a separate channel in desktop TCK03.</p>
+      <div id="take-results" class="take-results" hidden>
+        <label for="recorded-takes">TAKES IN THIS TAB<select id="recorded-takes"></select></label>
+        <a id="download-take" class="download-button" download>↓ Download WAV</a>
+        <button id="clear-takes" type="button" disabled>Clear saved takes</button>
+        <audio id="take-preview" controls preload="metadata" aria-label="Preview selected recorded take"></audio>
+        <p class="take-warning">Download before closing or refreshing this tab. Recordings stay on this device and are not uploaded. Switching tabs stops recording.</p>
+      </div>
+    </section>
     <section class="sound-row" aria-label="Choose your sound">
       <label class="preset-label" for="preset">STARTING POINT<select id="preset"></select></label>
       <p id="preset-description" class="sound-description"></p>

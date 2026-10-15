@@ -1,4 +1,5 @@
 import { PATCHES, GLITCH_TYPES, clamp } from './tcko2-engine.js';
+import { TakeRecorder } from './tcko2-recorder.js';
 
 const byId = id => document.getElementById(id);
 const MACROS = [
@@ -38,6 +39,7 @@ const macroElements = [];
 const send = message => synthNode?.port.postMessage(message);
 const announce = message => { byId('audio-status').textContent = message; };
 const isRunning = () => ready && context?.state === 'running' && !stopped;
+const takeRecorder = new TakeRecorder({ startAudio, isRunning, send });
 
 function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, hold: false, drone: false, mappings })); } catch {} }
 function control(name, value) { state[name] = value; send({ type: 'control', name, value }); save(); }
@@ -149,6 +151,7 @@ async function startAudio() {
         synthNode.connect(analyser); analyser.connect(context.destination);
         const engineStarted = new Promise((resolve, reject) => {
           synthNode.port.onmessage = ({ data }) => {
+            if (takeRecorder.handleMessage(data)) return;
             if (data.type !== 'meter') return;
             resolve();
             activeNotes = new Set(data.notes); highlightKeys();
@@ -158,6 +161,7 @@ async function startAudio() {
             if (data.invalidSamples > 0) announce('An unstable signal was cleared. Press Panic before continuing.');
           };
           synthNode.onprocessorerror = () => {
+            takeRecorder.recover('The sound engine stopped.');
             ready = false; pendingNotes.clear();
             const error = new Error('The sound engine stopped. Reload this page to restart it.');
             announce(error.message); reject(error);
@@ -221,6 +225,7 @@ function panic() {
 byId('panic').addEventListener('click', panic);
 byId('stop').addEventListener('click', () => {
   if (stopped) { void startAudio(); return; }
+  void takeRecorder.stop('sound-stopped');
   const next = !stopped; panic(); stopped = next; send({ type: 'stop', value: stopped });
   byId('stop').textContent = stopped ? 'Resume' : 'Stop';
   announce(stopped ? 'Stopped. Press Resume to play again.' : 'Sound resumed.');
@@ -312,11 +317,12 @@ window.addEventListener('keyup', event => {
   releaseNote(keysDown.get(event.code), 16); keysDown.delete(event.code); highlightKeys();
 });
 window.addEventListener('blur', () => { releaseComputer(); releasePointers(); });
-document.addEventListener('visibilitychange', () => {
+document.addEventListener('visibilitychange', async () => {
   if (!document.hidden || !context) return;
-  panic(); context.suspend().catch(() => {});
+  panic(); await takeRecorder.stop('hidden');
+  if (document.hidden) context.suspend().catch(() => {});
 });
-window.addEventListener('pagehide', () => { send({ type: 'panic' }); context?.suspend().catch(() => {}); });
+window.addEventListener('pagehide', () => { void takeRecorder.stop('hidden'); send({ type: 'panic' }); context?.suspend().catch(() => {}); });
 
 function disconnectMidi() {
   if (midiInput) midiInput.onmidimessage = null;
