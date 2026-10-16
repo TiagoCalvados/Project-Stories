@@ -43,6 +43,7 @@
     .main-page-copy {
       position: fixed;
       z-index: 1;
+      pointer-events: none;
       top: clamp(34px, 7vh, 72px);
       left: clamp(22px, 6vw, 88px);
       max-width: min(620px, 78vw);
@@ -80,6 +81,12 @@
       justify-items: center;
       column-gap: 18px;
       row-gap: 10px;
+    }
+
+    @media (min-width: 701px) and (max-height: 600px) {
+      .story-buttons {
+        top: max(190px, calc(48.5vh - 162px));
+      }
     }
 
     .story-button {
