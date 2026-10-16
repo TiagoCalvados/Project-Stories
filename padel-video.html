@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#08080a">
+  <title>Tiago Padel game | Project Stories</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; background: #08080a; color: #fff; }
+    .padel-stage { display: grid; grid-template-rows: minmax(0, 1fr) auto; width: 100%; height: 100vh; height: 100svh; overflow: hidden; }
+    .video-frame { min-width: 0; min-height: 0; }
+    .padel-video { display: block; width: 100%; height: 100%; object-fit: contain; background: #08080a; }
+    .padel-navigation { display: flex; align-items: center; justify-content: flex-end; gap: 16px; padding: 12px max(16px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+    .padel-back { display: inline-flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; min-width: 96px; min-height: 44px; padding: 10px 20px; border: 2px solid #ff5264; border-radius: 6px; color: #fff; background: #b61e32; font: 600 15px/1.2 Arial, Helvetica, sans-serif; text-decoration: none; }
+    .padel-back:hover { background: #c52238; }
+    .padel-back:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+    .phone-hint { display: none; margin: 0 auto 0 0; max-width: 240px; color: #c4c4ca; font: 12px/1.4 Arial, Helvetica, sans-serif; }
+    @media (max-width: 700px) and (orientation: portrait) { .phone-hint { display: block; } }
+  </style>
+</head>
+<body>
+  <main class="padel-stage">
+    <div class="video-frame">
+      <video class="padel-video" aria-label="Tiago Padel game at Padel Next club Amsterdam" controls autoplay playsinline preload="metadata">
+        <source src="Tiago/padel/web/tiago-padel-game-mobile.mp4" type="video/mp4" media="(max-width: 700px), (max-height: 500px)">
+        <source src="Tiago/padel/web/tiago-padel-game-desktop.mp4" type="video/mp4">
+        Your browser does not support HTML video.
+      </video>
+    </div>
+    <nav class="padel-navigation" aria-label="Padel navigation">
+      <p class="phone-hint">Turn your phone sideways for a wider view.</p>
+      <a class="padel-back" href="padel1.html" aria-label="Back to the last Padel picture"><span aria-hidden="true">&larr;</span> Back</a>
+    </nav>
+  </main>
+  <script>
+    const video = document.querySelector(".padel-video");
+    const mobileSource = video.querySelector("source[media]");
+    const desktopSource = video.querySelector("source:not([media])");
+    const compactScreen = window.matchMedia("(max-width: 700px), (max-height: 500px)");
+    // Choose once so resizing or rotating never reloads or interrupts the match.
+    video.src = compactScreen.matches ? mobileSource.src : desktopSource.src;
+    video.load();
+    video.play().catch(() => { /* Native controls remain available if autoplay needs a tap. */ });
+  </script>
+</body>
+</html>

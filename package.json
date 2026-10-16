@@ -8,7 +8,8 @@
     "build:deploy": "node scripts/build.mjs",
     "build:local": "node scripts/build.mjs --allow-local-fallback",
     "blob:operations": "node scripts/report-blob-operations.mjs",
-    "video:build-audiovisual": "node scripts/build-audiovisual-film.mjs"
+    "video:build-audiovisual": "node scripts/build-audiovisual-film.mjs",
+    "video:build-padel": "node scripts/build-padel-video.mjs"
   },
   "dependencies": {
     "@vercel/blob": "2.3.3"
