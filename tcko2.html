@@ -4,59 +4,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#161a1c">
-  <meta name="description" content="Play TCKO2 Synth Modular in your browser. Eleven experimental sounds, glitch, fragments and tape-style pitch. Touch, computer keyboard or optional USB MIDI. No installation.">
+  <meta name="description" content="Play TCKO2 Synth Modular. Vintage-inspired lasers, robot bleeps, waves, chorus and bells, plus glitch, fragments and WAV recording. Touch, computer keyboard or USB MIDI.">
   <title>TCKO2 Synth Modular | Project Stories</title>
   <link rel="stylesheet" href="tcko2.css">
   <script type="module" src="tcko2-app.js"></script>
 </head>
 <body>
   <main class="instrument">
-    <nav class="topline" aria-label="Site navigation">
-      <a href="index.html">← Project Stories</a>
-      <span class="edition">A small laboratory for unstable sound <span>/ browser edition</span></span>
-    </nav>
+    <nav class="topline" aria-label="Site navigation"><a href="index.html">← Project Stories</a><span class="edition">A small laboratory for unstable sound</span></nav>
     <header class="masthead">
-      <div><p class="eyebrow">SOUND IS A PLACE TO GET LOST</p><h1>TCKO2 <span>Synth Modular</span></h1><p class="intro">Warm circuits. Broken signals. Unexpected places.</p></div>
+      <div><h1>TCKO2 <span>Synth Modular</span></h1><p class="intro">Keys first. New places to get lost.</p></div>
       <div class="scope" aria-hidden="true"><canvas id="scope" width="500" height="100"></canvas><span>LIVE SIGNAL <i id="signal-light"></i></span></div>
     </header>
-    <section class="power-bar" aria-label="Audio and safety controls">
-      <p id="audio-status" class="status" role="status" aria-live="polite">Play a key to begin. Headphones recommended; begin quietly.</p>
-      <button id="stop" class="quiet-button" disabled>Stop</button>
-      <button id="panic" class="panic-button" title="Clear all notes and effect tails. Shortcut: Escape.">Panic <kbd>Esc</kbd></button>
-    </section>
-    <section class="recording-panel" aria-label="Record synth takes for TCK03">
-      <div class="recording-toolbar">
-        <span class="section-caption">RECORD / TCK03</span>
-        <button id="record-take" class="record-button" type="button" aria-pressed="false">● Record</button>
-        <button id="stop-recording" type="button" disabled>■ Stop recording</button>
-        <output id="recording-time" aria-label="Recording duration">00:00</output>
-      </div>
-      <p id="recording-status" role="status" aria-live="polite">Record your synth without a microphone. Download each WAV and import it as a separate channel in desktop TCK03.</p>
-      <div id="take-results" class="take-results" hidden>
-        <label for="recorded-takes">TAKES IN THIS TAB<select id="recorded-takes"></select></label>
-        <a id="download-take" class="download-button" download>↓ Download WAV</a>
-        <button id="clear-takes" type="button" disabled>Clear saved takes</button>
-        <audio id="take-preview" controls preload="metadata" aria-label="Preview selected recorded take"></audio>
-        <p class="take-warning">Download before closing or refreshing this tab. Recordings stay on this device and are not uploaded. Switching tabs stops recording.</p>
-      </div>
-    </section>
-    <section class="sound-row" aria-label="Choose your sound">
-      <label class="preset-label" for="preset">STARTING POINT<select id="preset"></select></label>
-      <p id="preset-description" class="sound-description"></p>
-      <label class="master-label" for="master">MASTER <output id="master-value" for="master">20%</output><input id="master" type="range" min="0" max="80" value="20" aria-label="Master volume"></label>
-    </section>
-    <section class="performance" aria-label="Performance controls">
-      <div class="latches">
-        <button id="hold" class="toggle" aria-pressed="false">Sustain</button>
-        <button id="drone" class="toggle" aria-pressed="false">Drone</button>
-        <label class="clarity"><input id="clarity" type="checkbox" checked> Key clarity</label>
-      </div>
-      <div class="transport" aria-label="Tape-style pitch and speed">
-        <span class="section-caption">PITCH / SPEED</span>
-        <div class="transport-buttons"><button id="slower" aria-label="Slower, lower pitch one semitone">− Slower</button><button id="normal">Normal</button><button id="faster" aria-label="Faster, raise pitch one semitone">Faster +</button></div>
-        <output id="pitch-value" aria-live="polite">1.00× / 0 st</output>
-      </div>
-    </section>
     <section class="keyboard-panel" aria-label="Playable synthesizer keyboard">
       <div class="keyboard-toolbar">
         <div class="octave-controls"><button id="octave-down" aria-label="Lower keyboard one octave">−</button><span id="octave-label">C3 — C5</span><button id="octave-up" aria-label="Raise keyboard one octave">+</button></div>
@@ -66,39 +25,35 @@
       <div id="keyboard" class="keyboard" aria-label="Piano keys. Play a key to begin."></div>
       <div class="keyboard-footer"><span class="desktop-hint">A W S E D F T G Y H U J K O L P ; 1 2 3 4 5 6 7 8 <span>· Z / X octave</span></span><span class="touch-hint">Touch & slide · play several notes together</span><span class="meter" role="meter" aria-label="Output level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="meter-fill"></i></span></div>
     </section>
-    <details id="effects-panel" class="panel" open>
-      <summary><span>01 <strong>Signal disruption</strong></span><span class="summary-note">Glitch + Fragments</span></summary>
+    <section class="sound-row" aria-label="Choose your sound">
+      <label class="preset-label" for="preset">SOUND<select id="preset"></select></label><p id="preset-description" class="sound-description"></p>
+      <label class="master-label" for="master">MASTER <output id="master-value" for="master">20%</output><input id="master" type="range" min="0" max="80" value="20" aria-label="Master volume"></label>
+    </section>
+    <section class="performance" aria-label="Performance controls">
+      <div class="latches"><button id="hold" class="toggle" aria-pressed="false">Sustain</button><button id="drone" class="toggle" aria-pressed="false">Drone</button><label class="clarity"><input id="clarity" type="checkbox" checked> Key clarity</label></div>
+      <div class="transport" aria-label="Tape-style pitch and speed"><span class="section-caption">PITCH / SPEED</span><div class="transport-buttons"><button id="slower" aria-label="Slower, lower pitch one semitone">− Slower</button><button id="normal">Normal</button><button id="faster" aria-label="Faster, raise pitch one semitone">Faster +</button></div><output id="pitch-value" aria-live="polite">1.00× / 0 st</output></div>
+    </section>
+    <section id="effects-panel" class="panel live-deck" aria-label="Vintage sounds and effects">
+      <section class="vintage-bank" aria-labelledby="vintage-heading"><div class="bank-heading"><h2 id="vintage-heading">Vintage sound lab</h2><span>Choose a sound, then play the keys · original patches, not hardware emulations</span></div><div id="vintage-sounds" class="vintage-sounds"></div></section>
       <div class="effects-grid">
-        <section class="effect-unit" aria-labelledby="glitch-heading">
-          <div class="unit-heading"><h2 id="glitch-heading">Glitch</h2><button id="glitch" class="toggle" aria-pressed="false" aria-label="Enable Glitch">Off</button></div>
-          <label class="small-label" for="glitch-type">TYPE<select id="glitch-type"></select></label>
-          <div class="range-pair"><label for="glitch-amount">Strength <output id="glitch-amount-value">65%</output><input id="glitch-amount" type="range" min="0" max="100" value="65"></label><label for="glitch-volume">Glitch volume <output id="glitch-volume-value">200%</output><input id="glitch-volume" type="range" min="0" max="400" step="5" value="200"></label></div>
-        </section>
-        <section class="effect-unit" aria-labelledby="fragments-heading">
-          <div class="unit-heading"><h2 id="fragments-heading">Fragments</h2><button id="fragments" class="toggle" aria-pressed="false" aria-label="Enable Fragments">Off</button></div>
-          <p class="unit-description">Reversed grains and little pieces of the last half-second. Let a note linger.</p>
-          <label for="fragments-amount">Strength <output id="fragments-amount-value">65%</output><input id="fragments-amount" type="range" min="0" max="100" value="65"></label>
-        </section>
-        <section class="effect-unit space-unit" aria-labelledby="space-heading">
-          <div class="unit-heading"><h2 id="space-heading">Space</h2><span class="mini-mark" aria-hidden="true">↗</span></div>
-          <label for="bloom">Bloom <output id="bloom-value">75%</output><input id="bloom" type="range" min="0" max="100" value="75"></label>
-          <label for="echo">Echo time <output id="echo-value">0.85 s</output><input id="echo" type="range" min="80" max="4000" step="10" value="850"></label>
-        </section>
+        <section class="effect-unit" aria-labelledby="glitch-heading"><div class="unit-heading"><h2 id="glitch-heading">Glitch</h2><button id="glitch" class="toggle" aria-pressed="false" aria-label="Enable Glitch">Off</button></div><label class="small-label" for="glitch-type">TYPE<select id="glitch-type"></select></label><div class="range-pair"><label for="glitch-amount">Strength <output id="glitch-amount-value">65%</output><input id="glitch-amount" type="range" min="0" max="100" value="65"></label><label for="glitch-volume">Volume <output id="glitch-volume-value">200%</output><input id="glitch-volume" type="range" min="0" max="400" step="5" value="200"></label></div></section>
+        <section class="effect-unit" aria-labelledby="fragments-heading"><div class="unit-heading"><h2 id="fragments-heading">Fragments</h2><button id="fragments" class="toggle" aria-pressed="false" aria-label="Enable Fragments">Off</button></div><p class="unit-description">Reversed grains and scattered pieces.</p><label for="fragments-amount">Strength <output id="fragments-amount-value">65%</output><input id="fragments-amount" type="range" min="0" max="100" value="65"></label></section>
+        <section class="effect-unit space-unit" aria-labelledby="space-heading"><div class="unit-heading"><h2 id="space-heading">Space</h2><span class="mini-mark" aria-hidden="true">↗</span></div><label for="bloom">Bloom <output id="bloom-value">75%</output><input id="bloom" type="range" min="0" max="100" value="75"></label><label for="echo">Echo time <output id="echo-value">0.85 s</output><input id="echo" type="range" min="80" max="4000" step="10" value="850"></label></section>
+        <section class="effect-unit fade-unit" aria-labelledby="fade-heading"><div class="unit-heading"><h2 id="fade-heading">Fade</h2></div><div class="fade-controls"><button id="fade" type="button">Fade out</button><label for="fade-time" class="sr-only">Fade duration</label><select id="fade-time" aria-label="Fade duration"><option value="1">1 sec</option><option value="3" selected>3 sec</option><option value="8">8 sec</option></select></div><p class="unit-description">Notes + echoes fade to silence. A new key brings sound back.</p></section>
       </div>
-    </details>
-    <details id="macros-panel" class="panel" open>
-      <summary><span>02 <strong>Shape the circuit</strong></span><span class="summary-note">Eight sound macros</span></summary>
-      <div id="macros" class="macro-grid"></div>
-    </details>
-    <details class="panel help-panel">
-      <summary><span>03 <strong>Connections & field notes</strong></span><span class="summary-note">MIDI / how to play</span></summary>
-      <div class="help-content">
-        <section><h2>Bring your keyboard</h2><p>Touch and computer keys work without hardware. USB MIDI is optional and depends on browser support. Connect your Akai by USB, switch its internal sounds off, then connect here. Audio comes from this device’s speakers or headphones.</p><div class="midi-controls"><button id="connect-midi">Connect MIDI</button><label for="midi-input" class="sr-only">MIDI input</label><select id="midi-input" disabled><option>No MIDI connected</option></select></div><p id="midi-status" class="muted" role="status">MIDI permission is requested only when you choose Connect MIDI.</p><p class="muted">To assign a knob, press Learn on a sound macro, then turn the physical knob. Sustain pedal and ±2-semitone pitch bend are supported.</p></section>
-        <section><h2>A few starting points</h2><p>Play a key to start the sound automatically. Tap Copper Satellites for metal bells. Try Dusty Polaroid for electric piano, or hold Arcade Vapour for an 8-bit arpeggio. The three Drone presets latch notes: tap again to release.</p><p>Sustain holds released notes. Drone toggles each note on or off. Panic clears notes, latches and tails. Slower and Faster change pitch <em>and</em> timing like tape, including echo spacing. Normal restores 1× speed.</p><p>Key clarity keeps upper notes audible with a dark Tone. Heavy glitches and fragments can obscure pitch; turn them off to hear the clean notes. Settings stay in this browser; held notes never restart automatically.</p><p>Desktop has eight voices. The compact mobile layout uses four voices to keep the sound engine lighter. On older devices, use fewer held notes and effects if you hear crackling. After returning from another tab, play a key or tap the synth to resume audio. Stop stays muted until you press Resume.</p></section>
-      </div>
-    </details>
-    <footer class="page-footer"><span>TCKO2 SYNTH MODULAR <span>/</span> PROJECT STORIES</span><span>Made to be played. No account. No installation. No microphone.</span></footer>
-    <noscript>This instrument needs JavaScript and a browser with Web Audio. Nothing is installed on your device.</noscript>
+    </section>
+    <section class="power-bar" aria-label="Audio and safety controls"><p id="audio-status" class="status" role="status" aria-live="polite">Play a key to begin. Headphones recommended; begin quietly.</p><button id="stop" class="quiet-button" disabled>Stop</button><button id="panic" class="panic-button" title="Clear all notes and effect tails. Shortcut: Escape.">Panic <kbd>Esc</kbd></button></section>
+    <section class="recording-panel" aria-label="Record synth takes for TCK03">
+      <div class="recording-toolbar"><span class="section-caption">RECORD / TCK03</span><button id="record-take" class="record-button" type="button" aria-pressed="false">● Record</button><button id="stop-recording" type="button" disabled>■ Stop recording</button><output id="recording-time" aria-label="Recording duration">00:00</output></div>
+      <p id="recording-status" role="status" aria-live="polite">Record your synth without a microphone. Download each WAV and import it as a separate channel in desktop TCK03.</p>
+      <div id="take-results" class="take-results" hidden><label for="recorded-takes">TAKES IN THIS TAB<select id="recorded-takes"></select></label><a id="download-take" class="download-button" download>↓ Download WAV</a><button id="clear-takes" type="button" disabled>Clear saved takes</button><audio id="take-preview" controls preload="metadata" aria-label="Preview selected recorded take"></audio><p class="take-warning">Download before closing or refreshing this tab. Recordings stay on this device and are not uploaded. Switching tabs stops recording.</p></div>
+    </section>
+    <details class="panel help-panel"><summary><span><strong>Connections & field notes</strong></span><span class="summary-note">MIDI / how to play</span></summary><div class="help-content">
+      <section><h2>Bring your keyboard</h2><p>Touch and computer keys work without hardware. USB MIDI is optional and depends on browser support. Connect your Akai by USB, switch its internal sounds off, then connect here. Audio comes from this device’s speakers or headphones.</p><div class="midi-controls"><button id="connect-midi">Connect MIDI</button><label for="midi-input" class="sr-only">MIDI input</label><select id="midi-input" disabled><option>No MIDI connected</option></select></div><p id="midi-status" class="muted" role="status">MIDI permission is requested only when you choose Connect MIDI.</p><p class="muted">Previously assigned MIDI knobs still work. The eight macro panels and Learn buttons have been removed from the interface.</p></section>
+      <section><h2>Play, shape, record</h2><p>Play any key to start audio. Vintage sound lab selects a new keyboard sound; these are original, vintage-inspired patches, not samples or exact branded reproductions. The eleven original sounds remain in the Sound menu. Tap Laser Zap and Crystal FM; hold a key for wind, waves, chorus and Cinema Convergence.</p><p>Sustain holds released notes. Drone toggles each note. Fade out silences the whole synth, including echoes and held notes, over the selected duration. A new note cancels the fade. Fade does not stop recording. Panic clears notes and tails immediately.</p><p>Slower and Faster change pitch and timing together like tape. Record, stop recording, then download WAV for TCK03. Nothing is uploaded; download takes before leaving. Mobile uses four voices; desktop uses eight.</p></section>
+    </div></details>
+    <footer class="page-footer"><span>TCKO2 SYNTH MODULAR <span>/</span> PROJECT STORIES</span><span>No account. No installation. No microphone.</span></footer>
+    <noscript>This instrument needs JavaScript and a browser with Web Audio.</noscript>
   </main>
 </body>
 </html>

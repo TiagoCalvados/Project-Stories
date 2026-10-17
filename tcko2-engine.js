@@ -10,11 +10,20 @@ export const PATCHES = [
   { name: 'Broken Transistor Organ', description: 'Immediate, steady drawbar harmonics and a tiny key click.', model: 8, values: [.88,.04,.04,.12,.05,.13,0,.02], attack: .002, release: .1, decay: .1, sustain: 1, envTone: 0 },
   { name: 'Soot Ribbon Lead', description: 'A nasal, biting lead with a narrow pulse and fast filter bite.', model: 9, values: [.73,.48,.16,.62,.22,.1,.04,.15], attack: .006, release: .28, decay: .23, sustain: .65, envTone: 1.8 },
   { name: 'Arcade Vapour', description: 'An 8-bit root / octave / fifth arpeggio. Motion changes its rate.', model: 10, values: [.89,.04,.02,.08,.16,.08,0,.62], attack: .002, release: .2, decay: .16, sustain: .5, envTone: 0 },
+  { name: 'Laser Zap', description: 'A fast descending space-laser sweep. Tap different keys for different zaps.', model: 11, values: [.97,.18,0,.08,.18,.09,0,0], attack: .001, release: .28, decay: .12, sustain: 0, envTone: 0, vintage: true, echo: .24 },
+  { name: 'Robot Bleeps', description: 'Stepped, warbling sci-fi chatter. Hold a key for a string of little signals.', model: 12, values: [.95,.05,0,.08,.08,.06,0,.35], attack: .002, release: .09, decay: .1, sustain: .85, envTone: 0, vintage: true, echo: .19 },
+  { name: 'Solar Wind', description: 'Airy filtered noise with a slow gust and a faint pitched whistle.', model: 13, values: [.62,.3,0,0,.08,.45,0,.15], attack: .9, release: 3, decay: 2, sustain: .9, envTone: 0, vintage: true, echo: 1.1 },
+  { name: 'Ocean Swell', description: 'Dark, rolling surf. Hold a key to hear the waves break and retreat.', model: 14, values: [.48,.16,0,0,.04,.26,0,.05], attack: .5, release: 3.5, decay: 1.5, sustain: .95, envTone: 0, vintage: true, echo: .72 },
+  { name: 'Acid Machine', description: 'A sharp resonant bass pluck with a wet, rubbery filter sweep.', model: 18, values: [.2,.94,0,.38,.06,.03,0,.02], attack: .002, release: .15, decay: .095, sustain: .06, envTone: 18, vintage: true, echo: .3 },
+  { name: 'Stereo Skyline', description: 'A bright pulse-and-saw pad with a moving, wide stereo chorus.', model: 15, values: [.8,.08,.22,.05,.08,.35,0,.12], attack: .18, release: 2.5, decay: 1, sustain: .9, envTone: .1, vintage: true, echo: .65 },
+  { name: 'Crystal FM', description: 'Clean, glassy FM chimes with a sparkling metallic strike.', model: 16, values: [.98,.02,0,0,.16,.3,0,0], attack: .001, release: 2.1, decay: .7, sustain: .005, envTone: 0, vintage: true, echo: .42 },
+  { name: 'Cinema Convergence', description: 'Detuned oscillators slowly converge into a wide, low sci-fi chord. Hold a key.', model: 17, values: [.8,.12,.08,.08,.15,.5,0,.05], attack: 2, release: 5, decay: 2, sustain: 1, envTone: .2, vintage: true, echo: 1.3 },
 ];
 
 export const GLITCH_TYPES = ['Stutter buffers', 'Static bursts', 'Error signals', 'Bitcrush sweep', 'Broken radio', 'VHS dropout', 'Data modem'];
 export const clamp = (value, minimum, maximum) => Number.isFinite(value) ? Math.max(minimum, Math.min(maximum, value)) : minimum;
 const TAU = Math.PI * 2;
+const ROBOT_RATIOS = [1,2,1.5,.75,2.5,1.25,3,.5];
 const advance = (phase, step) => { const value = phase + step; return value >= 1 ? value - 1 : value; };
 const saturate = value => value > 3 ? 1 : value < -3 ? -1 : value * (27 + value * value) / (27 + 9 * value * value);
 const frequencyOf = note => 440 * 2 ** ((note - 69) / 12);
@@ -219,6 +228,7 @@ export class SynthEngine {
   noteOn(note, velocity = 100, channel = 16) {
     if (!Number.isInteger(note) || note < 0 || note > 127 || !Number.isInteger(channel) || channel < 0 || channel > 17 || this.stopped) return;
     if (velocity <= 0) { this.noteOff(note, channel); return; }
+    if (this.fadeFrames > 0 || this.fadeGain < 1) { this.fadeFrames = 0; this.fadeStep = 0; }
     let chosen = this.voices.find(voice => voice.active && voice.note === note && voice.channel === channel);
     if (this.drone && chosen?.latched) { chosen.latched = chosen.down = chosen.held = false; chosen.stage = 2; return; }
     if (!chosen) chosen = this.voices.find(voice => !voice.active);
@@ -245,6 +255,7 @@ export class SynthEngine {
     else if (command === 176 && note === 121) { this.pedals[channel] = 0; this.bends[channel] = 0; this.releaseUnheld(); }
   }
   panic() {
+    this.fadeGain = 1; this.fadeFrames = this.fadeStep = 0;
     this.hold = this.drone = this.glitch = this.fragments = false;
     this.glitchSmooth = this.fragmentsSmooth = 0; this.glitchVolumeSmooth = this.glitchVolume;
     this.claritySmooth = this.clarity ? 1 : 0; this.noteFrequency = this.noteFrequencySmooth = 220;
@@ -255,6 +266,17 @@ export class SynthEngine {
     this.slices.clear();
     this.delayPosition = this.chorusPosition = this.echoDampLeft = this.echoDampRight = this.dcLeft = this.dcRight = this.lastLeft = this.lastRight = this.outputLeft = this.outputRight = this.previousLeft = this.previousRight = this.nextLeft = this.nextRight = this.transportPhase = 0;
     this.transportSpeed = 2 ** (this.pitch / 12); this.transportPrimed = false; this.peak = 0;
+  }
+  fadeOut(seconds = 3) {
+    this.fadeFrames = Math.max(1, Math.round(clamp(seconds, 1, 12) * this.rate));
+    this.fadeStep = this.fadeGain / this.fadeFrames;
+  }
+  fadeSample() {
+    if (this.fadeFrames > 0) {
+      this.fadeGain = Math.max(0, this.fadeGain - this.fadeStep);
+      if (--this.fadeFrames === 0) { this.panic(); this.fadeGain = 0; }
+    } else if (this.fadeGain < 1 && this.voices.some(voice => voice.active)) { this.fadeGain += (1 - this.fadeGain) * .002; if (this.fadeGain > .99999) this.fadeGain = 1; }
+    return this.fadeGain;
   }
   source(voice, frequency, firstStep, secondStep, wave) {
     const model = this.patch.model, rate = this.rate;
@@ -268,6 +290,30 @@ export class SynthEngine {
     voice.noiseLow += .035 * (noise - voice.noiseLow);
     const strike = voice.filterEnv, modulator = Math.sin(voice.modPhase * TAU), extra = Math.sin(voice.extraPhase * TAU), limit = Math.min(1, 3000 / frequency);
     switch (model) {
+      case 18: return .5 * saw(voice.phase1, firstStep) + .38 * Math.sin(subPhase) + .2 * pulse(voice.phase2, secondStep, .48);
+      case 11: {
+        const sweep = 1 + 9 * Math.exp(-voice.seconds * 18);
+        voice.chipPhase = advance(voice.chipPhase, Math.min(.42, frequency * sweep / rate));
+        return .9 * Math.sin(voice.chipPhase * TAU) * Math.exp(-voice.seconds * 9);
+      }
+      case 12: {
+        const position = Math.floor(voice.seconds * 9) % 8;
+        const step = Math.min(.42, frequency * ROBOT_RATIOS[position] * (1 + .07 * Math.sin(voice.seconds * 47)) / rate);
+        voice.chipPhase = advance(voice.chipPhase, step);
+        return .8 * Math.sin(voice.chipPhase * TAU) * Math.min(1, (voice.seconds * 9 % 1) * 20) * (.55 + .45 * Math.cos(voice.seconds * TAU * 9) ** 2);
+      }
+      case 13: return 1.8 * (noise - voice.noiseLow) * (.5 + .35 * Math.sin(voice.seconds * 1.7)) + .12 * Math.sin(phase + 3 * modulator);
+      case 14: {
+        const swell = (.5 - .5 * Math.cos(voice.seconds * 1.3)) ** 2;
+        return 3 * (voice.noiseLow + .18 * noise) * (.12 + .88 * swell);
+      }
+      case 15: return .5 * pulse(voice.phase1, firstStep, .4 + .07 * wave) + .4 * saw(voice.phase2, secondStep) + .1 * Math.sin(subPhase);
+      case 16: return .8 * Math.sin(phase + limit * 6 * Math.exp(-voice.seconds * 5) * Math.sin(phase * 3)) + .12 * partial(phase, 4, frequency, rate) * strike;
+      case 17: {
+        const convergence = Math.exp(-voice.seconds * .65), step = Math.min(.42, frequency * 2 ** ((-19 * convergence) / 12) / rate);
+        voice.chipPhase = advance(voice.chipPhase, step);
+        return .42 * saw(voice.chipPhase, step) + .3 * Math.sin(otherPhase + 4 * convergence * modulator) + .28 * Math.sin(subPhase);
+      }
       case 1: return .7 * pulse(voice.phase1, firstStep, .2) + .18 * saw(voice.phase2, secondStep) + .14 * Math.sin(subPhase);
       case 2: return 1.12 * (.78 * Math.sin(phase + limit * (.08 + 2.8 * strike * voice.velocity) * modulator) + .13 * partial(phase, 2, frequency, rate) * strike + .025 * noise * strike ** 8);
       case 3: return 1.08 * (.65 * Math.sin(phase + limit * 3.1 * strike * modulator) + .25 * extra * strike + .08 * partial(phase, 2, frequency, rate));
@@ -339,7 +385,7 @@ export class SynthEngine {
     this.chorusLeft[this.chorusPosition] = left; this.chorusRight[this.chorusPosition] = right;
     const cloudLeft = readRing(this.chorusLeft, this.chorusPosition - rate * (.014 + .004 * slowWave)), cloudRight = readRing(this.chorusRight, this.chorusPosition - rate * (.022 + .005 * Math.cos(this.slowLfo)));
     this.chorusPosition = (this.chorusPosition + 1) % this.chorusLeft.length;
-    const cloudMix = spaceBloom * .38; left = (left + cloudLeft * cloudMix) / (1 + cloudMix * .55); right = (right + cloudRight * cloudMix) / (1 + cloudMix * .55);
+    const cloudMix = patch.model === 15 ? .72 : spaceBloom * .38; left = (left + cloudLeft * cloudMix) / (1 + cloudMix * .55); right = (right + cloudRight * cloudMix) / (1 + cloudMix * .55);
     this.glitchSmooth += .0018 * ((this.glitch ? this.glitchAmount : 0) - this.glitchSmooth); this.fragmentsSmooth += .0018 * ((this.fragments ? this.fragmentsAmount : 0) - this.fragmentsSmooth); this.glitchVolumeSmooth += .0018 * (this.glitchVolume - this.glitchVolumeSmooth);
     this.slices.process(left, right, this.glitchSmooth, this.fragmentsSmooth, this.glitchType, this.glitchVolumeSmooth, 220 + (this.noteFrequencySmooth - 220) * this.claritySmooth);
     left = this.slices.outputLeft; right = this.slices.outputRight;
@@ -363,6 +409,7 @@ export class SynthEngine {
     for (let index = 0; index < left.length; index++) {
       this.transportSpeed += .0015 * (speed - this.transportSpeed);
       left[index] = this.previousLeft + (this.nextLeft - this.previousLeft) * this.transportPhase; right[index] = this.previousRight + (this.nextRight - this.previousRight) * this.transportPhase;
+      const fade = this.fadeSample(); left[index] *= fade; right[index] *= fade;
       peak = Math.max(peak, Math.abs(left[index]), Math.abs(right[index])); this.transportPhase += this.transportSpeed;
       while (this.transportPhase >= 1) { this.transportPhase -= 1; this.previousLeft = this.nextLeft; this.previousRight = this.nextRight; this.tick(); this.nextLeft = this.outputLeft; this.nextRight = this.outputRight; }
     }

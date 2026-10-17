@@ -2,10 +2,6 @@ import { PATCHES, GLITCH_TYPES, clamp } from './tcko2-engine.js';
 import { TakeRecorder } from './tcko2-recorder.js';
 
 const byId = id => document.getElementById(id);
-const MACROS = [
-  ['Tone','dark → open'], ['Squelch','filter resonance'], ['Drift','detune + wander'], ['Grit','soft saturation'],
-  ['Tape echo','long repeats'], ['Room','larger reverb'], ['Metal','ring modulation'], ['Motion','slow → restless'],
-];
 const KEY_CODES = ['KeyA','KeyW','KeyS','KeyE','KeyD','KeyF','KeyT','KeyG','KeyY','KeyH','KeyU','KeyJ','KeyK','KeyO','KeyL','KeyP','Semicolon','Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8'];
 const KEY_LABELS = ['A','W','S','E','D','F','T','G','Y','H','U','J','K','O','L','P',';','1','2','3','4','5','6','7','8'];
 const CONTROL_RANGES = {
@@ -32,10 +28,10 @@ try {
   }
 } catch {}
 
-let context, synthNode, analyser, starting, stopped = false, ready = false, learning = -1, midiAccess, midiInput;
+let context, synthNode, analyser, starting, stopped = false, ready = false, midiAccess, midiInput;
 let keysDown = new Map(), pointers = new Map(), activeNotes = new Set();
 const pendingNotes = new Map();
-const macroElements = [];
+let fading = false, fadeAcknowledged = false;
 const send = message => synthNode?.port.postMessage(message);
 const announce = message => { byId('audio-status').textContent = message; };
 const isRunning = () => ready && context?.state === 'running' && !stopped;
@@ -51,38 +47,20 @@ function syncEngine() {
 
 PATCHES.forEach((patch, index) => byId('preset').add(new Option(`${String(index + 1).padStart(2, '0')}  ${patch.name}`, index)));
 GLITCH_TYPES.forEach((name, index) => byId('glitch-type').add(new Option(name, index)));
-if (compactScreen) { byId('effects-panel').open = false; byId('macros-panel').open = false; }
-
-MACROS.forEach(([title, hint], index) => {
-  const card = document.createElement('div');
-  card.className = 'macro';
-  card.innerHTML = `<div class="macro-heading"><label for="macro-${index}">${title}</label><button class="learn" type="button" aria-pressed="false" aria-label="Learn a MIDI knob for ${title}">LEARN</button></div><div class="macro-value"><span class="dial" aria-hidden="true"></span><div><output for="macro-${index}">00</output><p class="macro-hint">${hint}</p></div></div><input id="macro-${index}" aria-label="${title}" type="range" min="0" max="100" value="0"><p class="mapping">No MIDI knob assigned</p>`;
-  const slider = card.querySelector('input'), learn = card.querySelector('button');
-  slider.addEventListener('input', () => setMacro(index, Number(slider.value) / 100));
-  learn.addEventListener('click', () => {
-    if (!midiInput) { byId('midi-status').textContent = 'Choose Connect MIDI first, then assign a knob.'; document.querySelector('.help-panel').open = true; byId('connect-midi').focus(); return; }
-    learning = learning === index ? -1 : index;
-    updateMappings();
-    byId('midi-status').textContent = learning < 0 ? 'Knob learning cancelled.' : `Turn the MIDI knob for ${title}. Press Learn again or Escape to cancel.`;
-  });
-  macroElements.push({ card, slider, learn, output: card.querySelector('output'), dial: card.querySelector('.dial'), mapping: card.querySelector('.mapping') });
-  byId('macros').append(card);
+const vintageButtons = new Map();
+PATCHES.forEach((patch, index) => {
+  if (!patch.vintage) return;
+  const button = document.createElement('button');
+  button.type = 'button'; button.textContent = patch.name; button.className = 'vintage-sound';
+  button.title = patch.description; button.setAttribute('aria-pressed', 'false');
+  button.addEventListener('click', () => choosePreset(index));
+  vintageButtons.set(index, button); byId('vintage-sounds').append(button);
 });
 
 function setMacro(index, value) {
   state.macros[index] = clamp(value, 0, 1);
   send({ type: 'macro', index, value: state.macros[index] });
-  renderMacro(index); save();
-}
-function renderMacro(index) {
-  const value = Math.round(state.macros[index] * 100), elements = macroElements[index];
-  elements.slider.value = value; elements.output.textContent = String(value).padStart(2, '0'); elements.dial.style.setProperty('--rotation', `${-135 + value * 2.7}deg`);
-}
-function updateMappings() {
-  macroElements.forEach((elements, index) => {
-    elements.learn.setAttribute('aria-pressed', String(index === learning)); elements.learn.textContent = index === learning ? 'TURN KNOB' : 'LEARN';
-    elements.mapping.textContent = mappings[index] < 0 ? 'No MIDI knob assigned' : `CC ${mappings[index] % 128} · channel ${Math.floor(mappings[index] / 128) + 1}`;
-  });
+  save();
 }
 const rangeBindings = [
   ['master','master',100, value => `${Math.round(value * 100)}%`],
@@ -97,7 +75,7 @@ for (const [id, name, scale, format] of rangeBindings) {
 }
 function renderControls() {
   byId('preset').value = state.preset; byId('preset-description').textContent = PATCHES[state.preset].description;
-  state.macros.forEach((value, index) => renderMacro(index));
+  vintageButtons.forEach((button, index) => button.setAttribute('aria-pressed', String(state.preset === index)));
   for (const [id, name, scale, format] of rangeBindings) { byId(id).value = Math.round(state[name] * scale); byId(`${id}-value`).textContent = format(state[name]); }
   for (const name of ['hold','drone','glitch','fragments']) {
     byId(name).setAttribute('aria-pressed', String(state[name]));
@@ -107,7 +85,6 @@ function renderControls() {
   byId('pitch-value').textContent = `${(2 ** (state.pitch / 12)).toFixed(2)}× / ${state.pitch > 0 ? '+' : ''}${state.pitch} st`;
   byId('slower').disabled = state.pitch <= -12; byId('faster').disabled = state.pitch >= 12;
   byId('key-count').value = state.keys;
-  updateMappings();
 }
 for (const name of ['hold','drone','glitch','fragments']) byId(name).addEventListener('click', () => {
   const enabled = !state[name];
@@ -121,13 +98,21 @@ function changePitch(value) { control('pitch', Math.round(clamp(value, -12, 12))
 byId('slower').addEventListener('click', () => changePitch(state.pitch - 1));
 byId('normal').addEventListener('click', () => changePitch(0));
 byId('faster').addEventListener('click', () => changePitch(state.pitch + 1));
-byId('preset').addEventListener('change', () => {
+function choosePreset(index) {
+  fading = fadeAcknowledged = false; byId('fade').textContent = 'Fade out';
   releaseComputer(); releasePointers();
-  state.preset = Number(byId('preset').value);
+  state.preset = index;
   const patch = PATCHES[state.preset];
   state.macros = [...patch.values]; state.hold = state.glitch = state.fragments = false; state.drone = Boolean(patch.drone);
   state.bloom = patch.drone ? .9 : .75; state.echo = patch.echo || .85;
   activeNotes.clear(); syncEngine(); renderControls(); highlightKeys(); save();
+}
+byId('preset').addEventListener('change', () => choosePreset(Number(byId('preset').value)));
+byId('fade').addEventListener('click', () => {
+  if (!isRunning()) { announce('Play a note first, then use Fade out.'); return; }
+  send({ type: 'fade', seconds: Number(byId('fade-time').value) });
+  fading = true; fadeAcknowledged = false; byId('fade').textContent = 'Fading…';
+  announce('Fading the notes and echoes. Play a new key to cancel the fade.');
 });
 
 async function startAudio() {
@@ -155,6 +140,15 @@ async function startAudio() {
             if (data.type !== 'meter') return;
             resolve();
             activeNotes = new Set(data.notes); highlightKeys();
+            if (fading && data.fading) fadeAcknowledged = true;
+            if (fading && fadeAcknowledged && !data.fading) {
+              fading = false; byId('fade').textContent = 'Fade out';
+              if (data.faded) {
+                state.hold = state.drone = state.glitch = state.fragments = false;
+                keysDown.clear(); pointers.clear(); pendingNotes.clear(); renderControls(); save();
+                announce('Fade complete. Play a new key to return. Recording continues until you stop it.');
+              }
+            }
             const level = Math.min(100, Math.round(data.peak * 160));
             byId('meter-fill').style.width = `${level}%`; document.querySelector('.meter').setAttribute('aria-valuenow', String(level));
             byId('signal-light').classList.toggle('active', level > 0);
@@ -192,6 +186,7 @@ function wakeAudio() { if (!stopped && !isRunning()) void startAudio(); }
 for (const eventName of ['pointerdown', 'pointerup', 'click', 'keydown']) document.addEventListener(eventName, wakeAudio, { capture: true });
 function playNote(note, velocity, channel) {
   if (!canPlay()) return;
+  if (fading) { fading = fadeAcknowledged = false; byId('fade').textContent = 'Fade out'; }
   const key = `${channel}:${note}`;
   if (isRunning()) { pendingNotes.delete(key); send({ type: 'noteOn', note, velocity, channel }); return; }
   const pending = { channel, released: false };
@@ -217,7 +212,7 @@ function releaseChannel(channel) {
   send({ type: 'release', channel });
 }
 function panic() {
-  pendingNotes.clear(); keysDown.clear(); pointers.clear(); activeNotes.clear(); learning = -1;
+  pendingNotes.clear(); keysDown.clear(); pointers.clear(); activeNotes.clear(); fading = false; byId('fade').textContent = 'Fade out';
   state.hold = state.drone = state.glitch = state.fragments = false;
   send({ type: 'panic' }); renderControls(); highlightKeys(); save();
   announce('Panic: notes, latches and effect tails cleared.');
@@ -328,7 +323,7 @@ function disconnectMidi() {
   if (midiInput) midiInput.onmidimessage = null;
   for (const [key, pending] of pendingNotes) if (pending.channel < 16) pendingNotes.delete(key);
   for (let channel = 0; channel < 16; channel++) send({ type: 'midi', data: [176 + channel, 123, 0] });
-  midiInput = undefined; learning = -1; updateMappings();
+  midiInput = undefined;
 }
 function chooseMidi() {
   disconnectMidi();
@@ -343,7 +338,6 @@ function chooseMidi() {
     if (!isRunning()) return;
     if (command === 176 && ![64,120,121,123].includes(cc)) {
       const mapping = channel * 128 + cc;
-      if (learning >= 0) { mappings = mappings.map(value => value === mapping ? -1 : value); mappings[learning] = mapping; learning = -1; updateMappings(); save(); byId('midi-status').textContent = 'Knob assigned. Your mappings stay in this browser.'; }
       mappings.forEach((value, index) => { if (value === mapping) setMacro(index, data[2] / 127); });
     }
     send({ type: 'midi', data: data.slice(0, 3) });

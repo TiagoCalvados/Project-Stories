@@ -19,6 +19,7 @@ class TCKO2Processor extends AudioWorkletProcessor {
         case 'macro': this.synth.set(data.index, data.value); break;
         case 'control': this.synth.control(data.name, data.value); break;
         case 'panic': this.synth.panic(); break;
+        case 'fade': this.synth.fadeOut(data.seconds); break;
         case 'stop': if (data.value) this.synth.panic(); this.synth.stopped = Boolean(data.value); break;
       }
     };
@@ -28,7 +29,7 @@ class TCKO2Processor extends AudioWorkletProcessor {
     if (!output?.[0] || !output[1]) return true;
     this.synth.render(output[0], output[1]);
     this.recorder.append(output[0], output[1]);
-    if (++this.blocks % 24 === 0) this.port.postMessage({ type: 'meter', peak: this.synth.peak, notes: this.synth.activeNotes(), invalidSamples: this.synth.invalidSamples });
+    if (++this.blocks % 24 === 0) this.port.postMessage({ type: 'meter', peak: this.synth.peak, notes: this.synth.activeNotes(), invalidSamples: this.synth.invalidSamples, fading: this.synth.fadeFrames > 0, faded: this.synth.fadeGain === 0 });
     return true;
   }
 }
