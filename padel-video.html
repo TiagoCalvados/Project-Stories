@@ -23,8 +23,7 @@
   <main class="padel-stage">
     <div class="video-frame">
       <video class="padel-video" aria-label="Tiago Padel game at Padel Next club Amsterdam" controls autoplay playsinline preload="metadata">
-        <source src="Tiago/padel/web/tiago-padel-game-mobile.mp4" type="video/mp4" media="(max-width: 700px), (max-height: 500px)">
-        <source src="Tiago/padel/web/tiago-padel-game-desktop.mp4" type="video/mp4">
+        <source src="Tiago/padel/web/tiago-padel-game.mp4" type="video/mp4">
         Your browser does not support HTML video.
       </video>
     </div>
@@ -35,12 +34,7 @@
   </main>
   <script>
     const video = document.querySelector(".padel-video");
-    const mobileSource = video.querySelector("source[media]");
-    const desktopSource = video.querySelector("source:not([media])");
-    const compactScreen = window.matchMedia("(max-width: 700px), (max-height: 500px)");
-    // Choose once so resizing or rotating never reloads or interrupts the match.
-    video.src = compactScreen.matches ? mobileSource.src : desktopSource.src;
-    video.load();
+    // Share one export across screen sizes; rotating never reloads the match.
     video.play().catch(() => { /* Native controls remain available if autoplay needs a tap. */ });
   </script>
 </body>
