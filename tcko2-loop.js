@@ -66,7 +66,7 @@ export class AudioLoop {
         if (this.recorded === this.maximumFrames) this.finish();
       }
       this.gain += ((this.playing ? this.volume : 0) - this.gain) * this.smoothing;
-      if (this.gain < .000001 && !this.playing) this.gain = 0;
+      if (this.gain < .000001 && (!this.playing || this.volume === 0)) this.gain = 0;
       if (this.fadeFrames > 0) {
         this.fadeGain = Math.max(0, this.fadeGain - this.fadeStep);
         if (--this.fadeFrames === 0) { this.fadeGain = 0; this.pause(true); }
@@ -80,8 +80,9 @@ export class AudioLoop {
         }
         const edge = Math.min(1, (this.position + 1) / this.edgeFrames, (this.length - this.position) / this.edgeFrames);
         const gain = this.gain * this.fadeGain * edge;
-        left[frame] = mix(liveLeft + this.left[this.position] * gain);
-        right[frame] = mix(liveRight + this.right[this.position] * gain);
+        const loopLeft = this.left[this.position] * gain, loopRight = this.right[this.position] * gain;
+        left[frame] = loopLeft === 0 ? liveLeft : mix(liveLeft + loopLeft);
+        right[frame] = loopRight === 0 ? liveRight : mix(liveRight + loopRight);
         this.position = (this.position + 1) % this.length;
       }
       peak = Math.max(peak, Math.abs(left[frame]), Math.abs(right[frame]));
