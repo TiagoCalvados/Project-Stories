@@ -12,7 +12,7 @@ const STORAGE_KEY = 'project-stories-tcko2-v1';
 const compactScreen = window.matchMedia('(max-width: 700px)').matches;
 const state = {
   preset: 3, macros: [...PATCHES[3].values], octave: 4, keys: compactScreen ? 13 : 25,
-  master: .2, pitch: 0, bloom: .75, echo: .85, glitch: false, fragments: false, hold: false, drone: false, clarity: true,
+  master: .2, pitch: 0, bloom: .75, echo: .85, glitch: false, fragments: false, hold: false, drone: false, clarity: true, flow: true,
   glitchAmount: .65, fragmentsAmount: .65, glitchVolume: 2, glitchType: 0,
 };
 let mappings = Array(8).fill(-1);
@@ -24,7 +24,7 @@ try {
     state.octave = Math.round(clamp(saved.octave ?? 4, 1, 7));
     for (const [name, range] of Object.entries(CONTROL_RANGES)) state[name] = clamp(saved[name] ?? state[name], ...range);
     state.pitch = Math.round(state.pitch); state.glitchType = Math.round(state.glitchType);
-    for (const name of ['glitch','fragments','clarity']) if (typeof saved[name] === 'boolean') state[name] = saved[name];
+    for (const name of ['glitch','fragments','clarity','flow']) if (typeof saved[name] === 'boolean') state[name] = saved[name];
     if (Array.isArray(saved.mappings)) mappings = mappings.map((value, index) => Number.isInteger(saved.mappings[index]) && saved.mappings[index] >= -1 && saved.mappings[index] < 2048 ? saved.mappings[index] : value);
   }
 } catch {}
@@ -44,8 +44,30 @@ function control(name, value) { state[name] = value; send({ type: 'control', nam
 function syncEngine() {
   send({ type: 'preset', index: state.preset });
   state.macros.forEach((value, index) => send({ type: 'macro', index, value }));
-  for (const name of [...Object.keys(CONTROL_RANGES), 'clarity','hold','drone','glitch','fragments']) send({ type: 'control', name, value: state[name] });
+  for (const name of [...Object.keys(CONTROL_RANGES), 'clarity','hold','drone','glitch','fragments','flow']) send({ type: 'control', name, value: state[name] });
 }
+
+let layerSignature = '';
+byId('layer-count').textContent = `1/${compactScreen ? 2 : 4}`;
+function renderLayers(data) {
+  if (data.rejected) { Object.assign(state, data.current); renderControls(); save(); }
+  const signature = JSON.stringify(data.kept);
+  if (signature !== layerSignature) {
+    layerSignature = signature; byId('kept-layers').replaceChildren();
+    for (const layer of data.kept) {
+      const label = [layer.name, layer.glitch, layer.fragments ? 'Fragments' : ''].filter(Boolean).join(' + ');
+      const button = document.createElement('button'); button.type = 'button'; button.className = 'layer-chip';
+      button.textContent = `× ${layer.fragments ? 'Fragments / ' : ''}${layer.glitch || layer.name}`; button.title = `Remove layer: ${label}`; button.setAttribute('aria-label', button.title);
+      button.addEventListener('click', () => send({ type: 'layerRemove', id: layer.id }));
+      byId('kept-layers').append(button);
+    }
+  }
+  byId('layers-clear').disabled = data.kept.length === 0;
+  byId('layer-count').textContent = `${data.kept.length + 1}/${data.maximum}`;
+  byId('layer-status').textContent = data.message || (data.enabled ? 'Notes stay on. Change sound or add an effect to keep a separate layer. Tap a held key again to release it.' : 'Normal key release. Kept notes release naturally; their echoes remain.');
+}
+byId('flow').addEventListener('click', () => { control('flow', !state.flow); renderControls(); });
+byId('layers-clear').addEventListener('click', () => send({ type: 'layersClear' }));
 
 PATCHES.forEach((patch, index) => byId('preset').add(new Option(`${String(index + 1).padStart(2, '0')}  ${patch.name}`, index)));
 GLITCH_TYPES.forEach((name, index) => byId('glitch-type').add(new Option(name, index)));
@@ -76,6 +98,7 @@ for (const [id, name, scale, format] of rangeBindings) {
   byId(id).addEventListener('input', () => { control(name, Number(byId(id).value) / scale); byId(`${id}-value`).textContent = format(state[name]); });
 }
 function renderControls() {
+  byId('flow').setAttribute('aria-pressed', String(state.flow)); byId('flow').textContent = `Keep playing: ${state.flow ? 'On' : 'Off'}`;
   byId('preset').value = state.preset; byId('preset-description').textContent = PATCHES[state.preset].description;
   vintageButtons.forEach((button, index) => button.setAttribute('aria-pressed', String(state.preset === index)));
   for (const [id, name, scale, format] of rangeBindings) { byId(id).value = Math.round(state[name] * scale); byId(`${id}-value`).textContent = format(state[name]); }
@@ -101,12 +124,12 @@ byId('slower').addEventListener('click', () => changePitch(state.pitch - 1));
 byId('normal').addEventListener('click', () => changePitch(0));
 byId('faster').addEventListener('click', () => changePitch(state.pitch + 1));
 function choosePreset(index) {
+  if (index === state.preset) return;
   state.preset = index;
   const patch = PATCHES[state.preset];
   state.macros = patch.values.map((value, macro) => macro === 4 || macro === 5 ? state.macros[macro] : value);
-  send({ type: 'preset', index, preserve: true });
-  state.macros.forEach((value, macro) => send({ type: 'macro', index: macro, value }));
-  if (patch.drone && !state.hold && !state.drone) control('drone', true);
+  send({ type: 'preset', index, preserve: true, macros: state.macros });
+  if (patch.drone && !state.hold && !state.drone && !state.flow) control('drone', true);
   renderControls(); save();
 }
 byId('preset').addEventListener('change', () => choosePreset(Number(byId('preset').value)));
@@ -138,6 +161,7 @@ async function startAudio() {
         synthNode.connect(analyser); analyser.connect(context.destination);
         const engineStarted = new Promise((resolve, reject) => {
           synthNode.port.onmessage = ({ data }) => {
+            if (data.type === 'layers') { renderLayers(data); return; }
             if (loopControls.handleMessage(data)) return;
             if (takeRecorder.handleMessage(data)) return;
             if (data.type !== 'meter') return;
@@ -304,7 +328,7 @@ function releasePointer(event) {
 keyboard.addEventListener('pointerup', releasePointer); keyboard.addEventListener('pointercancel', releasePointer); keyboard.addEventListener('lostpointercapture', releasePointer);
 window.addEventListener('keydown', event => {
   if (event.code === 'Escape') { event.preventDefault(); panic(); return; }
-  if (event.ctrlKey || event.metaKey || event.altKey || event.target.closest('input, select, textarea, [contenteditable="true"]')) return;
+  if (event.ctrlKey || event.metaKey || event.altKey || event.target.closest('textarea, [contenteditable="true"], input:not([type="range"]):not([type="checkbox"])')) return;
   if (event.code === 'KeyZ' || event.code === 'KeyX') { event.preventDefault(); if (!event.repeat) changeOctave(event.code === 'KeyZ' ? -1 : 1); return; }
   const index = KEY_CODES.indexOf(event.code);
   if (index < 0) return;

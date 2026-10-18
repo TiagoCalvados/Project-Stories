@@ -343,6 +343,19 @@ h2 { margin: 0; font-size: 14px; font-weight: 500; }
   .vintage-sound { min-height: 25px; padding-block: 3px; }
 }
 .loop-panel { display: grid; grid-template-columns: minmax(0, 1fr) 160px; gap: 8px 16px; margin-bottom: 12px; padding: 12px; border: 1px solid #716043; border-radius: 9px; background: #22241e; }
+.flow-panel { grid-column: 1 / -1; border: 1px solid var(--line); border-radius: 6px; padding: 7px; margin-bottom: 10px; }
+.flow-toolbar, .kept-layers { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; min-width: 0; }
+.flow-toolbar button { min-height: 30px; padding: 4px 8px; font-size: 11px; }
+.flow-toolbar output { color: var(--dim); font-size: 10px; }
+.flow-toolbar .layer-chip { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--mint); }
+#layers-clear { margin-left: auto; }
+#layer-status { margin: 4px 0 0; color: var(--dim); font-size: 10px; line-height: 1.3; }
+@media (min-width: 701px) {
+  .flow-panel { padding: 4px 6px; margin: 0; }
+  .flow-toolbar button { min-height: 25px; padding: 3px 6px; font-size: 10px; }
+  .flow-toolbar .layer-chip { max-width: 145px; }
+  #layer-status { font-size: 9px; margin-top: 2px; }
+}
 .loop-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
 .loop-toolbar button { padding-inline: 10px; font-size: 12px; }
 .loop-toolbar button[aria-pressed='true'] { border-color: var(--copper); background: #563d2b; }

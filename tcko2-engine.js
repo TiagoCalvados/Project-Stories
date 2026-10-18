@@ -230,6 +230,7 @@ export class SynthEngine {
       case 'echo': this.echo = clamp(value, .08, 4); break;
       case 'glitch': this.glitch = Boolean(value); break;
       case 'fragments': this.fragments = Boolean(value); break;
+      case 'flow': this.flow = Boolean(value); if (!this.flow) { for (const voice of this.voices) voice.flowHeld = false; this.releaseUnheld(); } break;
       case 'glitchAmount': this.glitchAmount = clamp(value, 0, 1); break;
       case 'fragmentsAmount': this.fragmentsAmount = clamp(value, 0, 1); break;
       case 'glitchVolume': this.glitchVolume = clamp(value, 0, 4); break;
@@ -243,20 +244,22 @@ export class SynthEngine {
     if (velocity <= 0) { this.noteOff(note, channel); return; }
     if (this.fadeFrames > 0 || this.fadeGain < 1) { this.fadeFrames = 0; this.fadeStep = 0; }
     let chosen = this.voices.find(voice => voice.active && voice.note === note && voice.channel === channel && voice.patchVersion === this.patchVersion);
+    if (this.flow && chosen?.flowHeld && !chosen.down) { chosen.flowHeld = chosen.held = chosen.latched = false; chosen.stage = 2; return; }
     if (this.drone && chosen?.latched) { chosen.latched = chosen.down = chosen.held = false; chosen.stage = 2; return; }
     if (!chosen) chosen = this.voices.find(voice => !voice.active);
     if (!chosen) chosen = this.voices.reduce((oldest, voice) => voice.age < oldest.age ? voice : oldest);
-    Object.assign(chosen, { note, channel, patchVersion: this.patchVersion, frozen: null, age: ++this.age, active: true, down: true, held: false, latched: this.drone, bloom: 0, stage: 0, env: 0, filterEnv: 1, ic1: 0, ic2: 0, velocity: (clamp(velocity, 1, 127) / 127) ** .65, frequency: frequencyOf(note), drift: this.random.next() * 2 - 1, phase1: this.random.next(), phase2: this.random.next(), phase3: this.random.next(), phase4: this.random.next(), sub: this.random.next(), ring: 0, modPhase: 0, extraPhase: 0, chipPhase: 0, seconds: 0, noiseLow: 0, noiseState: 947 + note * 7919 + channel * 101 });
+    Object.assign(chosen, { note, channel, patchVersion: this.patchVersion, frozen: null, age: ++this.age, active: true, down: true, held: false, flowHeld: false, latched: this.drone, bloom: 0, stage: 0, env: 0, filterEnv: 1, ic1: 0, ic2: 0, velocity: (clamp(velocity, 1, 127) / 127) ** .65, frequency: frequencyOf(note), drift: this.random.next() * 2 - 1, phase1: this.random.next(), phase2: this.random.next(), phase3: this.random.next(), phase4: this.random.next(), sub: this.random.next(), ring: 0, modPhase: 0, extraPhase: 0, chipPhase: 0, seconds: 0, noiseLow: 0, noiseState: 947 + note * 7919 + channel * 101 });
     this.noteFrequency = chosen.frequency;
   }
   noteOff(note, channel = 16) {
     for (const voice of this.voices) if (voice.active && voice.note === note && voice.channel === channel) {
       voice.down = false;
       if (voice.stage === 2 && !voice.latched) continue;
-      if (this.pedals[channel] || this.hold || voice.latched) voice.held = true; else voice.stage = 2;
+      if (this.flow) voice.flowHeld = true;
+      if (this.pedals[channel] || this.hold || voice.latched || voice.flowHeld) voice.held = true; else voice.stage = 2;
     }
   }
-  releaseUnheld() { for (const voice of this.voices) if (voice.active && !voice.down && !voice.latched && !this.hold && !this.pedals[voice.channel]) { voice.held = false; voice.stage = 2; } }
+  releaseUnheld() { for (const voice of this.voices) if (voice.active && !voice.down && !voice.latched && !voice.flowHeld && !this.hold && !this.pedals[voice.channel]) { voice.held = false; voice.stage = 2; } }
   releaseKeys(channel) { for (const voice of this.voices) if (voice.active && voice.channel === channel && voice.down) this.noteOff(voice.note, channel); }
   midi(status, note, value) {
     const channel = status & 15, command = status & 240;
@@ -264,7 +267,7 @@ export class SynthEngine {
     else if (command === 128) this.noteOff(note, channel);
     else if (command === 224) this.bends[channel] = ((note + value * 128) - 8192) / 8192 * 2;
     else if (command === 176 && note === 64) { this.pedals[channel] = value >= 64 ? 1 : 0; this.releaseUnheld(); }
-    else if (command === 176 && (note === 120 || note === 123)) { this.pedals[channel] = 0; for (const voice of this.voices) if (voice.channel === channel) { voice.down = voice.held = voice.latched = false; voice.stage = 2; if (note === 120) voice.active = false; } }
+    else if (command === 176 && (note === 120 || note === 123)) { this.pedals[channel] = 0; for (const voice of this.voices) if (voice.channel === channel) { voice.down = voice.held = voice.latched = voice.flowHeld = false; voice.stage = 2; if (note === 120) voice.active = false; } }
     else if (command === 176 && note === 121) { this.pedals[channel] = 0; this.bends[channel] = 0; this.releaseUnheld(); }
   }
   panic() {
@@ -272,7 +275,7 @@ export class SynthEngine {
     this.hold = this.drone = this.glitch = this.fragments = false;
     this.glitchSmooth = this.fragmentsSmooth = 0; this.glitchVolumeSmooth = this.glitchVolume;
     this.claritySmooth = this.clarity ? 1 : 0; this.noteFrequency = this.noteFrequencySmooth = 220;
-    for (const voice of this.voices) voice.active = voice.down = voice.held = voice.latched = false;
+    for (const voice of this.voices) voice.active = voice.down = voice.held = voice.latched = voice.flowHeld = false;
     this.pedals.fill(0); this.bends.fill(0);
     for (const buffer of [this.delayLeft,this.delayRight,this.chorusLeft,this.chorusRight]) buffer.fill(0);
     for (const comb of [...this.reverbLeft,...this.reverbRight]) comb.clear();
@@ -373,7 +376,7 @@ export class SynthEngine {
       if (voice.stage !== 2) voice.bloom += .0002 * ((expanded ? this.bloomSmooth : 0) - voice.bloom);
       const sustain = voice.latched ? Math.max(.92, patch.sustain) : expanded ? patch.sustain + (1 - patch.sustain) * voice.bloom * .88 : patch.sustain;
       if (voice.stage === 0) { voice.env += tone.attackStep; if (voice.env >= 1) { voice.env = 1; voice.stage = 1; } }
-      else if (voice.stage === 1) voice.env = sustain + (voice.env - sustain) * tone.decayMultiplier;
+      else if (voice.stage === 1) { voice.env = sustain + (voice.env - sustain) * tone.decayMultiplier; if (voice.flowHeld && sustain < .00008 && voice.env < .00008) { voice.active = false; continue; } }
       else { const release = voice.bloom > .01 ? Math.exp(-7 / (rate * Math.max(patch.release, 3 + 11 * voice.bloom))) : tone.releaseMultiplier; voice.env *= release; if (voice.env < .00008) { voice.active = false; continue; } }
       spaceBloom = Math.max(spaceBloom, voice.bloom); voice.filterEnv *= tone.decayMultiplier;
       const drift = tone.detune * (.55 + .3 * voice.drift + .15 * wave), frequency = voice.frequency * 2 ** ((this.bends[voice.channel] + wave * tone.motion * .1) / 12);
