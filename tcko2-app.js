@@ -1,5 +1,6 @@
 import { PATCHES, GLITCH_TYPES, clamp } from './tcko2-engine.js';
 import { TakeRecorder } from './tcko2-recorder.js';
+import { LoopControls } from './tcko2-loop-controls.js';
 
 const byId = id => document.getElementById(id);
 const KEY_CODES = ['KeyA','KeyW','KeyS','KeyE','KeyD','KeyF','KeyT','KeyG','KeyY','KeyH','KeyU','KeyJ','KeyK','KeyO','KeyL','KeyP','Semicolon','Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8'];
@@ -36,6 +37,7 @@ const send = message => synthNode?.port.postMessage(message);
 const announce = message => { byId('audio-status').textContent = message; };
 const isRunning = () => ready && context?.state === 'running' && !stopped;
 const takeRecorder = new TakeRecorder({ startAudio, isRunning, send });
+const loopControls = new LoopControls({ startAudio, isRunning, send });
 
 function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, hold: false, drone: false, mappings })); } catch {} }
 function control(name, value) { state[name] = value; send({ type: 'control', name, value }); save(); }
@@ -99,13 +101,13 @@ byId('slower').addEventListener('click', () => changePitch(state.pitch - 1));
 byId('normal').addEventListener('click', () => changePitch(0));
 byId('faster').addEventListener('click', () => changePitch(state.pitch + 1));
 function choosePreset(index) {
-  fading = fadeAcknowledged = false; byId('fade').textContent = 'Fade out';
-  releaseComputer(); releasePointers();
   state.preset = index;
   const patch = PATCHES[state.preset];
-  state.macros = [...patch.values]; state.hold = state.glitch = state.fragments = false; state.drone = Boolean(patch.drone);
-  state.bloom = patch.drone ? .9 : .75; state.echo = patch.echo || .85;
-  activeNotes.clear(); syncEngine(); renderControls(); highlightKeys(); save();
+  state.macros = patch.values.map((value, macro) => macro === 4 || macro === 5 ? state.macros[macro] : value);
+  send({ type: 'preset', index, preserve: true });
+  state.macros.forEach((value, macro) => send({ type: 'macro', index: macro, value }));
+  if (patch.drone && !state.hold && !state.drone) control('drone', true);
+  renderControls(); save();
 }
 byId('preset').addEventListener('change', () => choosePreset(Number(byId('preset').value)));
 byId('fade').addEventListener('click', () => {
@@ -136,6 +138,7 @@ async function startAudio() {
         synthNode.connect(analyser); analyser.connect(context.destination);
         const engineStarted = new Promise((resolve, reject) => {
           synthNode.port.onmessage = ({ data }) => {
+            if (loopControls.handleMessage(data)) return;
             if (takeRecorder.handleMessage(data)) return;
             if (data.type !== 'meter') return;
             resolve();
@@ -146,7 +149,7 @@ async function startAudio() {
               if (data.faded) {
                 state.hold = state.drone = state.glitch = state.fragments = false;
                 keysDown.clear(); pointers.clear(); pendingNotes.clear(); renderControls(); save();
-                announce('Fade complete. Play a new key to return. Recording continues until you stop it.');
+                announce('Fade complete; loop paused and kept. Play a key to return. Recording continues until you stop it.');
               }
             }
             const level = Math.min(100, Math.round(data.peak * 160));
@@ -156,6 +159,7 @@ async function startAudio() {
           };
           synthNode.onprocessorerror = () => {
             takeRecorder.recover('The sound engine stopped.');
+            loopControls.recover();
             ready = false; pendingNotes.clear();
             const error = new Error('The sound engine stopped. Reload this page to restart it.');
             announce(error.message); reject(error);
@@ -212,10 +216,11 @@ function releaseChannel(channel) {
   send({ type: 'release', channel });
 }
 function panic() {
+  loopControls.cancelPending();
   pendingNotes.clear(); keysDown.clear(); pointers.clear(); activeNotes.clear(); fading = false; byId('fade').textContent = 'Fade out';
   state.hold = state.drone = state.glitch = state.fragments = false;
   send({ type: 'panic' }); renderControls(); highlightKeys(); save();
-  announce('Panic: notes, latches and effect tails cleared.');
+  announce('Panic: live notes and tails cleared; loop paused and kept.');
 }
 byId('panic').addEventListener('click', panic);
 byId('stop').addEventListener('click', () => {

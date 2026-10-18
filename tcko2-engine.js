@@ -186,7 +186,7 @@ export class SynthEngine {
   constructor(rate = 48000, voiceLimit = 8) {
     this.rate = Math.round(clamp(rate, 22050, 192000));
     this.voices = Array.from({ length: Math.round(clamp(voiceLimit, 1, 8)) }, () => ({ active: false }));
-    this.random = new Random(947); this.age = 0;
+    this.random = new Random(947); this.age = this.patchVersion = 0;
     this.pedals = new Uint8Array(18); this.bends = new Float64Array(18);
     this.target = new Float64Array(8); this.smooth = new Float64Array(8);
     this.delayLeft = new Float64Array(this.rate * 5); this.delayRight = new Float64Array(this.rate * 5);
@@ -199,13 +199,26 @@ export class SynthEngine {
     this.stopped = false; this.invalidSamples = 0; this.lfo = this.slowLfo = this.sampleCounter = 0;
     this.setPatch(3);
   }
-  setPatch(index) {
-    this.patchIndex = Math.round(clamp(index, 0, PATCHES.length - 1)); this.patch = PATCHES[this.patchIndex]; this.panic();
+  setPatch(index, preserve = false) {
+    if (preserve) {
+      for (const voice of this.voices) if (voice.active && !voice.frozen) {
+        const cutoffHertz = this.cutoffHertz ?? Math.min(this.rate * .4, 80 * 150 ** this.smooth[0]);
+        voice.frozen = { patch: this.patch, smooth: Float64Array.from(this.smooth), attackStep: this.attackStep, decayMultiplier: this.decayMultiplier, releaseMultiplier: this.releaseMultiplier, driveScale: this.driveScale, cutoffHertz, filter: this.filter ?? Math.tan(Math.PI * cutoffHertz / this.rate), resonance: this.resonance ?? 2 - 1.9 * this.smooth[1], detune: this.detune ?? this.smooth[2] * 28, drive: this.drive ?? 1 + this.smooth[3] * 7, ringRatio: this.ringRatio ?? Math.SQRT2 + this.smooth[6] * 3.72, motion: this.motion ?? this.smooth[7] };
+      }
+    }
+    const echoAmount = this.target[4], space = this.target[5];
+    this.patchVersion++;
+    this.patchIndex = Math.round(clamp(index, 0, PATCHES.length - 1)); this.patch = PATCHES[this.patchIndex];
+    if (!preserve) this.panic();
     this.attackStep = 1 / (this.rate * this.patch.attack); this.decayMultiplier = Math.exp(-1 / (this.rate * this.patch.decay)); this.releaseMultiplier = Math.exp(-7 / (this.rate * this.patch.release));
     this.driveScale = this.patch.model === 0 || this.patch.model === 1 || this.patch.model === 9 ? 1 : this.patch.model === 7 ? .5 : .18;
-    this.drone = Boolean(this.patch.drone); this.bloom = this.bloomSmooth = this.patch.drone ? .9 : .75;
-    this.echo = this.echoSmooth = this.patch.echo || .85;
-    this.target.set(this.patch.values); this.smooth.set(this.target);
+    if (!preserve) {
+      this.drone = Boolean(this.patch.drone); this.bloom = this.bloomSmooth = this.patch.drone ? .9 : .75;
+      this.echo = this.echoSmooth = this.patch.echo || .85;
+    }
+    this.target.set(this.patch.values);
+    if (preserve) { this.target[4] = echoAmount; this.target[5] = space; }
+    this.smooth.set(this.target);
   }
   set(index, value) { if (Number.isInteger(index) && index >= 0 && index < 8) this.target[index] = clamp(value, 0, 1); }
   control(name, value) {
@@ -229,11 +242,11 @@ export class SynthEngine {
     if (!Number.isInteger(note) || note < 0 || note > 127 || !Number.isInteger(channel) || channel < 0 || channel > 17 || this.stopped) return;
     if (velocity <= 0) { this.noteOff(note, channel); return; }
     if (this.fadeFrames > 0 || this.fadeGain < 1) { this.fadeFrames = 0; this.fadeStep = 0; }
-    let chosen = this.voices.find(voice => voice.active && voice.note === note && voice.channel === channel);
+    let chosen = this.voices.find(voice => voice.active && voice.note === note && voice.channel === channel && voice.patchVersion === this.patchVersion);
     if (this.drone && chosen?.latched) { chosen.latched = chosen.down = chosen.held = false; chosen.stage = 2; return; }
     if (!chosen) chosen = this.voices.find(voice => !voice.active);
     if (!chosen) chosen = this.voices.reduce((oldest, voice) => voice.age < oldest.age ? voice : oldest);
-    Object.assign(chosen, { note, channel, age: ++this.age, active: true, down: true, held: false, latched: this.drone, bloom: 0, stage: 0, env: 0, filterEnv: 1, ic1: 0, ic2: 0, velocity: (clamp(velocity, 1, 127) / 127) ** .65, frequency: frequencyOf(note), drift: this.random.next() * 2 - 1, phase1: this.random.next(), phase2: this.random.next(), phase3: this.random.next(), phase4: this.random.next(), sub: this.random.next(), ring: 0, modPhase: 0, extraPhase: 0, chipPhase: 0, seconds: 0, noiseLow: 0, noiseState: 947 + note * 7919 + channel * 101 });
+    Object.assign(chosen, { note, channel, patchVersion: this.patchVersion, frozen: null, age: ++this.age, active: true, down: true, held: false, latched: this.drone, bloom: 0, stage: 0, env: 0, filterEnv: 1, ic1: 0, ic2: 0, velocity: (clamp(velocity, 1, 127) / 127) ** .65, frequency: frequencyOf(note), drift: this.random.next() * 2 - 1, phase1: this.random.next(), phase2: this.random.next(), phase3: this.random.next(), phase4: this.random.next(), sub: this.random.next(), ring: 0, modPhase: 0, extraPhase: 0, chipPhase: 0, seconds: 0, noiseLow: 0, noiseState: 947 + note * 7919 + channel * 101 });
     this.noteFrequency = chosen.frequency;
   }
   noteOff(note, channel = 16) {
@@ -278,8 +291,8 @@ export class SynthEngine {
     } else if (this.fadeGain < 1 && this.voices.some(voice => voice.active)) { this.fadeGain += (1 - this.fadeGain) * .002; if (this.fadeGain > .99999) this.fadeGain = 1; }
     return this.fadeGain;
   }
-  source(voice, frequency, firstStep, secondStep, wave) {
-    const model = this.patch.model, rate = this.rate;
+  source(voice, frequency, firstStep, secondStep, wave, patch = this.patch, motion = this.motion) {
+    const model = patch.model, rate = this.rate;
     const phase = voice.phase1 * TAU, otherPhase = voice.phase2 * TAU, subPhase = voice.sub * TAU;
     const modRatio = model === 3 ? 2.714 : model === 7 ? Math.SQRT2 : model === 6 ? 1.5 : 2;
     const extraRatio = model === 3 ? 4.213 : model === 7 ? 3.731 : 3;
@@ -324,15 +337,15 @@ export class SynthEngine {
       case 8: return 1.2 * (.34 * Math.sin(subPhase) + .26 * partial(phase, 1, frequency, rate) + .2 * partial(phase, 2, frequency, rate) + .12 * partial(phase, 3, frequency, rate) + .05 * partial(phase, 4, frequency, rate) + .03 * partial(phase, 8, frequency, rate)) + .035 * noise * Math.exp(-voice.seconds * 200);
       case 9: return .62 * Math.sin(phase + limit * 2.8 * Math.sin(phase)) + .3 * pulse(voice.phase2, secondStep, .18) + .08 * Math.sin(subPhase);
       case 10: {
-        const position = Math.floor(voice.seconds * (7 + this.motion * 12)) % 4, ratio = position === 0 ? 1 : position === 2 ? 1.5 : 2;
+        const position = Math.floor(voice.seconds * (7 + motion * 12)) % 4, ratio = position === 0 ? 1 : position === 2 ? 1.5 : 2;
         const step = Math.min(.42, frequency * ratio / rate); voice.chipPhase = advance(voice.chipPhase, step);
         return .75 * pulse(voice.chipPhase, step, .125) + .15 * Math.round((1 - 4 * Math.abs(voice.sub - .5)) * 7) / 7;
       }
       default: return .47 * saw(voice.phase1, firstStep) + .43 * saw(voice.phase2, secondStep) + .1 * Math.sin(subPhase);
     }
   }
-  bloomTone(phase, step) {
-    const model = this.patch.model;
+  bloomTone(phase, step, patch = this.patch) {
+    const model = patch.model;
     if (model === 0) return saw(phase, step);
     if (model === 1 || model === 9) return pulse(phase, step, .42);
     if (model === 10) return pulse(phase, step, .125);
@@ -351,31 +364,33 @@ export class SynthEngine {
     this.claritySmooth += .0018 * ((this.clarity ? 1 : 0) - this.claritySmooth); this.noteFrequencySmooth += .0018 * (this.noteFrequency - this.noteFrequencySmooth);
     this.lfo = (this.lfo + TAU * (.12 + this.motion * 1.9) / rate) % TAU; this.slowLfo = (this.slowLfo + TAU * .035 / rate) % TAU;
     const slowWave = Math.sin(this.slowLfo), wave = Math.sin(this.lfo);
-    let left = 0, right = 0, spaceBloom = 0;
+    let left = 0, right = 0, spaceBloom = 0, chorusMode = patch.model === 15;
     for (const voice of this.voices) {
       if (!voice.active) continue;
+      const tone = voice.frozen || this, patch = tone.patch;
+      if (patch.model === 15) chorusMode = true;
       const expanded = voice.latched || this.hold || this.pedals[voice.channel];
       if (voice.stage !== 2) voice.bloom += .0002 * ((expanded ? this.bloomSmooth : 0) - voice.bloom);
       const sustain = voice.latched ? Math.max(.92, patch.sustain) : expanded ? patch.sustain + (1 - patch.sustain) * voice.bloom * .88 : patch.sustain;
-      if (voice.stage === 0) { voice.env += this.attackStep; if (voice.env >= 1) { voice.env = 1; voice.stage = 1; } }
-      else if (voice.stage === 1) voice.env = sustain + (voice.env - sustain) * this.decayMultiplier;
-      else { const release = voice.bloom > .01 ? Math.exp(-7 / (rate * Math.max(patch.release, 3 + 11 * voice.bloom))) : this.releaseMultiplier; voice.env *= release; if (voice.env < .00008) { voice.active = false; continue; } }
-      spaceBloom = Math.max(spaceBloom, voice.bloom); voice.filterEnv *= this.decayMultiplier;
-      const drift = this.detune * (.55 + .3 * voice.drift + .15 * wave), frequency = voice.frequency * 2 ** ((this.bends[voice.channel] + wave * this.motion * .1) / 12);
+      if (voice.stage === 0) { voice.env += tone.attackStep; if (voice.env >= 1) { voice.env = 1; voice.stage = 1; } }
+      else if (voice.stage === 1) voice.env = sustain + (voice.env - sustain) * tone.decayMultiplier;
+      else { const release = voice.bloom > .01 ? Math.exp(-7 / (rate * Math.max(patch.release, 3 + 11 * voice.bloom))) : tone.releaseMultiplier; voice.env *= release; if (voice.env < .00008) { voice.active = false; continue; } }
+      spaceBloom = Math.max(spaceBloom, voice.bloom); voice.filterEnv *= tone.decayMultiplier;
+      const drift = tone.detune * (.55 + .3 * voice.drift + .15 * wave), frequency = voice.frequency * 2 ** ((this.bends[voice.channel] + wave * tone.motion * .1) / 12);
       const firstStep = Math.min(.42, frequency * 2 ** (-drift / 1200) / rate), secondStep = Math.min(.42, frequency * 2 ** (drift / 1200) / rate);
-      let source = this.source(voice, frequency, firstStep, secondStep, wave);
+      let source = this.source(voice, frequency, firstStep, secondStep, wave, patch, tone.motion);
       voice.phase1 = advance(voice.phase1, firstStep); voice.phase2 = advance(voice.phase2, secondStep); voice.sub = advance(voice.sub, Math.min(.42, frequency * .5 / rate));
       if (voice.bloom > .0001) {
-        const spread = 14 + this.detune * .65 + slowWave * 2, thirdStep = Math.min(.42, frequency * 2 ** (-spread / 1200) / rate), fourthStep = Math.min(.42, frequency * 2 ** (spread / 1200) / rate);
-        source = (source + voice.bloom * .24 * (this.bloomTone(voice.phase3, thirdStep) + this.bloomTone(voice.phase4, fourthStep))) / (1 + voice.bloom * .48);
+        const spread = 14 + tone.detune * .65 + slowWave * 2, thirdStep = Math.min(.42, frequency * 2 ** (-spread / 1200) / rate), fourthStep = Math.min(.42, frequency * 2 ** (spread / 1200) / rate);
+        source = (source + voice.bloom * .24 * (this.bloomTone(voice.phase3, thirdStep, patch) + this.bloomTone(voice.phase4, fourthStep, patch))) / (1 + voice.bloom * .48);
         voice.phase3 = advance(voice.phase3, thirdStep); voice.phase4 = advance(voice.phase4, fourthStep);
       }
-      voice.ring = advance(voice.ring, Math.min(.45, frequency * this.ringRatio / rate)); source *= 1 - this.smooth[6] + this.smooth[6] * Math.sin(voice.ring * TAU);
-      const tracked = this.claritySmooth > .00001 && frequency * 1.5 > this.cutoffHertz ? Math.tan(Math.PI * Math.min(rate * .36, frequency * 1.5) / rate) : this.filter;
-      const cutoff = this.filter + Math.max(0, tracked - this.filter) * this.claritySmooth;
-      const filter = Math.min(1.8, cutoff * (1 + patch.envTone * voice.filterEnv) * (1 + wave * this.motion * .32));
-      const first = 1 / (1 + filter * (filter + this.resonance)), second = filter * first, third = filter * second;
-      const input = saturate(source * (1 + (this.drive - 1) * this.driveScale)) * .8, difference = input - voice.ic2;
+      voice.ring = advance(voice.ring, Math.min(.45, frequency * tone.ringRatio / rate)); source *= 1 - tone.smooth[6] + tone.smooth[6] * Math.sin(voice.ring * TAU);
+      const tracked = this.claritySmooth > .00001 && frequency * 1.5 > tone.cutoffHertz ? Math.tan(Math.PI * Math.min(rate * .36, frequency * 1.5) / rate) : tone.filter;
+      const cutoff = tone.filter + Math.max(0, tracked - tone.filter) * this.claritySmooth;
+      const filter = Math.min(1.8, cutoff * (1 + patch.envTone * voice.filterEnv) * (1 + wave * tone.motion * .32));
+      const first = 1 / (1 + filter * (filter + tone.resonance)), second = filter * first, third = filter * second;
+      const input = saturate(source * (1 + (tone.drive - 1) * tone.driveScale)) * .8, difference = input - voice.ic2;
       const band = first * voice.ic1 + second * difference, low = voice.ic2 + second * voice.ic1 + third * difference;
       voice.ic1 = 2 * band - voice.ic1; voice.ic2 = 2 * low - voice.ic2;
       const filtered = patch.model === 7 ? .4 * low + .6 * band : low;
@@ -385,7 +400,7 @@ export class SynthEngine {
     this.chorusLeft[this.chorusPosition] = left; this.chorusRight[this.chorusPosition] = right;
     const cloudLeft = readRing(this.chorusLeft, this.chorusPosition - rate * (.014 + .004 * slowWave)), cloudRight = readRing(this.chorusRight, this.chorusPosition - rate * (.022 + .005 * Math.cos(this.slowLfo)));
     this.chorusPosition = (this.chorusPosition + 1) % this.chorusLeft.length;
-    const cloudMix = patch.model === 15 ? .72 : spaceBloom * .38; left = (left + cloudLeft * cloudMix) / (1 + cloudMix * .55); right = (right + cloudRight * cloudMix) / (1 + cloudMix * .55);
+    const cloudMix = chorusMode ? .72 : spaceBloom * .38; left = (left + cloudLeft * cloudMix) / (1 + cloudMix * .55); right = (right + cloudRight * cloudMix) / (1 + cloudMix * .55);
     this.glitchSmooth += .0018 * ((this.glitch ? this.glitchAmount : 0) - this.glitchSmooth); this.fragmentsSmooth += .0018 * ((this.fragments ? this.fragmentsAmount : 0) - this.fragmentsSmooth); this.glitchVolumeSmooth += .0018 * (this.glitchVolume - this.glitchVolumeSmooth);
     this.slices.process(left, right, this.glitchSmooth, this.fragmentsSmooth, this.glitchType, this.glitchVolumeSmooth, 220 + (this.noteFrequencySmooth - 220) * this.claritySmooth);
     left = this.slices.outputLeft; right = this.slices.outputRight;
