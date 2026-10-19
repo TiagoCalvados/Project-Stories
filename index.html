@@ -462,14 +462,9 @@
   <details class="visitor-poll" id="visitor-poll" hidden aria-label="Project Stories visitor poll">
     <summary>Talk to me</summary>
     <form>
-      <h2 class="visitor-poll-question">What did you enjoy most?</h2>
-      <div class="visitor-poll-choices" tabindex="0" aria-label="Choose your favourite part of Project Stories">
-        <button class="visitor-poll-step" type="button" data-poll-previous aria-label="Previous topic">‹</button>
-        <p class="visitor-poll-choice" aria-live="polite">TCKO2 Synth Modular</p>
-        <button class="visitor-poll-step" type="button" data-poll-next aria-label="Next topic">›</button>
-      </div>
-      <p class="visitor-poll-position"></p>
-      <button class="visitor-poll-send" type="submit">Send my choice</button>
+      <h2 class="visitor-poll-question" id="visitor-poll-question">What did you enjoy most?</h2>
+      <fieldset class="visitor-poll-choices" aria-labelledby="visitor-poll-question"></fieldset>
+      <button class="visitor-poll-send" type="submit" disabled>Send my choice</button>
       <p class="visitor-poll-privacy">No name, email or sign-in.</p>
       <p class="visitor-poll-status" role="status" aria-live="polite"></p>
     </form>

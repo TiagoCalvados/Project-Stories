@@ -1,6 +1,6 @@
 # Homepage visitor poll
 
-The homepage “Talk to me” box expands within the space above the synth card. It supports mouse, keyboard arrows and horizontal swipe, with ten topic choices. No names, email addresses, login, free text or IP addresses are stored by the poll. The hosting platform may retain normal request logs.
+The homepage “Talk to me” box expands within the space above the synth card. All ten topic choices appear together in a compact grid of radio options, without a carousel. Select a topic and press “Send my choice”. No names, email addresses, login, free text or IP addresses are stored by the poll. The hosting platform may retain normal request logs.
 
 The browser remembers a random submission receipt and successful vote in local storage. The private counter stores aggregate topic totals and monthly hashed receipts to deduplicate retries. Clearing browser storage permits another vote; this lightweight preference poll is not an election or identity verification system.
 
