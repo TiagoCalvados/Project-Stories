@@ -38,5 +38,16 @@ assert.equal((await request({ headers: { origin: 'https://elsewhere.example', 'c
 assert.equal((await request({ body: { choice: 'daao', id: randomUUID(), email: 'test@example.com' } })).statusCode, 400);
 assert.equal((await request({ body: { choice: 'unknown', id: randomUUID() } })).statusCode, 400);
 assert.equal((await request({}, { read() { throw Error('storage failure'); } })).statusCode, 503);
+const comments = memory(), commentId = randomUUID();
+const commentRequest = {body:{choice:'other',id:commentId,note:'  The park atmosphere  '}};
+assert.equal((await request(commentRequest,comments)).statusCode,200);
+assert.equal((await request(commentRequest,comments)).statusCode,200);
+assert.equal(comments.data.notes.length,1);
+assert.equal(comments.data.notes[0].text,'The park atmosphere');
+assert.equal(comments.data.counts.other,1);
+assert.equal((await request({body:{choice:'other',id:randomUUID()}})).statusCode,400);
+assert.equal((await request({body:{choice:'other',id:randomUUID(),note:' '.repeat(20)}})).statusCode,400);
+assert.equal((await request({body:{choice:'other',id:randomUUID(),note:'a'.repeat(121)}})).statusCode,400);
+assert.equal((await request({body:{choice:'daao',id:randomUUID(),note:'Unwanted comment'}})).statusCode,400);
 assert.equal(Object.values(emptyPoll().counts).reduce((a,b) => a+b), 0);
 console.log('PASS: atomic concurrent votes, retry deduplication, budget caps, period rollover, private receipts, request validation, preview isolation and storage failure.');

@@ -464,8 +464,12 @@
     <form>
       <h2 class="visitor-poll-question" id="visitor-poll-question">What did you enjoy most?</h2>
       <fieldset class="visitor-poll-choices" aria-labelledby="visitor-poll-question"></fieldset>
+      <label class="visitor-poll-other" hidden>
+        Tell me what you enjoyed
+        <textarea name="comment" rows="2" maxlength="120" placeholder="A few words (up to 120 characters)" disabled></textarea>
+      </label>
       <button class="visitor-poll-send" type="submit" disabled>Send my choice</button>
-      <p class="visitor-poll-privacy">No name, email or sign-in.</p>
+      <p class="visitor-poll-privacy">No sign-in. Please leave out personal details.</p>
       <p class="visitor-poll-status" role="status" aria-live="polite"></p>
     </form>
   </details>

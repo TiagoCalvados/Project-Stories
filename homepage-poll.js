@@ -12,6 +12,7 @@
   const form = root.querySelector('form'), choices = root.querySelector('.visitor-poll-choices');
   const status = root.querySelector('.visitor-poll-status');
   const submit = root.querySelector('.visitor-poll-send');
+  const other = root.querySelector('.visitor-poll-other'), comment = form.querySelector('textarea');
   const storageKey = 'project-stories-favourite-v1';
   let busy = false, receipt;
   try { receipt = JSON.parse(localStorage.getItem(storageKey) || 'null'); } catch {}
@@ -22,7 +23,12 @@
     input.type = 'radio'; input.name = 'topic'; input.value = value; input.required = true;
     caption.textContent = text; label.append(input, caption); choices.append(label);
   }
-  choices.addEventListener('change', () => { submit.disabled = busy || Boolean(receipt?.submitted); setStatus(''); });
+  choices.addEventListener('change', () => {
+    const selected = form.querySelector('input[name="topic"]:checked')?.value;
+    other.hidden = selected !== 'other'; comment.disabled = selected !== 'other'; comment.required = selected === 'other';
+    root.dataset.other = String(selected === 'other');
+    submit.disabled = busy || Boolean(receipt?.submitted); setStatus('');
+  });
   submit.disabled = true;
   function sent() { root.dataset.sent = 'true'; setStatus('Thank you. Your choice has been received.'); }
   if (receipt?.submitted === true) sent();
@@ -30,12 +36,14 @@
     event.preventDefault(); if (busy || receipt?.submitted) return;
     const selected = form.querySelector('input[name="topic"]:checked')?.value;
     if (!selected) return;
+    const note = selected === 'other' ? comment.value.trim() : '';
+    if (selected === 'other' && !note) { comment.focus(); setStatus('Please write a few words about what you enjoyed.'); return; }
     busy = true; choices.disabled = true; submit.disabled = true; submit.textContent = 'Sending…'; setStatus('');
     const id = receipt?.choice === selected && typeof receipt?.id === 'string' ? receipt.id : crypto.randomUUID();
     remember({ id, choice: selected, submitted: false });
     const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), 12000);
     try {
-      const response = await fetch('/api/poll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ choice: selected, id }), signal: controller.signal, credentials: 'omit' });
+      const response = await fetch('/api/poll', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ choice: selected, id, ...(note ? { note } : {}) }), signal: controller.signal, credentials: 'omit' });
       const result = await response.json();
       if (!response.ok || result.accepted !== true) throw new Error(result.message || 'Your choice could not be sent. Please try later.');
       if (result.preview) {

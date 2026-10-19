@@ -26,7 +26,11 @@
 .visitor-poll-send:disabled { cursor: default; opacity: .65; }
 .visitor-poll-privacy, .visitor-poll-status { margin: 6px 0 0; font: 10px/1.3 Arial, sans-serif; color: #e0e9d8; }
 .visitor-poll-status:empty { display: none; }
-.visitor-poll[data-sent='true'] .visitor-poll-choices, .visitor-poll[data-sent='true'] .visitor-poll-send { display: none; }
+.visitor-poll-other { display: block; margin: 0 0 7px; font: 11px/1.2 Arial, sans-serif; }
+.visitor-poll-other[hidden] { display: none; }
+.visitor-poll-other textarea { display: block; width: 100%; min-height: 42px; margin-top: 4px; padding: 5px; border: 1px solid #ffffff70; border-radius: 6px; background: #f2f6ec; color: #142214; font: 16px/1.2 Arial, sans-serif; resize: vertical; }
+.visitor-poll-other textarea:focus-visible { outline: 2px solid #d7f5c5; }
+.visitor-poll[data-sent='true'] .visitor-poll-choices, .visitor-poll[data-sent='true'] .visitor-poll-send, .visitor-poll[data-sent='true'] .visitor-poll-other { display: none; }
 @media (max-width: 700px) {
   .visitor-poll { left: max(4px, env(safe-area-inset-left)); width: min(140px, calc(50vw - 12px)); }
   .visitor-poll summary { padding: 7px 8px; font-size: 12px; }
