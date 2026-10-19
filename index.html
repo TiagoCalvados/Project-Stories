@@ -19,6 +19,8 @@
   <meta name="twitter:description" content="Ideas, images, memories, music, machines, past, present, and future fold into one another.">
   <meta name="twitter:image" content="social-preview.png">
   <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="homepage-poll.css">
+  <script defer src="homepage-poll.js"></script>
   <script defer src="homepage-analytics.js"></script>
   <style>
     * {
@@ -457,5 +459,21 @@
     <h2 class="daao-name" id="daao-name">DIY Astronomical Attic Observatory (DAAO)</h2>
     <p class="daao-description">Explore the sky in your browser with camera, location, motion, or manual direction. No desktop app needed.</p>
   </aside>
+  <details class="visitor-poll" id="visitor-poll" hidden aria-label="Project Stories visitor poll">
+    <summary>Talk to me</summary>
+    <form>
+      <h2 class="visitor-poll-question">What did you enjoy most?</h2>
+      <div class="visitor-poll-choices" tabindex="0" aria-label="Choose your favourite part of Project Stories">
+        <button class="visitor-poll-step" type="button" data-poll-previous aria-label="Previous topic">‹</button>
+        <p class="visitor-poll-choice" aria-live="polite">TCKO2 Synth Modular</p>
+        <button class="visitor-poll-step" type="button" data-poll-next aria-label="Next topic">›</button>
+      </div>
+      <p class="visitor-poll-position"></p>
+      <button class="visitor-poll-send" type="submit">Send my choice</button>
+      <p class="visitor-poll-privacy">No name, email or sign-in.</p>
+      <p class="visitor-poll-status" role="status" aria-live="polite"></p>
+    </form>
+  </details>
+
 </body>
 </html>
