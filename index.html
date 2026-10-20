@@ -84,7 +84,11 @@
     }
 
     @media (min-width: 701px) and (max-height: 600px) {
+      body { position: relative; height: auto; min-height: 640px; }
+      .front-page { position: absolute; inset: 0; height: 100%; }
+      .main-page-copy { position: absolute; }
       .story-buttons {
+        position: absolute;
         top: max(190px, calc(48.5vh - 162px));
       }
     }
@@ -221,7 +225,7 @@
 
     .daao-panel {
       position: fixed;
-      right: 14px;
+      left: 14px;
       bottom: 14px;
       z-index: 2;
       width: min(230px, calc(100vw - 28px));
@@ -286,7 +290,7 @@
 
     .synth-panel {
       position: fixed;
-      left: 14px;
+      right: 14px;
       bottom: 14px;
       z-index: 2;
       width: min(230px, calc(50vw - 21px));
@@ -299,7 +303,7 @@
       backdrop-filter: blur(12px);
     }
 
-    .music-apps { position: fixed; left: 14px; bottom: 14px; z-index: 2; width: min(230px, calc(50vw - 21px)); display: grid; gap: 8px; }
+    .music-apps { position: fixed; right: 14px; bottom: 14px; z-index: 2; width: min(230px, calc(50vw - 21px)); display: grid; gap: 8px; }
     .music-apps .synth-panel { position: static; width: 100%; }
     .music-apps .daao-launcher { min-height: 44px; box-sizing: border-box; }
     .studio-panel { border-color: rgba(192,175,255,.5); }
@@ -307,85 +311,112 @@
     .synth-launcher::before { background: #81d5b7; box-shadow: 0 0 12px rgba(129, 213, 183, 0.8); }
     .synth-launcher:hover, .synth-launcher:focus-visible { border-color: #81d5b7; background: rgba(17, 41, 34, 0.88); }
 
-    /* Embedded browsers have changing toolbars: keep every destination in the
-       document flow so a shorter visible viewport can always scroll to it. */
-    @media (max-width: 700px), (max-height: 600px) {
-      body {
-        height: auto;
-        min-height: 100vh;
-        min-height: 100svh;
-        padding: max(20px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
-        isolation: isolate;
-      }
-
-      .front-page {
-        position: fixed;
-        inset: 0;
-        height: 100%;
-        z-index: -1;
-      }
-
+    @media (max-width: 700px) {
       .main-page-copy {
-        position: relative;
-        inset: auto;
-        width: min(100%, 440px);
-        max-width: none;
-        margin: 0 auto;
+        top: 16px;
+        left: 22px;
+        max-width: calc(100vw - 44px);
       }
 
-      .main-page-title { margin-bottom: 8px; font-size: 26px; }
-      .main-page-description { font-size: 14px; line-height: 1.4; }
+      .main-page-title {
+        margin-bottom: 6px;
+        font-size: 24px;
+      }
+
+      .main-page-description {
+        font-size: 14px;
+        line-height: 1.23;
+      }
 
       .story-buttons {
-        position: relative;
-        inset: auto;
-        transform: none;
-        width: min(100%, 440px);
-        margin: 28px auto;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        grid-template-rows: none;
-        gap: 22px 12px;
+        top: calc(45.5vh - 132px);
+        left: 50vw;
+        grid-template-columns: repeat(6, clamp(36px, 11.3vw, 42px));
+        grid-template-rows: repeat(2, 46px);
+        column-gap: 18px;
+        row-gap: 8px;
       }
 
-      .story-buttons > div {
-        position: static;
-        transform: none;
-        grid-column: auto;
-        grid-row: auto;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 100%;
-        height: auto;
-        gap: 7px;
+      .story-button {
+        width: clamp(36px, 11.3vw, 42px);
+        height: clamp(36px, 11.3vw, 42px);
       }
 
-      .story-buttons > .story-entry-graphic-novel { grid-column: 1 / -1; }
-      .story-button { flex: none; width: 48px; height: 48px; }
-      .story-buttons .story-entry-caption {
-        position: static;
-        transform: none;
-        width: auto;
-        max-width: 100%;
+      .story-entry-graphic-novel {
+        top: -36px;
+        width: clamp(36px, 11.3vw, 42px);
+        height: clamp(36px, 11.3vw, 42px);
+      }
+
+      .story-entry-padel {
+        transform: translateY(-28px);
+      }
+
+      .story-label-entry {
+        width: clamp(36px, 11.3vw, 42px);
+        height: clamp(36px, 11.3vw, 42px);
+        transform: translateY(-18px);
+      }
+
+      .story-label-entry .story-entry-caption {
+        max-width: 56px;
+      }
+
+      .story-button-audiovisual .story-entry-caption {
+        font-size: 9px;
+      }
+
+      .story-button-interviews .story-entry-caption { font-size: 9px; }
+
+      .story-button-tree .story-entry-caption {
+        max-width: 56px;
+        font-size: 11px;
+      }
+
+      .story-entry-caption {
+        top: calc(100% + 6px);
         font-size: 12px;
-        line-height: 1.2;
-        text-align: center;
-        white-space: normal;
-        overflow-wrap: anywhere;
       }
 
-      .music-apps, .daao-panel {
-        position: relative;
-        inset: auto;
-        width: min(100%, 440px);
-        margin: 0 auto;
+      .daao-panel {
+        left: max(4px, env(safe-area-inset-left));
+        bottom: 4px;
+        width: min(140px, calc(100vw - 8px));
+        padding: 6px 7px;
       }
-      .music-apps { gap: 10px; }
-      .music-apps .synth-panel, .daao-panel { padding: 10px 12px; }
-      .daao-panel { margin-top: 10px; }
-      .daao-launcher { min-height: 44px; font-size: 12px; padding: 8px 12px; }
-      .daao-name { font-size: 12px; margin: 7px 0 0; }
-      .daao-description { display: none; }
+
+      .daao-launcher {
+        padding: 4px 6px;
+        font-size: 10px;
+      }
+
+      .daao-name { margin-top: 6px; font-size: 10px; }
+      .daao-description { font-size: 9px; line-height: 1.2; }
+      .music-apps .daao-description { display: none; }
+      .music-apps { right: max(4px, env(safe-area-inset-right)); bottom: max(4px, env(safe-area-inset-bottom)); width: min(140px, calc(50vw - 12px)); gap: 6px; }
+      .synth-panel { right: max(4px, env(safe-area-inset-right)); bottom: max(4px, env(safe-area-inset-bottom)); width: min(140px, calc(50vw - 12px)); padding: 6px 7px; }
+    }
+    @media (max-width: 700px) {
+      body { position: relative; height: auto; min-height: 640px; min-height: max(640px, 100svh); }
+      .front-page { position: absolute; inset: 0; height: 100%; }
+      .main-page-copy { position: absolute; }
+      .story-buttons { position: absolute; top: max(190px, calc(45.5svh - 132px)); column-gap: clamp(6px, 3vw, 18px); }
+      .music-apps, .daao-panel { position: absolute; bottom: max(8px, env(safe-area-inset-bottom)); width: clamp(96px, 30vw, 140px); }
+      .music-apps { right: max(6px, env(safe-area-inset-right)); gap: 6px; }
+      .daao-panel { left: max(6px, env(safe-area-inset-left)); }
+      .music-apps .synth-panel, .daao-panel { padding: 4px; }
+      .music-apps .daao-name, .daao-panel .daao-name, .daao-description { display: none; }
+      .daao-launcher { width: 100%; min-height: 44px; justify-content: center; padding: 4px; font-size: 10px; letter-spacing: 0; }
+      .story-button, .story-label-entry, .story-entry-graphic-novel { width: 44px; height: 44px; }
+      .story-buttons { grid-template-columns: repeat(6, 44px); }
+    }
+    @media (max-width: 360px) {
+      .main-page-copy { top: 14px; }
+      .main-page-description { font-size: 13px; line-height: 1.2; }
+      .story-buttons { column-gap: 6px; }
+    }
+    @media (min-width: 701px) and (max-height: 600px) {
+      .music-apps, .daao-panel { position: absolute; }
     }
   </style>
 </head>
