@@ -1,4 +1,5 @@
 .env.local
+local-studio/
 node_modules/
 .codex_deps/
 dist/
