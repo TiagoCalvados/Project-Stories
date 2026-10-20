@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#121416">
+  <meta name="description" content="A small, local sound playground. Play one synth or open a recent TCKO2 recording. Add two sounds, six effects per source and independent loops. Mix and download on your device.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>TCKO3 · Layer Studio</title>
+  <link rel="stylesheet" href="tcko3.css">
+  <link rel="stylesheet" href="music-nav.css">
+  <script type="module" src="tcko3-app.js"></script>
+</head>
+<body>
+<main class="studio">
+  <nav class="music-nav" aria-label="Music app navigation"><a href="index.html">← Project Stories</a><a href="tcko2.html">Play TCKO2 ↗</a></nav>
+  <header class="masthead">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">≋</span><div><h1>TCKO3 <span>Layer Studio</span></h1><p>A little room for your sounds.</p></div></div>
+    <span class="local-badge"><i></i> AUDIO ON YOUR DEVICE</span>
+  </header>
+
+  <section class="visual-panel" aria-label="Live mix visualization">
+    <div class="visual-caption"><span>THE COLOUR OF SOUND</span><span id="visual-state">Waiting for a little noise</span></div>
+    <canvas id="mix-visual" width="1100" height="185" aria-label="Colourful live waveforms for the three sound sources"></canvas>
+    <div class="visual-footer"><div class="legend"><span><i class="mint"></i>01 / SYNTH</span><span><i class="coral"></i>02 / SOUND</span><span><i class="lilac"></i>03 / SOUND</span></div><span id="clock">00:00</span></div>
+  </section>
+
+  <section class="transport" aria-label="Mix playback and recording">
+    <div class="transport-buttons"><button id="play" class="primary" type="button">▶ Play mix</button><button id="stop" type="button" aria-label="Stop and rewind the mix">■ Stop</button><button id="record" class="record-button" type="button" aria-pressed="false">● Record mix</button></div>
+    <label class="master-label">MASTER <output id="master-value">65%</output><input id="master" aria-label="Master volume" type="range" min="0" max="100" value="65"></label>
+  </section>
+  <div class="session-line"><p id="status" role="status" aria-live="polite">Play the synth, or open a TCKO2 take. Add two more sounds and make them yours.</p><button id="demo" class="text-button" type="button">Try a little demo ↗</button></div>
+
+  <section id="tracks" class="tracks" aria-label="Three sound sources"></section>
+
+  <section class="save-panel" aria-label="Your recorded mix">
+    <div><span class="eyebrow">TAKE IT WITH YOU</span><h2>Your mix, your device.</h2><p id="recording-status" role="status" aria-live="polite">Record the mix while you play. Download it before closing this page.</p></div>
+    <div id="mix-result" hidden><audio id="mix-preview" controls preload="metadata" aria-label="Preview your recorded mix"></audio><a id="download" class="download-button" download="TCKO3-mix.wav">↓ Download WAV</a></div>
+  </section>
+
+  <footer><p>Open sounds → play together → shape the mix → record & download.</p><p>Audio stays on this device. Nothing is uploaded. TCKO2 recent takes are kept in this browser when space allows. Download your mix and other imported sounds before leaving.</p><span class="footer-mark">TCKO3 / SMALL STUDIO, WIDE POSSIBILITIES</span></footer>
+  <noscript>This studio needs JavaScript and a browser with Web Audio.</noscript>
+</main>
+</body>
+</html>
