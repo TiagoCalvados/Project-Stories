@@ -1,0 +1,5 @@
+.music-nav{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;padding:0 0 14px;margin-bottom:14px;border-bottom:1px solid var(--line,#394346);font-size:12px}
+.music-nav a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:9px 14px;border:1px solid var(--line,#394346);border-radius:8px;color:var(--mint,#a6e6c7);background:#1b2524;text-decoration:none;font-weight:600}
+.music-nav a:hover{border-color:var(--mint,#a6e6c7)}
+.music-nav a:focus-visible{outline:2px solid var(--mint,#a6e6c7);outline-offset:3px}
+@media(max-width:650px){.music-nav{gap:8px;margin-bottom:16px;padding-bottom:12px}.music-nav a{flex:1;white-space:nowrap;font-size:12px;padding-inline:8px}}

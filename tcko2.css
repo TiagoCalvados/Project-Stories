@@ -384,3 +384,5 @@ h2 { margin: 0; font-size: 14px; font-weight: 500; }
   .loop-toolbar .section-caption { grid-column: 1; grid-row: 1; }
   .loop-toolbar output { grid-column: 2; grid-row: 1; justify-self: end; }
 }
+
+.take-results{grid-template-columns:minmax(0,1fr) auto auto auto}@media(max-width:700px){.take-results{grid-template-columns:1fr 1fr}.take-results>label{grid-column:1/-1}.take-results .download-button{font-size:12px}}

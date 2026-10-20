@@ -299,6 +299,11 @@
       backdrop-filter: blur(12px);
     }
 
+    .music-apps { position: fixed; left: 14px; bottom: 14px; z-index: 2; width: min(230px, calc(50vw - 21px)); display: grid; gap: 8px; }
+    .music-apps .synth-panel { position: static; width: 100%; }
+    .music-apps .daao-launcher { min-height: 44px; box-sizing: border-box; }
+    .studio-panel { border-color: rgba(192,175,255,.5); }
+    .studio-panel .synth-launcher::before { background: #c0afff; }
     .synth-launcher::before { background: #81d5b7; box-shadow: 0 0 12px rgba(129, 213, 183, 0.8); }
     .synth-launcher:hover, .synth-launcher:focus-visible { border-color: #81d5b7; background: rgba(17, 41, 34, 0.88); }
 
@@ -383,6 +388,8 @@
 
       .daao-name { margin-top: 6px; font-size: 10px; }
       .daao-description { font-size: 9px; line-height: 1.2; }
+      .music-apps .daao-description { display: none; }
+      .music-apps { left: max(4px, env(safe-area-inset-left)); bottom: max(4px, env(safe-area-inset-bottom)); width: min(140px, calc(50vw - 12px)); gap: 6px; }
       .synth-panel { left: max(4px, env(safe-area-inset-left)); bottom: max(4px, env(safe-area-inset-bottom)); width: min(140px, calc(50vw - 12px)); padding: 6px 7px; }
     }
     @media (max-width: 360px) {
@@ -447,11 +454,18 @@
       <span class="story-entry-caption">Tiago K</span>
     </div>
   </div>
+  <div class="music-apps" aria-label="Music apps">
+  <aside class="synth-panel studio-panel" aria-labelledby="studio-name">
+    <a class="daao-launcher synth-launcher" href="tcko3.html" aria-label="Open TCKO3 Layer Studio">Open TCKO3 ↗</a>
+    <h2 class="daao-name" id="studio-name">TCKO3 Layer Studio</h2>
+    <p class="daao-description">Three sounds. Six effects each. Loop, remix and download on your device.</p>
+  </aside>
   <aside class="synth-panel" aria-labelledby="synth-name">
-    <a class="daao-launcher synth-launcher" href="tcko2.html" target="_blank" rel="noopener" aria-label="Play TCKO2 Synth Modular in a new tab">Play TCKO2 ↗</a>
+    <a class="daao-launcher synth-launcher" href="tcko2.html" aria-label="Play TCKO2 Synth Modular">Play TCKO2 ↗</a>
     <h2 class="daao-name" id="synth-name">TCKO2 Synth Modular</h2>
     <p class="daao-description">A small laboratory for unstable sound. Play with touch, keys or MIDI. No installation.</p>
   </aside>
+  </div>
   <aside class="daao-panel" aria-labelledby="daao-name">
     <a class="daao-launcher" href="daao.html" aria-label="Open DAAO in your browser">Open DAAO</a>
     <h2 class="daao-name" id="daao-name">DIY Astronomical Attic Observatory (DAAO)</h2>

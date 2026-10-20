@@ -1,4 +1,5 @@
 import { encodeWav } from './tcko2-recording.js';
+import { saveTake } from './music-library.js';
 
 const MAXIMUM_BYTES = 96 * 1024 * 1024;
 const duration = seconds => `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${Math.floor(seconds % 60).toString().padStart(2, '0')}`;
@@ -16,6 +17,7 @@ export class TakeRecorder {
     this.download = document.getElementById('download-take');
     this.preview = document.getElementById('take-preview');
     this.clear = document.getElementById('clear-takes');
+    this.studio = document.getElementById('open-take-studio');
     this.record.addEventListener('click', () => this.start());
     this.stopButton.addEventListener('click', () => this.stop());
     this.select.addEventListener('change', () => this.selectTake());
@@ -23,17 +25,17 @@ export class TakeRecorder {
       const take = this.takes[this.select.selectedIndex];
       if (!take) return;
       take.downloaded = true;
-      this.status.textContent = 'WAV download requested. In desktop TCK03, choose Import WAV to add it as a separate channel.';
+      this.status.textContent = 'WAV download requested. Open TCKO3 Studio to remix your recent takes, or import the downloaded WAV there.';
     });
     this.clear.addEventListener('click', () => {
-      if (this.current || this.arming || !window.confirm('Clear the takes kept in this browser tab? Download your WAVs first. Files already downloaded are not deleted.')) return;
+      if (this.current || this.arming || !window.confirm('Clear this tab’s recording list? Download any unsaved WAVs first. Recordings already kept in TCKO3 recents and downloaded files remain.')) return;
       this.preview.pause(); this.preview.removeAttribute('src'); this.preview.load();
       for (const take of this.takes) URL.revokeObjectURL(take.url);
       this.takes = []; this.select.replaceChildren(); this.results.hidden = true;
-      this.status.textContent = 'Browser takes cleared. Downloaded WAV files are unchanged.'; this.updateButtons();
+      this.status.textContent = 'This tab’s list is cleared. TCKO3 recent takes and downloaded files are unchanged.'; this.updateButtons();
     });
     window.addEventListener('beforeunload', event => {
-      if (!this.current && !this.arming && !this.takes.some(take => !take.downloaded)) return;
+      if (!this.current && !this.arming && !this.takes.some(take => !take.downloaded && !take.stored)) return;
       event.preventDefault(); event.returnValue = '';
     });
     this.updateButtons();
@@ -95,11 +97,16 @@ export class TakeRecorder {
       if (!take.frames || !take.rate) { this.status.textContent = 'No audio frames were received. Try Record again.'; return; }
       const blob = encodeWav(take.chunks, take.rate);
       const name = `TCKO2-take-${new Date().toISOString().replace(/[:.]/g, '-')}-${String(take.id).padStart(2, '0')}${reason === 'partial' ? '-partial' : ''}.wav`;
-      this.takes.push({ name, url: URL.createObjectURL(blob), bytes: blob.size, downloaded: false });
+      const saved = { name, url: URL.createObjectURL(blob), bytes: blob.size, downloaded: false, stored: false };
+      this.takes.push(saved);
+      void saveTake({ name, blob, duration: take.frames / take.rate }).then(id => {
+        saved.libraryId = id; saved.stored = true;
+        if (!this.current && this.takes[this.select.selectedIndex] === saved) { this.selectTake(); this.status.textContent = 'Take saved on this device. Choose Remix in TCKO3, or Download WAV for a backup.'; }
+      }).catch(() => { if (!this.current && this.takes[this.select.selectedIndex] === saved) this.status.textContent = 'WAV ready. Recent storage is unavailable or full: download it, then open that file in TCKO3.'; });
       this.select.add(new Option(`Take ${String(take.id).padStart(2, '0')} · ${duration(take.frames / take.rate)}${reason === 'partial' ? ' · partial' : ''}`, name));
       this.select.selectedIndex = this.takes.length - 1; this.results.hidden = false; this.selectTake();
       this.time.textContent = duration(take.frames / take.rate);
-      this.status.textContent = reason === 'partial' ? 'Partial take kept. The final audio buffer may be missing; preview it before downloading.' : reason === 'limit' ? 'Take limit reached. Download the WAV; clear downloaded takes if you need more browser memory.' : reason === 'hidden' ? 'Recording stopped when you left the synth tab. Your WAV is ready to download.' : 'Take ready. Download WAV, then choose Import WAV in desktop TCK03. Earlier takes stay in the list.';
+      this.status.textContent = reason === 'partial' ? 'Partial take kept. The final audio buffer may be missing; preview it before downloading.' : reason === 'limit' ? 'Take limit reached. Download the WAV; clear downloaded takes if you need more browser memory.' : reason === 'hidden' ? 'Recording stopped when you left the synth tab. Your WAV is ready to download.' : 'Take ready. Keeping it in this browser for TCKO3… Download WAV for a backup.';
     } catch (error) { this.status.textContent = `Could not create the WAV: ${error.message}`; }
     finally { take.resolve?.(); this.updateButtons(); }
   }
@@ -107,6 +114,7 @@ export class TakeRecorder {
     const take = this.takes[this.select.selectedIndex];
     if (!take) return;
     this.preview.pause(); this.preview.src = take.url;
+    if (this.studio) this.studio.href = take.libraryId ? `tcko3.html?take=${encodeURIComponent(take.libraryId)}` : 'tcko3.html';
     this.download.href = take.url; this.download.download = take.name;
     this.download.setAttribute('aria-label', `Download WAV: ${take.name}`);
   }
