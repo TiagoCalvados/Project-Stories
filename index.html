@@ -288,6 +288,8 @@
       line-height: 1.4;
     }
 
+    .compact-description { display: none; }
+
     .synth-panel {
       position: fixed;
       right: 14px;
@@ -396,25 +398,52 @@
       .synth-panel { right: max(4px, env(safe-area-inset-right)); bottom: max(4px, env(safe-area-inset-bottom)); width: min(140px, calc(50vw - 12px)); padding: 6px 7px; }
     }
     @media (max-width: 700px) {
-      body { position: relative; height: auto; min-height: 780px; min-height: max(780px, 100svh); }
+      body { position: relative; height: 100svh; min-height: 100svh; --app-width: calc((100vw - 28px) / 3); }
       .front-page { position: absolute; inset: 0; height: 100%; }
-      .main-page-copy { position: absolute; }
-      .story-buttons { position: absolute; top: max(190px, calc(45.5svh - 132px)); column-gap: clamp(6px, 3vw, 18px); }
-      .music-apps, .daao-panel { position: absolute; bottom: max(8px, env(safe-area-inset-bottom)); width: clamp(128px, 40vw, 180px); }
-      .music-apps { right: max(6px, env(safe-area-inset-right)); gap: 6px; }
-      .daao-panel { left: max(6px, env(safe-area-inset-left)); }
-      .music-apps .synth-panel, .daao-panel { padding: 7px; }
-      .daao-launcher { width: 100%; min-height: 44px; justify-content: center; padding: 4px; font-size: 11px; letter-spacing: 0; }
+      .main-page-copy { position: absolute; top: max(12px, env(safe-area-inset-top)); left: 16px; max-width: calc(100vw - 32px); }
+      .main-page-title { font-size: 22px; }
+      .main-page-description { font-size: 12px; line-height: 1.3; }
+      .story-buttons { position: absolute; top: clamp(170px, 28svh, 240px); column-gap: clamp(6px, 3vw, 18px); }
+      .music-apps, .daao-panel { position: absolute; bottom: max(8px, env(safe-area-inset-bottom)); }
+      .music-apps { right: 8px; width: calc(var(--app-width) * 2 + 6px); grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+      .daao-panel { left: 8px; width: var(--app-width); }
+      .music-apps .synth-panel, .daao-panel { min-width: 0; padding: 6px; border-radius: 10px; background: rgba(5, 11, 20, 0.88); backdrop-filter: none; }
+      .daao-name { margin-top: 5px; font-size: 12px; line-height: 1.2; }
+      .daao-description { font-size: 11px; line-height: 1.3; }
+      .full-description { display: none; }
+      .compact-description { display: inline; }
+      .daao-launcher { width: 100%; min-height: 44px; justify-content: center; padding: 4px; font-size: 11px; letter-spacing: 0; backdrop-filter: none; }
+      .daao-launcher::before { flex-shrink: 0; }
       .story-button, .story-label-entry, .story-entry-graphic-novel { width: 44px; height: 44px; }
       .story-buttons { grid-template-columns: repeat(6, 44px); }
     }
     @media (max-width: 360px) {
-      .main-page-copy { top: 14px; }
-      .main-page-description { font-size: 13px; line-height: 1.2; }
       .story-buttons { column-gap: 6px; }
     }
     @media (min-width: 701px) and (max-height: 600px) {
       .music-apps, .daao-panel { position: absolute; }
+    }
+    @media (max-width: 1000px) and (max-height: 500px) and (orientation: landscape) {
+      body { position: relative; height: 100svh; min-height: 100svh; --app-width: calc((100vw - 28px) / 3); }
+      .front-page { position: absolute; inset: 0; height: 100%; }
+      .main-page-copy { position: absolute; top: 12px; left: 16px; max-width: 39vw; }
+      .main-page-title { margin-bottom: 6px; font-size: 22px; }
+      .main-page-description { font-size: 12px; line-height: 1.3; }
+      .story-buttons { position: absolute; top: 64px; left: 73vw; grid-template-columns: repeat(6, 44px); grid-template-rows: repeat(2, 46px); column-gap: 6px; row-gap: 8px; }
+      .story-button, .story-label-entry, .story-entry-graphic-novel { width: 44px; height: 44px; }
+      .story-entry-graphic-novel { top: -36px; }
+      .story-entry-padel { transform: translateY(-28px); }
+      .story-label-entry { transform: translateY(-18px); }
+      .story-entry-caption, .story-label-entry .story-entry-caption { font-size: 10px; }
+      .music-apps, .daao-panel { position: absolute; bottom: max(8px, env(safe-area-inset-bottom)); }
+      .music-apps { right: 8px; width: calc(var(--app-width) * 2 + 6px); grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+      .daao-panel { left: 8px; width: var(--app-width); }
+      .music-apps .synth-panel, .daao-panel { min-width: 0; padding: 6px; border-radius: 10px; background: rgba(5, 11, 20, 0.88); backdrop-filter: none; }
+      .daao-launcher { width: 100%; min-height: 44px; justify-content: center; padding: 4px; font-size: 11px; backdrop-filter: none; }
+      .daao-name { margin: 5px 0 3px; font-size: 12px; line-height: 1.2; }
+      .daao-description { font-size: 11px; line-height: 1.3; }
+      .full-description { display: none; }
+      .compact-description { display: inline; }
     }
   </style>
 </head>
@@ -477,18 +506,18 @@
   <aside class="synth-panel studio-panel" aria-labelledby="studio-name">
     <a class="daao-launcher synth-launcher" href="tcko3.html" aria-label="Open TCKO3 Layer Studio">Open Layer Studio ↗</a>
     <h2 class="daao-name" id="studio-name">TCKO3 Layer Studio</h2>
-    <p class="daao-description">Layer up to three sounds, add effects and loops, then record and download your mix.</p>
+    <p class="daao-description"><span class="full-description">Layer up to three sounds, add effects and loops, then record and download your mix.</span><span class="compact-description">Mix 3 sounds, effects &amp; loops. Record &amp; download.</span></p>
   </aside>
   <aside class="synth-panel" aria-labelledby="synth-name">
     <a class="daao-launcher synth-launcher" href="tcko2.html" aria-label="Play TCKO2 Synth Modular">Play the Synth ↗</a>
     <h2 class="daao-name" id="synth-name">TCKO2 Synth Modular</h2>
-    <p class="daao-description">Play a synthesizer with touch, keyboard or MIDI. Shape the sound and record a WAV.</p>
+    <p class="daao-description"><span class="full-description">Play a synthesizer with touch, keyboard or MIDI. Shape the sound and record a WAV.</span><span class="compact-description">Play touch, keys or MIDI. Shape &amp; record sound.</span></p>
   </aside>
   </div>
   <aside class="daao-panel" aria-labelledby="daao-name">
     <a class="daao-launcher" href="daao.html" aria-label="Open DAAO Sky Observatory">Explore the Sky ↗</a>
     <h2 class="daao-name" id="daao-name">DAAO Sky Observatory</h2>
-    <p class="daao-description">Explore stars and planets in your browser. Use your camera and location, or choose a direction manually.</p>
+    <p class="daao-description"><span class="full-description">Explore stars and planets in your browser. Use your camera and location, or choose a direction manually.</span><span class="compact-description">Find stars &amp; planets with your camera or manually.</span></p>
   </aside>
 
 </body>
