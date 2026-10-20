@@ -307,95 +307,85 @@
     .synth-launcher::before { background: #81d5b7; box-shadow: 0 0 12px rgba(129, 213, 183, 0.8); }
     .synth-launcher:hover, .synth-launcher:focus-visible { border-color: #81d5b7; background: rgba(17, 41, 34, 0.88); }
 
-    @media (max-width: 700px) {
+    /* Embedded browsers have changing toolbars: keep every destination in the
+       document flow so a shorter visible viewport can always scroll to it. */
+    @media (max-width: 700px), (max-height: 600px) {
+      body {
+        height: auto;
+        min-height: 100vh;
+        min-height: 100svh;
+        padding: max(20px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+        isolation: isolate;
+      }
+
+      .front-page {
+        position: fixed;
+        inset: 0;
+        height: 100%;
+        z-index: -1;
+      }
+
       .main-page-copy {
-        top: 16px;
-        left: 22px;
-        max-width: calc(100vw - 44px);
+        position: relative;
+        inset: auto;
+        width: min(100%, 440px);
+        max-width: none;
+        margin: 0 auto;
       }
 
-      .main-page-title {
-        margin-bottom: 6px;
-        font-size: 24px;
-      }
-
-      .main-page-description {
-        font-size: 14px;
-        line-height: 1.23;
-      }
+      .main-page-title { margin-bottom: 8px; font-size: 26px; }
+      .main-page-description { font-size: 14px; line-height: 1.4; }
 
       .story-buttons {
-        top: calc(45.5vh - 132px);
-        left: 50vw;
-        grid-template-columns: repeat(6, clamp(36px, 11.3vw, 42px));
-        grid-template-rows: repeat(2, 46px);
-        column-gap: 18px;
-        row-gap: 8px;
+        position: relative;
+        inset: auto;
+        transform: none;
+        width: min(100%, 440px);
+        margin: 28px auto;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-rows: none;
+        gap: 22px 12px;
       }
 
-      .story-button {
-        width: clamp(36px, 11.3vw, 42px);
-        height: clamp(36px, 11.3vw, 42px);
+      .story-buttons > div {
+        position: static;
+        transform: none;
+        grid-column: auto;
+        grid-row: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        height: auto;
+        gap: 7px;
       }
 
-      .story-entry-graphic-novel {
-        top: -36px;
-        width: clamp(36px, 11.3vw, 42px);
-        height: clamp(36px, 11.3vw, 42px);
-      }
-
-      .story-entry-padel {
-        transform: translateY(-28px);
-      }
-
-      .story-label-entry {
-        width: clamp(36px, 11.3vw, 42px);
-        height: clamp(36px, 11.3vw, 42px);
-        transform: translateY(-18px);
-      }
-
-      .story-label-entry .story-entry-caption {
-        max-width: 56px;
-      }
-
-      .story-button-audiovisual .story-entry-caption {
-        font-size: 9px;
-      }
-
-      .story-button-interviews .story-entry-caption { font-size: 9px; }
-
-      .story-button-tree .story-entry-caption {
-        max-width: 56px;
-        font-size: 11px;
-      }
-
-      .story-entry-caption {
-        top: calc(100% + 6px);
+      .story-buttons > .story-entry-graphic-novel { grid-column: 1 / -1; }
+      .story-button { flex: none; width: 48px; height: 48px; }
+      .story-buttons .story-entry-caption {
+        position: static;
+        transform: none;
+        width: auto;
+        max-width: 100%;
         font-size: 12px;
+        line-height: 1.2;
+        text-align: center;
+        white-space: normal;
+        overflow-wrap: anywhere;
       }
 
-      .daao-panel {
-        right: 4px;
-        bottom: 4px;
-        width: min(140px, calc(100vw - 8px));
-        padding: 6px 7px;
+      .music-apps, .daao-panel {
+        position: relative;
+        inset: auto;
+        width: min(100%, 440px);
+        margin: 0 auto;
       }
-
-      .daao-launcher {
-        padding: 4px 6px;
-        font-size: 10px;
-      }
-
-      .daao-name { margin-top: 6px; font-size: 10px; }
-      .daao-description { font-size: 9px; line-height: 1.2; }
-      .music-apps .daao-description { display: none; }
-      .music-apps { left: max(4px, env(safe-area-inset-left)); bottom: max(4px, env(safe-area-inset-bottom)); width: min(140px, calc(50vw - 12px)); gap: 6px; }
-      .synth-panel { left: max(4px, env(safe-area-inset-left)); bottom: max(4px, env(safe-area-inset-bottom)); width: min(140px, calc(50vw - 12px)); padding: 6px 7px; }
-    }
-    @media (max-width: 360px) {
-      .main-page-copy { top: 14px; }
-      .main-page-description { font-size: 13px; line-height: 1.2; }
-      .story-buttons { top: calc(45.5vh - 100px); }
+      .music-apps { gap: 10px; }
+      .music-apps .synth-panel, .daao-panel { padding: 10px 12px; }
+      .daao-panel { margin-top: 10px; }
+      .daao-launcher { min-height: 44px; font-size: 12px; padding: 8px 12px; }
+      .daao-name { font-size: 12px; margin: 7px 0 0; }
+      .daao-description { display: none; }
     }
   </style>
 </head>
