@@ -1,6 +1,7 @@
+import {TECHNOLOGY_LABELS} from './tcko2-technologies.js';
 import { SynthEngine, PATCHES, GLITCH_TYPES } from './tcko2-engine.js';
 
-const SETTINGS = ['master','pitch','clarity','bloom','echo','glitch','fragments','glitchAmount','fragmentsAmount','glitchVolume','glitchType','hold','drone'];
+const SETTINGS = ['technologyType','technologyCharacter','technologyLevel','master','pitch','clarity','bloom','echo','glitch','fragments','glitchAmount','fragmentsAmount','glitchVolume','glitchType','hold','drone'];
 const ceiling = value => Math.abs(value) <= .8 ? value : Math.sign(value) * (.8 + .15 * (1 - Math.exp(-((Math.abs(value) - .8) / .15))));
 
 export class LiveLayers {
@@ -16,7 +17,7 @@ export class LiveLayers {
     return { preset: synth.patchIndex, macros: Array.from(synth.target), flow: this.enabled, ...Object.fromEntries(SETTINGS.map(name => [name, synth[name]])) };
   }
   status(message = '', rejected = false) {
-    return { type: 'layers', enabled: this.enabled, maximum: this.slots.length, voiceLimit: this.voiceLimit, message, rejected, current: this.settings(), kept: this.slots.filter(slot => slot.active && slot !== this.current && !slot.retiring).map(slot => ({ id: slot.id, name: PATCHES[slot.synth.patchIndex].name, glitch: slot.synth.glitch ? GLITCH_TYPES[slot.synth.glitchType] : '', fragments: slot.synth.fragments })) };
+    return { type: 'layers', enabled: this.enabled, maximum: this.slots.length, voiceLimit: this.voiceLimit, message, rejected, current: this.settings(), kept: this.slots.filter(slot => slot.active && slot !== this.current && !slot.retiring).map(slot => ({ id: slot.id, name: slot.synth.technologyType>=0?TECHNOLOGY_LABELS[slot.synth.technologyType]:PATCHES[slot.synth.patchIndex].name, glitch: slot.synth.glitch ? GLITCH_TYPES[slot.synth.glitchType] : '', fragments: slot.synth.fragments })) };
   }
   notify(message = '', rejected = false) { this.emit(this.status(message, rejected)); }
   hasSound(slot = this.current) { return slot.synth.fadeGain !== 0 && (slot.touched || slot.synth.voices.some(voice => voice.active)); }
@@ -45,11 +46,16 @@ export class LiveLayers {
     return true;
   }
   setPatch(index, preserve = false, macros) {
-    if (index === this.current.synth.patchIndex && preserve) return;
+    if (index === this.current.synth.patchIndex && this.current.synth.technologyType<0 && preserve) return;
     if (preserve && !this.fork(false)) return;
     this.current.synth.setPatch(index, preserve);
     if (Array.isArray(macros)) macros.forEach((value, macro) => this.current.synth.set(macro, value));
     this.notify();
+  }
+  selectTechnology(index) {
+    if(index===this.current.synth.technologyType)return;
+    if(!this.fork(false))return;
+    this.current.synth.selectTechnology(index);this.notify();
   }
   set(index, value) { this.current.synth.set(index, value); }
   control(name, value) {

@@ -1,3 +1,4 @@
+import {TechnologyVoice} from './tcko2-technologies.js';
 export const PATCHES = [
   { name: 'Velvet Voltage', description: 'Wide, warm detuned saws with a soft swell.', model: 0, values: [.55,.12,.66,.16,.18,.3,0,.18], attack: .18, release: 1.8, decay: .9, sustain: .82, envTone: .25 },
   { name: 'Cellar Acid', description: 'A narrow pulse, sharp filter pluck and rubbery squelch.', model: 1, values: [.28,.86,.03,.38,.12,.05,0,.08], attack: .003, release: .16, decay: .13, sustain: .12, envTone: 8 },
@@ -185,7 +186,7 @@ class SliceEffects {
 export class SynthEngine {
   constructor(rate = 48000, voiceLimit = 8) {
     this.rate = Math.round(clamp(rate, 22050, 192000));
-    this.voices = Array.from({ length: Math.round(clamp(voiceLimit, 1, 8)) }, () => ({ active: false }));
+    this.voices = Array.from({ length: Math.round(clamp(voiceLimit, 1, 8)) }, () => ({ active: false, technology: new TechnologyVoice(this.rate) }));
     this.random = new Random(947); this.age = this.patchVersion = 0;
     this.pedals = new Uint8Array(18); this.bends = new Float64Array(18);
     this.target = new Float64Array(8); this.smooth = new Float64Array(8);
@@ -194,12 +195,13 @@ export class SynthEngine {
     this.reverbLeft = [2591,3251,3907,4451].map(size => new Comb(Math.round(size * this.rate / 44100)));
     this.reverbRight = [2677,3371,4003,4561].map(size => new Comb(Math.round(size * this.rate / 44100)));
     this.slices = new SliceEffects(this.rate);
-    this.master = this.masterSmooth = .2; this.pitch = 0; this.clarity = true; this.glitchType = 0;
+    this.technologyCharacter=.5;this.technologyLevel=.35;this.master = this.masterSmooth = .2; this.pitch = 0; this.clarity = true; this.glitchType = 0;
     this.glitchAmount = this.fragmentsAmount = .65; this.glitchVolume = this.glitchVolumeSmooth = 2;
     this.stopped = false; this.invalidSamples = 0; this.lfo = this.slowLfo = this.sampleCounter = 0;
     this.setPatch(3);
   }
   setPatch(index, preserve = false) {
+    this.technologyType=-1;
     if (preserve) {
       for (const voice of this.voices) if (voice.active && !voice.frozen) {
         const cutoffHertz = this.cutoffHertz ?? Math.min(this.rate * .4, 80 * 150 ** this.smooth[0]);
@@ -220,9 +222,16 @@ export class SynthEngine {
     if (preserve) { this.target[4] = echoAmount; this.target[5] = space; }
     this.smooth.set(this.target);
   }
+  selectTechnology(index) {
+    index=Math.round(clamp(index,-1,11));if(index===this.technologyType)return;
+    this.panic();this.technologyType=index;this.patchVersion++;
+  }
   set(index, value) { if (Number.isInteger(index) && index >= 0 && index < 8) this.target[index] = clamp(value, 0, 1); }
   control(name, value) {
     switch (name) {
+      case 'technologyType': this.selectTechnology(value); break;
+      case 'technologyCharacter': this.technologyCharacter=clamp(value,0,1);for(const voice of this.voices)if(voice.technologyActive)voice.technology.Configure(voice.technology.Type,voice.note,this.technologyCharacter,this.technologyLevel??.35);break;
+      case 'technologyLevel': this.technologyLevel=clamp(value,0,1);for(const voice of this.voices)if(voice.technologyActive)voice.technology.Configure(voice.technology.Type,voice.note,this.technologyCharacter??.5,this.technologyLevel);break;
       case 'master': this.master = clamp(value, 0, .8); break;
       case 'pitch': this.pitch = Math.round(clamp(value, -12, 12)); break;
       case 'clarity': this.clarity = Boolean(value); break;
@@ -249,6 +258,8 @@ export class SynthEngine {
     if (!chosen) chosen = this.voices.find(voice => !voice.active);
     if (!chosen) chosen = this.voices.reduce((oldest, voice) => voice.age < oldest.age ? voice : oldest);
     Object.assign(chosen, { note, channel, patchVersion: this.patchVersion, frozen: null, age: ++this.age, active: true, down: true, held: false, flowHeld: false, latched: this.drone, bloom: 0, stage: 0, env: 0, filterEnv: 1, ic1: 0, ic2: 0, velocity: (clamp(velocity, 1, 127) / 127) ** .65, frequency: frequencyOf(note), drift: this.random.next() * 2 - 1, phase1: this.random.next(), phase2: this.random.next(), phase3: this.random.next(), phase4: this.random.next(), sub: this.random.next(), ring: 0, modPhase: 0, extraPhase: 0, chipPhase: 0, seconds: 0, noiseLow: 0, noiseState: 947 + note * 7919 + channel * 101 });
+    chosen.technologyActive=this.technologyType>=0;
+    if(chosen.technologyActive){chosen.technology.Configure(this.technologyType,note,this.technologyCharacter??.5,this.technologyLevel??.35);chosen.technology.Play(true);}
     this.noteFrequency = chosen.frequency;
   }
   noteOff(note, channel = 16) {
@@ -275,7 +286,7 @@ export class SynthEngine {
     this.hold = this.drone = this.glitch = this.fragments = false;
     this.glitchSmooth = this.fragmentsSmooth = 0; this.glitchVolumeSmooth = this.glitchVolume;
     this.claritySmooth = this.clarity ? 1 : 0; this.noteFrequency = this.noteFrequencySmooth = 220;
-    for (const voice of this.voices) voice.active = voice.down = voice.held = voice.latched = voice.flowHeld = false;
+    for (const voice of this.voices) {voice.technology.Panic();voice.technologyActive=false;voice.active = voice.down = voice.held = voice.latched = voice.flowHeld = false;}
     this.pedals.fill(0); this.bends.fill(0);
     for (const buffer of [this.delayLeft,this.delayRight,this.chorusLeft,this.chorusRight]) buffer.fill(0);
     for (const comb of [...this.reverbLeft,...this.reverbRight]) comb.clear();
@@ -370,6 +381,11 @@ export class SynthEngine {
     let left = 0, right = 0, spaceBloom = 0, chorusMode = patch.model === 15;
     for (const voice of this.voices) {
       if (!voice.active) continue;
+      if(voice.technologyActive){
+        if(voice.stage===0){voice.env=Math.min(1,voice.env+1/(rate*.005));if(voice.env===1)voice.stage=1;}
+        else if(voice.stage===2){voice.env*=Math.exp(-7/(rate*.25));if(voice.env<.00008){voice.active=false;voice.technology.Panic();continue;}}
+        voice.technology.Next();left+=voice.technology.Left*voice.env*voice.velocity*.65;right+=voice.technology.Right*voice.env*voice.velocity*.65;continue;
+      }
       const tone = voice.frozen || this, patch = tone.patch;
       if (patch.model === 15) chorusMode = true;
       const expanded = voice.latched || this.hold || this.pedals[voice.channel];

@@ -40,9 +40,20 @@
       <p id="layer-status" role="status" aria-live="polite">Notes stay on. Change sound or add an effect to keep a separate layer. Tap a held key again to release it.</p>
     </section>
     <section id="effects-panel" class="panel live-deck" aria-label="Vintage sounds and effects">
-      <section class="vintage-bank" aria-labelledby="vintage-heading"><div class="bank-heading"><h2 id="vintage-heading">Old Electro</h2><span>Eight original patches · choose here, then play the keys</span></div><div id="vintage-sounds" class="vintage-sounds"></div></section>
-      <div class="effects-grid">
+
+      <div class="sound-laboratory" aria-label="Independent sound sections">
         <section class="effect-unit" aria-labelledby="glitch-heading"><div class="unit-heading"><h2 id="glitch-heading">Glitch</h2><button id="glitch" class="toggle" aria-pressed="false" aria-label="Enable Glitch">Off</button></div><label class="small-label" for="glitch-type">TYPE<select id="glitch-type"></select></label><div class="range-pair"><label for="glitch-amount">Strength <output id="glitch-amount-value">65%</output><input id="glitch-amount" type="range" min="0" max="100" value="65"></label><label for="glitch-volume">Volume <output id="glitch-volume-value">200%</output><input id="glitch-volume" type="range" min="0" max="400" step="5" value="200"></label></div></section>
+        <section class="technology-bank" aria-labelledby="technology-heading"><div class="bank-heading"><h2 id="technology-heading">Sound Technologies</h2><span>DATA RIOT · twelve sound experiments</span></div>
+          <label for="technology-type" class="sr-only">Sound technology</label><select id="technology-type"></select>
+          <div class="technology-transport"><span id="technology-keyboard" role="status">Select a technology, then play keys</span></div>
+          <p id="technology-description" class="unit-description" aria-live="polite"></p>
+          <label for="technology-character">Character <output id="technology-character-value">50%</output><input id="technology-character" type="range" min="0" max="100" value="50"></label>
+          <label for="technology-volume">Volume <output id="technology-volume-value">35%</output><input id="technology-volume" type="range" min="0" max="100" value="35"></label>
+        </section>
+      <section class="vintage-bank" aria-labelledby="vintage-heading"><div class="bank-heading"><h2 id="vintage-heading">Old Electro</h2><span>Eight original patches · choose here, then play the keys</span></div><div id="vintage-sounds" class="vintage-sounds"></div></section>
+      </div>
+      <div class="effects-grid">
+
         <section class="effect-unit" aria-labelledby="fragments-heading"><div class="unit-heading"><h2 id="fragments-heading">Fragments</h2><button id="fragments" class="toggle" aria-pressed="false" aria-label="Enable Fragments">Off</button></div><p class="unit-description">Reversed grains and scattered pieces.</p><label for="fragments-amount">Strength <output id="fragments-amount-value">65%</output><input id="fragments-amount" type="range" min="0" max="100" value="65"></label></section>
         <section class="effect-unit space-unit" aria-labelledby="space-heading"><div class="unit-heading"><h2 id="space-heading">Space</h2><span class="mini-mark" aria-hidden="true">↗</span></div><label for="bloom">Bloom <output id="bloom-value">75%</output><input id="bloom" type="range" min="0" max="100" value="75"></label><label for="echo">Echo time <output id="echo-value">0.85 s</output><input id="echo" type="range" min="80" max="4000" step="10" value="850"></label></section>
         <section class="effect-unit fade-unit" aria-labelledby="fade-heading"><div class="unit-heading"><h2 id="fade-heading">Fade</h2></div><div class="fade-controls"><button id="fade" type="button">Fade out</button><label for="fade-time" class="sr-only">Fade duration</label><select id="fade-time" aria-label="Fade duration"><option value="1">1 sec</option><option value="3" selected>3 sec</option><option value="8">8 sec</option></select></div><p class="unit-description">Notes + echoes fade to silence. A new key brings sound back.</p></section>

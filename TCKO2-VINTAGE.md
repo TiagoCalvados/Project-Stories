@@ -24,3 +24,7 @@ Validation covers the eleven original sound identities at neutral macro values; 
 ## Local sound files
 
 Open sound is beside the title on desktop and mobile. Choose a local audio file to load and play it alongside the synth. Play sound and Stop sound control the file independently; Live volume, Fade, Panic, Stop and REC include it. Decoding stays on the device, and failures or cancelled selections keep the previous sound. Supported formats depend on the browser. The Windows version starts its picker in Projects/TCK02/SOUNDS and supports WAV, M4A/AAC, MP3 and MP4 audio. Imported files play their original audio; keyboard effects apply to generated voices. The original file is never overwritten.
+
+## Sound Technologies
+
+The new centre section supplies twelve keyboard sounds. Select a technology, then play the piano, computer keys or MIDI. Selection itself is silent. Character and Volume control its keyboard voices. See TCKO2-SOUND-TECHNOLOGIES.md for the exact models, research basis and verification.

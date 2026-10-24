@@ -388,3 +388,13 @@ h2 { margin: 0; font-size: 14px; font-weight: 500; }
 .take-results{grid-template-columns:minmax(0,1fr) auto auto auto}@media(max-width:700px){.take-results{grid-template-columns:1fr 1fr}.take-results>label{grid-column:1/-1}.take-results .download-button{font-size:12px}}
 
 .title-line{display:flex;align-items:center;flex-wrap:wrap;gap:12px}.title-line h1{margin:0}.title-line #open-sound{flex:0 0 auto;padding:10px 14px}.sound-file-panel{display:flex;align-items:center;gap:10px;flex-wrap:wrap;grid-column:1/-1;width:100%}.sound-file-panel output{flex:1 1 240px;font-size:.8rem;overflow-wrap:anywhere}@media(max-width:700px){.title-line{gap:8px}.title-line #open-sound{padding:8px 10px}.sound-file-panel{gap:8px}}
+
+/* Three sound sections: preserve their order at every viewport size. */
+.live-deck{display:block}.sound-laboratory{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,4fr) minmax(0,3fr)}
+.sound-laboratory>section{min-width:0;border:0;border-right:1px solid var(--line);padding:10px}.sound-laboratory>section:last-child{border-right:0}
+.sound-laboratory .bank-heading{display:block}.sound-laboratory h2{font-size:14px;margin:0 0 5px}.sound-laboratory .bank-heading span{display:block;font-size:10px;color:var(--dim);margin-bottom:7px}
+.technology-transport{display:flex;gap:5px;margin-top:7px;align-items:center}.technology-transport button{flex:1;padding:6px}.technology-transport label{display:flex;gap:5px;align-items:center}.technology-transport input{width:52px;min-height:30px;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:4px}
+.technology-transport [aria-pressed=true]{border-color:var(--mint);background:#28473b}.technology-bank .unit-description{min-height:30px;font-size:11px;line-height:1.35;margin:7px 0}.technology-bank label{font-size:11px}.technology-bank input[type=range]{margin:1px 0;min-height:24px}
+.sound-laboratory .vintage-sounds{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}.sound-laboratory .vintage-sound{white-space:normal;font-size:11px;padding:5px;min-height:31px}
+.live-deck>.effects-grid{grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--line)}
+@media(max-width:700px){.sound-laboratory{grid-template-columns:1fr}.sound-laboratory>section{border-right:0;border-bottom:1px solid var(--line);padding:12px}.sound-laboratory .vintage-sounds{grid-template-columns:repeat(2,minmax(0,1fr))}.technology-transport button,.technology-transport input{min-height:44px}.technology-bank input[type=range]{min-height:36px}.sound-laboratory .vintage-sound{min-height:44px}.live-deck>.effects-grid{grid-template-columns:1fr}.sound-laboratory h2{font-size:17px}}

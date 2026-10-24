@@ -13,6 +13,12 @@ class TCKO2Processor extends AudioWorkletProcessor {
     this.recorder = new PcmTakeCapture(sampleRate, (message, transfer) => this.port.postMessage(message, transfer || []));
     this.port.onmessage = ({ data }) => {
       switch (data.type) {
+        case 'technology':
+          if(data.action==='configure'){
+            if(data.enabled)this.layers.selectTechnology(data.selected);
+            this.layers.control('technologyCharacter',data.character);this.layers.control('technologyLevel',data.level);
+          }
+          this.port.postMessage({type:'technologyStatus',selected:this.synth.technologyType});break;
         case 'soundFile':
           if (data.action === 'load') this.soundFile.load(data.left, data.right, data.autoplay && !this.synth.stopped);
           else if (data.action === 'play' && !this.synth.stopped) this.soundFile.play();
@@ -49,6 +55,7 @@ class TCKO2Processor extends AudioWorkletProcessor {
     if (!output?.[0] || !output[1]) return true;
     this.layers.render(output[0], output[1]);
     this.soundFile.mix(output[0], output[1], this.synth.master);
+
     let peak = this.loop.recording || this.loop.playing || this.loop.gain > 0 ? this.loop.process(output[0], output[1]) : this.layers.peak;
     for (let i=0;i<output[0].length;i++) peak=Math.max(peak,Math.abs(output[0][i]),Math.abs(output[1][i]));
     this.recorder.append(output[0], output[1]);
@@ -56,6 +63,7 @@ class TCKO2Processor extends AudioWorkletProcessor {
       this.port.postMessage({ type: 'meter', peak, notes: this.layers.activeNotes(), invalidSamples: this.layers.invalidSamples, fading: this.synth.fadeFrames > 0, faded: this.synth.fadeGain === 0 });
       this.port.postMessage(this.loop.status());
       this.port.postMessage(this.soundFile.status());
+      this.port.postMessage({type:"technologyStatus",selected:this.synth.technologyType});
     }
     return true;
   }

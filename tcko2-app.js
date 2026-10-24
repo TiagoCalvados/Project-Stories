@@ -1,3 +1,4 @@
+import { TechnologyControls } from './tcko2-technology-controls.js';
 import { PATCHES, GLITCH_TYPES, clamp } from './tcko2-engine.js';
 import { TakeRecorder } from './tcko2-recorder.js';
 import { LoopControls } from './tcko2-loop-controls.js';
@@ -40,6 +41,7 @@ const isRunning = () => ready && context?.state === 'running' && !stopped;
 const takeRecorder = new TakeRecorder({ startAudio, isRunning, send });
 const loopControls = new LoopControls({ startAudio, isRunning, send });
 const soundFiles = new SoundFileControls({ startAudio, getContext:()=>context, send });
+const technologies = new TechnologyControls({startAudio,send});
 
 function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, hold: false, drone: false, mappings })); } catch {} }
 function control(name, value) { state[name] = value; send({ type: 'control', name, value }); save(); }
@@ -47,6 +49,7 @@ function syncEngine() {
   send({ type: 'preset', index: state.preset });
   state.macros.forEach((value, index) => send({ type: 'macro', index, value }));
   for (const name of [...Object.keys(CONTROL_RANGES), 'clarity','hold','drone','glitch','fragments','flow']) send({ type: 'control', name, value: state[name] });
+  technologies.sync();
 }
 
 let layerSignature = '';
@@ -127,7 +130,8 @@ byId('slower').addEventListener('click', () => changePitch(state.pitch - 1));
 byId('normal').addEventListener('click', () => changePitch(0));
 byId('faster').addEventListener('click', () => changePitch(state.pitch + 1));
 function choosePreset(index) {
-  if (index === state.preset) return;
+  if (index === state.preset && !technologies.enabled) return;
+  technologies.deactivate();
   state.preset = index;
   const patch = PATCHES[state.preset];
   state.macros = patch.values.map((value, macro) => macro === 4 || macro === 5 ? state.macros[macro] : value);
@@ -164,6 +168,7 @@ async function startAudio() {
         synthNode.connect(analyser); analyser.connect(context.destination);
         const engineStarted = new Promise((resolve, reject) => {
           synthNode.port.onmessage = ({ data }) => {
+            if(technologies.handleMessage(data))return;
             if(soundFiles.handleMessage(data))return;
             if (data.type === 'layers') { renderLayers(data); return; }
             if (loopControls.handleMessage(data)) return;
@@ -244,7 +249,7 @@ function releaseChannel(channel) {
   send({ type: 'release', channel });
 }
 function panic() {
-  soundFiles.cancelPendingAutoplay();
+  technologies.cancelPending();soundFiles.cancelPendingAutoplay();
   loopControls.cancelPending();
   pendingNotes.clear(); keysDown.clear(); pointers.clear(); activeNotes.clear(); fading = false; byId('fade').textContent = 'Fade out';
   state.hold = state.drone = state.glitch = state.fragments = false;
