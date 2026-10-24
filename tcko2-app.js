@@ -1,6 +1,7 @@
 import { PATCHES, GLITCH_TYPES, clamp } from './tcko2-engine.js';
 import { TakeRecorder } from './tcko2-recorder.js';
 import { LoopControls } from './tcko2-loop-controls.js';
+import { SoundFileControls } from './tcko2-sound-controls.js';
 
 const byId = id => document.getElementById(id);
 const KEY_CODES = ['KeyA','KeyW','KeyS','KeyE','KeyD','KeyF','KeyT','KeyG','KeyY','KeyH','KeyU','KeyJ','KeyK','KeyO','KeyL','KeyP','Semicolon','Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8'];
@@ -33,11 +34,12 @@ let context, synthNode, analyser, starting, stopped = false, ready = false, midi
 let keysDown = new Map(), pointers = new Map(), activeNotes = new Set();
 const pendingNotes = new Map();
 let fading = false, fadeAcknowledged = false;
-const send = message => synthNode?.port.postMessage(message);
+const send = (message, transfer = []) => synthNode?.port.postMessage(message, transfer);
 const announce = message => { byId('audio-status').textContent = message; };
 const isRunning = () => ready && context?.state === 'running' && !stopped;
 const takeRecorder = new TakeRecorder({ startAudio, isRunning, send });
 const loopControls = new LoopControls({ startAudio, isRunning, send });
+const soundFiles = new SoundFileControls({ startAudio, getContext:()=>context, send });
 
 function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, hold: false, drone: false, mappings })); } catch {} }
 function control(name, value) { state[name] = value; send({ type: 'control', name, value }); save(); }
@@ -69,7 +71,8 @@ function renderLayers(data) {
 byId('flow').addEventListener('click', () => { control('flow', !state.flow); renderControls(); });
 byId('layers-clear').addEventListener('click', () => send({ type: 'layersClear' }));
 
-PATCHES.forEach((patch, index) => byId('preset').add(new Option(`${String(index + 1).padStart(2, '0')}  ${patch.name}`, index)));
+PATCHES.forEach((patch, index) => { if(!patch.vintage)byId('preset').add(new Option(`${String(index + 1).padStart(2, '0')}  ${patch.name}`, index)); });
+const electroSelected=new Option('Old Electro selected','electro');electroSelected.disabled=true;electroSelected.hidden=true;byId('preset').add(electroSelected);
 GLITCH_TYPES.forEach((name, index) => byId('glitch-type').add(new Option(name, index)));
 const vintageButtons = new Map();
 PATCHES.forEach((patch, index) => {
@@ -99,7 +102,7 @@ for (const [id, name, scale, format] of rangeBindings) {
 }
 function renderControls() {
   byId('flow').setAttribute('aria-pressed', String(state.flow)); byId('flow').textContent = `Keep playing: ${state.flow ? 'On' : 'Off'}`;
-  byId('preset').value = state.preset; byId('preset-description').textContent = PATCHES[state.preset].description;
+  byId('preset').value = PATCHES[state.preset].vintage ? 'electro' : state.preset; byId('preset-description').textContent = PATCHES[state.preset].description;
   vintageButtons.forEach((button, index) => button.setAttribute('aria-pressed', String(state.preset === index)));
   for (const [id, name, scale, format] of rangeBindings) { byId(id).value = Math.round(state[name] * scale); byId(`${id}-value`).textContent = format(state[name]); }
   for (const name of ['hold','drone','glitch','fragments']) {
@@ -161,6 +164,7 @@ async function startAudio() {
         synthNode.connect(analyser); analyser.connect(context.destination);
         const engineStarted = new Promise((resolve, reject) => {
           synthNode.port.onmessage = ({ data }) => {
+            if(soundFiles.handleMessage(data))return;
             if (data.type === 'layers') { renderLayers(data); return; }
             if (loopControls.handleMessage(data)) return;
             if (takeRecorder.handleMessage(data)) return;
@@ -240,6 +244,7 @@ function releaseChannel(channel) {
   send({ type: 'release', channel });
 }
 function panic() {
+  soundFiles.cancelPendingAutoplay();
   loopControls.cancelPending();
   pendingNotes.clear(); keysDown.clear(); pointers.clear(); activeNotes.clear(); fading = false; byId('fade').textContent = 'Fade out';
   state.hold = state.drone = state.glitch = state.fragments = false;

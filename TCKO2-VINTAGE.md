@@ -2,7 +2,7 @@
 
 The piano now comes first. The compact laptop layout places keys and effects together; mobile keeps the piano visible while scrolling. The eight large macro panels and their Learn buttons are removed; existing saved sound parameters and MIDI mappings remain supported. The eleven original presets keep their original indexes and DSP behavior.
 
-Eight new, original vintage-inspired patches are available beside Glitch and Fragments, and in the Sound menu. These are synthesized sounds, not samples, branded hardware emulations or recreations of film recordings:
+Eight new, original vintage-inspired patches are available in Old Electro beside Glitch and Fragments. They are no longer duplicated in the upper Sound menu. These are synthesized sounds, not samples, branded hardware emulations or recreations of film recordings:
 
 - **Laser Zap**: rapidly descending pitch envelope; tap a key.
 - **Robot Bleeps**: stepped, warbling tone sequences; hold a key.
@@ -20,3 +20,7 @@ Select a vintage patch, then play the keys. Online selections now choose the sou
 The desktop synth uses the same eight sound designs and fade behavior. Device selection, recording, Export WAV and Send to TCK03 remain on its main window. Existing sound-session and knob-mapping files must not be overwritten during installation.
 
 Validation covers the eleven original sound identities at neutral macro values; new patches are checked at their intended settings and over time, because a transient laser or decaying FM strike cannot be identified by a late steady-state spectrum alone. All nineteen patches are checked for bounded, finite output. Fade timing, clean silence, cancellation and replay are checked at normal, half and double speed. Recording regressions and desktop/mobile layout checks remain separate.
+
+## Local sound files
+
+Open sound is beside the title on desktop and mobile. Choose a local audio file to load and play it alongside the synth. Play sound and Stop sound control the file independently; Live volume, Fade, Panic, Stop and REC include it. Decoding stays on the device, and failures or cancelled selections keep the previous sound. Supported formats depend on the browser. The Windows version starts its picker in Projects/TCK02/SOUNDS and supports WAV, M4A/AAC, MP3 and MP4 audio. Imported files play their original audio; keyboard effects apply to generated voices. The original file is never overwritten.

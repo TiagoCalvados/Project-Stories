@@ -386,3 +386,5 @@ h2 { margin: 0; font-size: 14px; font-weight: 500; }
 }
 
 .take-results{grid-template-columns:minmax(0,1fr) auto auto auto}@media(max-width:700px){.take-results{grid-template-columns:1fr 1fr}.take-results>label{grid-column:1/-1}.take-results .download-button{font-size:12px}}
+
+.title-line{display:flex;align-items:center;flex-wrap:wrap;gap:12px}.title-line h1{margin:0}.title-line #open-sound{flex:0 0 auto;padding:10px 14px}.sound-file-panel{display:flex;align-items:center;gap:10px;flex-wrap:wrap;grid-column:1/-1;width:100%}.sound-file-panel output{flex:1 1 240px;font-size:.8rem;overflow-wrap:anywhere}@media(max-width:700px){.title-line{gap:8px}.title-line #open-sound{padding:8px 10px}.sound-file-panel{gap:8px}}

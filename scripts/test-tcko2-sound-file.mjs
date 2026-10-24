@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import { PcmSoundFile } from '../tcko2-sound-file.js';
+
+const file=new PcmSoundFile(44100);
+assert.equal(file.load(new Float32Array([.5,.25,-.5,-.25]),new Float32Array([.25,.5,-.25,-.5])),true);
+let left=new Float32Array([.1,.1]),right=new Float32Array([.2,.2]);
+file.mix(left,right,.5);
+assert(Math.abs(left[0]-.35)<1e-6 && Math.abs(right[0]-.325)<1e-6);
+assert.equal(file.position,2);
+assert.equal(file.load(new Float32Array(0),new Float32Array(0)),false);
+assert.equal(file.position,2);assert.equal(file.playing,true);
+file.mix(left,right,0);assert.equal(file.playing,false);
+file.play();file.stop();assert.equal(file.position,0);assert.equal(file.playing,false);
+file.load(new Float32Array(88200).fill(.5),new Float32Array(88200).fill(.5));file.fadeOut(1);
+left=new Float32Array(44100);right=new Float32Array(44100);file.mix(left,right,.8);
+assert(left[0]>.39 && left.at(-1)<.00002);
+file.mix(new Float32Array(128),new Float32Array(128),.8);assert.equal(file.playing,false);
+file.load(new Float32Array([NaN,Infinity]),new Float32Array([-.5,.5]));left=new Float32Array(2);right=new Float32Array(2);file.mix(left,right,.8);
+assert(left.every(Number.isFinite) && right.every(Number.isFinite));
+console.log('PASS: imported PCM mixing, master mute, completion, invalid-load retention, stop/replay, bounded fade and finite output');

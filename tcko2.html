@@ -14,7 +14,7 @@
   <main class="instrument">
     <nav class="music-nav" aria-label="Music app navigation"><a href="index.html">← Project Stories</a><a href="tcko3.html">Open TCKO3 Studio ↗</a></nav>
     <header class="masthead">
-      <div><h1>TCKO2 <span>Synth Modular</span></h1><p class="intro">Keys first. New places to get lost.</p></div>
+      <div><div class="title-line"><h1>TCKO2 <span>Synth Modular</span></h1><button id="open-sound" type="button">Open sound</button></div><p class="intro">Keys first. New places to get lost.</p></div>
       <div class="scope" aria-hidden="true"><canvas id="scope" width="500" height="100"></canvas><span>LIVE SIGNAL <i id="signal-light"></i></span></div>
     </header>
     <section class="keyboard-panel" aria-label="Playable synthesizer keyboard">
@@ -31,6 +31,7 @@
       <label class="master-label" for="master">LIVE VOLUME <output id="master-value" for="master">20%</output><input id="master" type="range" min="0" max="80" value="20" aria-label="Live synth volume"></label>
     </section>
     <section class="performance" aria-label="Performance controls">
+      <section class="sound-file-panel" aria-label="Your sound file"><input id="sound-file-input" type="file" accept="audio/*,.wav,.m4a,.mp3,.mp4" hidden><button id="play-sound" type="button" disabled>Play sound</button><button id="stop-sound" type="button" disabled>Stop sound</button><output id="sound-file-status" role="status" aria-live="polite">Open a sound from your device. It stays on your device.</output></section>
       <div class="latches"><button id="hold" class="toggle" aria-pressed="false">Sustain</button><button id="drone" class="toggle" aria-pressed="false">Drone</button><label class="clarity"><input id="clarity" type="checkbox" checked> Key clarity</label></div>
       <div class="transport" aria-label="Tape-style pitch and speed"><span class="section-caption">PITCH / SPEED</span><div class="transport-buttons"><button id="slower" aria-label="Slower, lower pitch one semitone">− Slower</button><button id="normal">Normal</button><button id="faster" aria-label="Faster, raise pitch one semitone">Faster +</button></div><output id="pitch-value" aria-live="polite">1.00× / 0 st</output></div>
     </section>
@@ -39,7 +40,7 @@
       <p id="layer-status" role="status" aria-live="polite">Notes stay on. Change sound or add an effect to keep a separate layer. Tap a held key again to release it.</p>
     </section>
     <section id="effects-panel" class="panel live-deck" aria-label="Vintage sounds and effects">
-      <section class="vintage-bank" aria-labelledby="vintage-heading"><div class="bank-heading"><h2 id="vintage-heading">Vintage sound lab</h2><span>Choose a sound, then play the keys · original patches, not hardware emulations</span></div><div id="vintage-sounds" class="vintage-sounds"></div></section>
+      <section class="vintage-bank" aria-labelledby="vintage-heading"><div class="bank-heading"><h2 id="vintage-heading">Old Electro</h2><span>Eight original patches · choose here, then play the keys</span></div><div id="vintage-sounds" class="vintage-sounds"></div></section>
       <div class="effects-grid">
         <section class="effect-unit" aria-labelledby="glitch-heading"><div class="unit-heading"><h2 id="glitch-heading">Glitch</h2><button id="glitch" class="toggle" aria-pressed="false" aria-label="Enable Glitch">Off</button></div><label class="small-label" for="glitch-type">TYPE<select id="glitch-type"></select></label><div class="range-pair"><label for="glitch-amount">Strength <output id="glitch-amount-value">65%</output><input id="glitch-amount" type="range" min="0" max="100" value="65"></label><label for="glitch-volume">Volume <output id="glitch-volume-value">200%</output><input id="glitch-volume" type="range" min="0" max="400" step="5" value="200"></label></div></section>
         <section class="effect-unit" aria-labelledby="fragments-heading"><div class="unit-heading"><h2 id="fragments-heading">Fragments</h2><button id="fragments" class="toggle" aria-pressed="false" aria-label="Enable Fragments">Off</button></div><p class="unit-description">Reversed grains and scattered pieces.</p><label for="fragments-amount">Strength <output id="fragments-amount-value">65%</output><input id="fragments-amount" type="range" min="0" max="100" value="65"></label></section>
