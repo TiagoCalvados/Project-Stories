@@ -13,7 +13,7 @@ const CONTROL_RANGES = {
 const STORAGE_KEY = 'project-stories-tcko2-v1';
 const compactScreen = window.matchMedia('(max-width: 700px)').matches;
 const state = {
-  preset: 3, macros: [...PATCHES[3].values], octave: 4, keys: compactScreen ? 13 : 25,
+  preset: 0, macros: [...PATCHES[0].values], octave: 4, keys: compactScreen ? 13 : 25,
   master: .2, pitch: 0, bloom: .75, echo: .85, glitch: false, fragments: false, hold: false, drone: false, clarity: true, flow: true,
   glitchAmount: .65, fragmentsAmount: .65, glitchVolume: 2, glitchType: 0,
 };
@@ -50,11 +50,18 @@ function syncEngine() {
   state.macros.forEach((value, index) => send({ type: 'macro', index, value }));
   for (const name of [...Object.keys(CONTROL_RANGES), 'clarity','hold','drone','glitch','fragments','flow']) send({ type: 'control', name, value: state[name] });
   technologies.sync();
+  if((startupLayers&&typeof startupLayers==="object"))send({type:"layersRestore",saved:startupLayers});
 }
 
+let startupLayers=null,latestLayers=null;try{startupLayers=JSON.parse(localStorage.getItem('project-stories-tcko2-stack-v1')||'null');}catch{}
+if(!startupLayers)state.flow=true;
+let latestLayerKeys=new Set();
 let layerSignature = '';
-byId('layer-count').textContent = `1/${compactScreen ? 2 : 4}`;
+byId('layer-count').textContent = `1/${compactScreen ? 4 : 8}`;
 function renderLayers(data) {
+  latestLayerKeys=new Set(data.kept.map(layer=>layer.kind+":"+layer.index));
+  vintageButtons.forEach((button,index)=>button.setAttribute("aria-pressed",String(latestLayerKeys.has("2:"+index))));
+  latestLayers=data.saved;if(ready&&(latestLayers&&typeof latestLayers==="object")){try{localStorage.setItem("project-stories-tcko2-stack-v1",JSON.stringify(latestLayers));}catch{}}
   if (data.rejected) { Object.assign(state, data.current); renderControls(); save(); }
   const signature = JSON.stringify(data.kept);
   if (signature !== layerSignature) {
@@ -68,8 +75,8 @@ function renderLayers(data) {
     }
   }
   byId('layers-clear').disabled = data.kept.length === 0;
-  byId('layer-count').textContent = `${data.kept.length + 1}/${data.maximum}`;
-  byId('layer-status').textContent = data.message || (data.enabled ? 'Notes stay on. Change sound or add an effect to keep a separate layer. Tap a held key again to release it.' : 'Normal key release. Kept notes release naturally; their echoes remain.');
+  byId('layer-count').textContent = `${data.count}/${data.maximum}`;
+  byId('layer-status').textContent = data.message || (data.enabled ? 'Each selected sound stays in the mix. All layers follow the same keys. Use Sustain or Drone to hold notes.' : 'Stack sounds is off: selecting a sound replaces only the selected layer.');
 }
 byId('flow').addEventListener('click', () => { control('flow', !state.flow); renderControls(); });
 byId('layers-clear').addEventListener('click', () => send({ type: 'layersClear' }));
@@ -104,9 +111,9 @@ for (const [id, name, scale, format] of rangeBindings) {
   byId(id).addEventListener('input', () => { control(name, Number(byId(id).value) / scale); byId(`${id}-value`).textContent = format(state[name]); });
 }
 function renderControls() {
-  byId('flow').setAttribute('aria-pressed', String(state.flow)); byId('flow').textContent = `Keep playing: ${state.flow ? 'On' : 'Off'}`;
+  byId('flow').setAttribute('aria-pressed', String(state.flow)); byId('flow').textContent = `Stack sounds: ${state.flow ? 'On' : 'Off'}`;
   byId('preset').value = PATCHES[state.preset].vintage ? 'electro' : state.preset; byId('preset-description').textContent = PATCHES[state.preset].description;
-  vintageButtons.forEach((button, index) => button.setAttribute('aria-pressed', String(state.preset === index)));
+  vintageButtons.forEach((button, index) => button.setAttribute('aria-pressed', String(latestLayerKeys.has('2:'+index))));
   for (const [id, name, scale, format] of rangeBindings) { byId(id).value = Math.round(state[name] * scale); byId(`${id}-value`).textContent = format(state[name]); }
   for (const name of ['hold','drone','glitch','fragments']) {
     byId(name).setAttribute('aria-pressed', String(state[name]));
@@ -124,14 +131,16 @@ for (const name of ['hold','drone','glitch','fragments']) byId(name).addEventLis
   control(name, enabled); renderControls();
 });
 byId('clarity').addEventListener('change', () => control('clarity', byId('clarity').checked));
-byId('glitch-type').addEventListener('change', () => control('glitchType', Number(byId('glitch-type').value)));
+byId('glitch-type').addEventListener('change', () => {control('glitchType',Number(byId('glitch-type').value));control('glitch',true);renderControls();});
 function changePitch(value) { control('pitch', Math.round(clamp(value, -12, 12))); renderControls(); }
 byId('slower').addEventListener('click', () => changePitch(state.pitch - 1));
 byId('normal').addEventListener('click', () => changePitch(0));
 byId('faster').addEventListener('click', () => changePitch(state.pitch + 1));
-function choosePreset(index) {
-  if (index === state.preset && !technologies.enabled) return;
-  technologies.deactivate();
+async function choosePreset(index) {
+  if(!isRunning()&&!await startAudio())return;
+  if(PATCHES[index].vintage){send({type:'preset',index,preserve:true,macros:PATCHES[index].values});return;}
+
+
   state.preset = index;
   const patch = PATCHES[state.preset];
   state.macros = patch.values.map((value, macro) => macro === 4 || macro === 5 ? state.macros[macro] : value);
@@ -140,6 +149,7 @@ function choosePreset(index) {
   renderControls(); save();
 }
 byId('preset').addEventListener('change', () => choosePreset(Number(byId('preset').value)));
+byId('add-main-sound').addEventListener('click',()=>choosePreset(state.preset));
 byId('fade').addEventListener('click', () => {
   if (!isRunning()) { announce('Play a note first, then use Fade out.'); return; }
   send({ type: 'fade', seconds: Number(byId('fade-time').value) });
@@ -199,7 +209,7 @@ async function startAudio() {
           };
         });
         context.onstatechange = updateAudioStatus;
-        syncEngine(); await engineStarted; ready = true;
+        syncEngine(); await engineStarted; ready = true;if((latestLayers&&typeof latestLayers==="object")){try{localStorage.setItem("project-stories-tcko2-stack-v1",JSON.stringify(latestLayers));}catch{}}
       } else if (!ready) { throw new Error('The sound engine needs a fresh start. Reload this page.'); }
       await context.resume();
       stopped = false; send({ type: 'stop', value: false });

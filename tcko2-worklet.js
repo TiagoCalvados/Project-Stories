@@ -13,12 +13,13 @@ class TCKO2Processor extends AudioWorkletProcessor {
     this.recorder = new PcmTakeCapture(sampleRate, (message, transfer) => this.port.postMessage(message, transfer || []));
     this.port.onmessage = ({ data }) => {
       switch (data.type) {
+        case 'layersRestore': this.layers.restore(data.saved); break;
         case 'technology':
           if(data.action==='configure'){
             if(data.enabled)this.layers.selectTechnology(data.selected);
             this.layers.control('technologyCharacter',data.character);this.layers.control('technologyLevel',data.level);
           }
-          this.port.postMessage({type:'technologyStatus',selected:this.synth.technologyType});break;
+          this.port.postMessage({type:'technologyStatus',selected:this.layers.selectedTechnologyType,character:this.layers.technology?.synth.technologyCharacter,level:this.layers.technology?.synth.technologyLevel});break;
         case 'soundFile':
           if (data.action === 'load') this.soundFile.load(data.left, data.right, data.autoplay && !this.synth.stopped);
           else if (data.action === 'play' && !this.synth.stopped) this.soundFile.play();
@@ -60,10 +61,10 @@ class TCKO2Processor extends AudioWorkletProcessor {
     for (let i=0;i<output[0].length;i++) peak=Math.max(peak,Math.abs(output[0][i]),Math.abs(output[1][i]));
     this.recorder.append(output[0], output[1]);
     if (++this.blocks % 24 === 0) {
-      this.port.postMessage({ type: 'meter', peak, notes: this.layers.activeNotes(), invalidSamples: this.layers.invalidSamples, fading: this.synth.fadeFrames > 0, faded: this.synth.fadeGain === 0 });
+      this.port.postMessage({ type: 'meter', peak, notes: this.layers.activeNotes(), invalidSamples: this.layers.invalidSamples, fading: this.layers.fadeFrames > 0, faded: this.layers.fadeGain === 0 });
       this.port.postMessage(this.loop.status());
       this.port.postMessage(this.soundFile.status());
-      this.port.postMessage({type:"technologyStatus",selected:this.synth.technologyType});
+      this.port.postMessage({type:"technologyStatus",selected:this.layers.selectedTechnologyType,character:this.layers.technology?.synth.technologyCharacter,level:this.layers.technology?.synth.technologyLevel});
     }
     return true;
   }

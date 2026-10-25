@@ -60,7 +60,7 @@ class Comb {
   clear() { this.data.fill(0); this.position = this.damp = 0; }
 }
 
-class SliceEffects {
+export class SliceEffects {
   constructor(rate) {
     this.rate = rate;
     this.left = new Float64Array(rate);

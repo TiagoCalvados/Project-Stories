@@ -13,7 +13,7 @@ Eight new, original vintage-inspired patches are available in Old Electro beside
 - **Crystal FM**: bright, metallic FM chimes with a decaying modulation index.
 - **Cinema Convergence**: a slow convergence from detuned pitches into a sci-fi chord.
 
-Select a vintage patch, then play the keys. Online selections now choose the sound for new notes without cutting off previously held instruments or effects. These are keyboard-sound selectors, not one-shot sample pads. The online loop captures a phrase and allows additional live sounds or one-cycle overdubs; see TCKO2-LOOP.md. Use separate WAV takes in TCK03 when you need independently editable tracks.
+Select a vintage patch, then play the keys. Selections add a complete sound layer, including when choosing another sound from the same box. New layers join held notes and every new key plays the whole stack. Glitch and Fragments process the combined waveform. Remove one sound using its layer chip. These are keyboard-sound selectors, not one-shot sample pads. The online loop captures a phrase and allows additional live sounds or one-cycle overdubs; see TCKO2-LOOP.md. Use separate WAV takes in TCK03 when you need independently editable tracks.
 
 **Fade out** fades live synth output, including held notes, glitches and echo/reverb tails, over 1, 3 or 8 real seconds, independent of tape pitch/speed. Online it also fades and pauses the loop without deleting it. On completion it clears live notes and tails. Playing a new note cancels an unfinished fade and smoothly restores output. Live volume is not changed. Fade keeps a recording running, allowing the fade itself to be captured; use Stop recording afterward. Panic is still the immediate safety cut and online it retains the loop paused.
 

@@ -19,7 +19,7 @@ All twelve are original procedural sounds. They do not require downloads, microp
 | Moving in stereo | Spatial modulation | A resonant, noise-excited surface moves through equal-power stereo panning. Character controls travel speed. Stereo output is needed to hear direction. |
 | Spectral morph | Spectral morphing | Interpolation between two phase-aligned original magnitude envelopes, with slow movement around the chosen Character position. Band-limited wavetable banks avoid excessive upper harmonics at high notes. |
 
-These are compact experimental sound models, not calibrated measurements of specific rocks, glass objects or fluid dynamics. Freeze and Morph use generated source spectra; they do not yet capture or transform the file opened with Open sound. The new section supplies keyboard voices, rather than an independently playing loop. Settings restore without playing any notes. The browser keeps its existing Keep playing mode: technology changes can retain the previous live layer, and selecting the new technology does not seed notes into the new layer.
+These are compact experimental sound models, not calibrated measurements of specific rocks, glass objects or fluid dynamics. Freeze and Morph use generated source spectra; they do not yet capture or transform the file opened with Open sound. The new section supplies keyboard voices, rather than an independently playing loop. Settings restore without playing any notes. Desktop and browser now retain every selected main, technology and Old Electro sound in one keyboard stack. New layers join held notes, and subsequent keys play the entire mix. Glitch and Fragments process the sum. Sessions restore the configured layers without restoring held notes.
 
 ## Research basis
 
@@ -33,3 +33,7 @@ No source code or sound recordings are copied from these references.
 ## Verification
 
 Build, then run `bin\TCKO2Synth.exe --technologies-test <new-output-directory>` for bounded audio, extreme settings, recorder integration, keyboard selection, chords, MIDI message routing, note releases, sustain, settings and layout checks. It opens no live audio or MIDI devices. The Project Stories counterpart also tests all twelve techniques through its real AudioWorklet and browser recording controls, plus desktop/mobile layouts. Physical listening remains a user check: numeric signal tests establish operation and stability, not subjective realism.
+
+## Layer capacity and verification
+
+Desktop supports eight layers and sixteen shared held voices; mobile browser supports four layers and eight shared held voices. Extra layers or notes are refused without stealing an existing sound. Normal key release works; use Sustain or Drone for intentional holds. Browser Stack sounds starts on. Removable layer chips list every sound, including the current one. `node scripts/test-tcko2-layer-mix.mjs` checks the actual mixer and recording tap, alongside the twelve-technology checks.

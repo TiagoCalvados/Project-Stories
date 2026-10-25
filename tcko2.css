@@ -398,3 +398,5 @@ h2 { margin: 0; font-size: 14px; font-weight: 500; }
 .sound-laboratory .vintage-sounds{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}.sound-laboratory .vintage-sound{white-space:normal;font-size:11px;padding:5px;min-height:31px}
 .live-deck>.effects-grid{grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--line)}
 @media(max-width:700px){.sound-laboratory{grid-template-columns:1fr}.sound-laboratory>section{border-right:0;border-bottom:1px solid var(--line);padding:12px}.sound-laboratory .vintage-sounds{grid-template-columns:repeat(2,minmax(0,1fr))}.technology-transport button,.technology-transport input{min-height:44px}.technology-bank input[type=range]{min-height:36px}.sound-laboratory .vintage-sound{min-height:44px}.live-deck>.effects-grid{grid-template-columns:1fr}.sound-laboratory h2{font-size:17px}}
+
+.main-sound-picker{display:flex;align-items:center;gap:5px}.main-sound-picker select{min-width:0;flex:1}.main-sound-picker button{margin-top:8px;flex:0 0 32px;padding:3px;min-height:30px;font-size:18px}

@@ -11,12 +11,12 @@ export class TechnologyVoice {
     rate;frequency;phase=0;time=0;seed=123456789;gain=0;fade=1;fadeStep=0;
     low=0;previous=0;slip=0;walk=0;burst=0;nextEvent=0;
     cursor=0;pluckLength=100;grainSlot=0;tableStart=0;
-    source=new Float64Array(2048);frozen=new Float64Array(16384);tableA=new Float64Array(16384);tableB=new Float64Array(16384);
+    source;frozen;tableA;tableB;
     pluck=new Float64Array(4096);history=new Float64Array(256);impulse=new Float64Array(128);
     mode1=new Float64Array(8);mode2=new Float64Array(8);modeC=new Float64Array(8);modeR=new Float64Array(8);
     ages=new Float64Array(16);lengths=new Float64Array(16);starts=new Float64Array(16);speeds=new Float64Array(16);pans=new Float64Array(16);osc=new Float64Array(16);
     ratios=new Float64Array([1,1.593,2.135,2.917,3.598,4.421,5.713,7.271]);
-    constructor(sampleRate){this.rate=sampleRate;if(TechnologyTables.Source==null){this.Prepare();TechnologyTables.Source=this.source;TechnologyTables.Frozen=this.frozen;TechnologyTables.A=this.tableA;TechnologyTables.B=this.tableB;}else{this.source=TechnologyTables.Source;this.frozen=TechnologyTables.Frozen;this.tableA=TechnologyTables.A;this.tableB=TechnologyTables.B;}this.Reset();}
+    constructor(sampleRate){this.rate=sampleRate;if(TechnologyTables.Source==null){this.source=new Float64Array(2048);this.frozen=new Float64Array(16384);this.tableA=new Float64Array(16384);this.tableB=new Float64Array(16384);this.Prepare();TechnologyTables.Source=this.source;TechnologyTables.Frozen=this.frozen;TechnologyTables.A=this.tableA;TechnologyTables.B=this.tableB;}else{this.source=TechnologyTables.Source;this.frozen=TechnologyTables.Frozen;this.tableA=TechnologyTables.A;this.tableB=TechnologyTables.B;}this.Reset();}
     Random(){this.seed=(this.seed*1664525+1013904223)%4294967296.0;return this.seed/4294967296.0;}
     Noise(){return this.Random()*2-1;}
     Index(value){return Math.trunc(value);}
