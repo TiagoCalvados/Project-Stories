@@ -391,8 +391,8 @@
       }
 
       .daao-name { margin-top: 6px; font-size: 10px; }
-      .daao-description { font-size: 9px; line-height: 1.2; }
-      .music-apps .daao-description { display: none; }
+      /* Keep the original homepage app explanations visible on phones, too. */
+      .daao-description { display: block; margin-top: 6px; font-size: 10px; line-height: 1.35; }
       .music-apps { right: max(4px, env(safe-area-inset-right)); bottom: max(4px, env(safe-area-inset-bottom)); width: min(140px, calc(50vw - 12px)); gap: 6px; }
       .synth-panel { right: max(4px, env(safe-area-inset-right)); bottom: max(4px, env(safe-area-inset-bottom)); width: min(140px, calc(50vw - 12px)); padding: 6px 7px; }
     }
@@ -405,7 +405,7 @@
       .music-apps { right: max(6px, env(safe-area-inset-right)); gap: 6px; }
       .daao-panel { left: max(6px, env(safe-area-inset-left)); }
       .music-apps .synth-panel, .daao-panel { padding: 4px; }
-      .music-apps .daao-name, .daao-panel .daao-name, .daao-description { display: none; }
+      .music-apps .daao-name, .daao-panel .daao-name { display: none; }
       .daao-launcher { width: 100%; min-height: 44px; justify-content: center; padding: 4px; font-size: 10px; letter-spacing: 0; }
       .story-button, .story-label-entry, .story-entry-graphic-novel { width: 44px; height: 44px; }
       .story-buttons { grid-template-columns: repeat(6, 44px); }
