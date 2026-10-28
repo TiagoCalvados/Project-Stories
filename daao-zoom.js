@@ -24,14 +24,19 @@ export class CameraZoomConversation {
     const q = question.toLowerCase().trim().replace(/[.!?,]/g, "").replace(/\s+/g, " ");
     const pending = this.pendingTarget;
     this.clearOffer(); // A different utterance expires the offer, so later yes is unrelated.
-    const zoomOut = /^(?:please )?(?:zoom out|reset zoom|reset the zoom|zoom back out|zoom all the way out)(?: please)?$/.test(q);
-    const zoomIn = /^(?:please )?(?:zoom in|zoom in please|magnify|magnify the view)$/.test(q);
+    // Explicit camera requests do not depend on identifying a celestial target.
+    // Strip polite framing, then match a command rather than any mention of zoom.
+    const command = q.replace(/^(?:(?:can|could|would|will) you )?(?:please )?/, "")
+      .replace(/(?: again)?(?: for me)?(?: please)?$/, "");
+    const view = "(?:(?:this|that|the)(?: (?:bright )?(?:light|star|planet|object|target|view))?|it)";
+    const zoomOut = new RegExp(`^(?:zoom (?:all the way )?(?:back )?out(?: (?:of|from|on) ${view})?|reset (?:the )?(?:camera )?zoom|(?:return|go back) to (?:the )?normal view)$`).test(command);
+    const zoomIn = new RegExp(`^(?:zoom in(?: (?:on|onto|to) ${view})?|magnify(?: ${view})?)$`).test(command);
     const yes = /^(?:yes|yes please|yes zoom in|sure|go ahead|please do)$/.test(q);
     const no = /^(?:no|no thanks|no thank you|not now)$/.test(q);
     if (pending && target?.name === pending && no) return `Okay, no zoom. We are still talking about ${target.name}.`;
     if (zoomOut) {
       this.reset();
-      return "The camera is back to its normal view. Our conversation topic is unchanged.";
+      return this.hasCamera() ? "The camera is back to its normal view. Our conversation topic is unchanged." : "Zoom is reset. The camera is not running; tap Start camera for a live view.";
     }
     if (zoomIn || (pending && target?.name === pending && yes)) {
       if (!this.hasCamera()) return "The camera is not running, so I cannot magnify a live view. Tap Start camera, then ask me to zoom in.";

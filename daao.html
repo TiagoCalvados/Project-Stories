@@ -34,6 +34,13 @@
     .shade { position: absolute; inset: 0; background: linear-gradient(#03101caa, transparent 27%, transparent 65%, #03101ccc); pointer-events: none; }
     .view-label { position: absolute; top: 18px; left: 18px; display: flex; gap: 8px; align-items: center; padding: 8px 11px; border: 1px solid #b9d7f24d; border-radius: 999px; background: #061321aa; color: #dceeff; font-size: 12px; }
     .view-label::before { width: 7px; height: 7px; border-radius: 50%; background: #6bd5ee; content: ""; }
+    .sky-overlay { position: absolute; inset: 0; pointer-events: none; }
+    .prediction-note { position: absolute; top: 54px; left: 18px; right: 18px; margin: 0; color: #dcf3ff; font-size: 10px; text-shadow: 0 1px 4px #000; pointer-events: none; }
+    .sky-target { position: absolute; width: 5px; height: 5px; border: 1px solid #d8f2ff; border-radius: 50%; color: #d8f2ff; }
+    .sky-target.planet { color: #ffe5a0; border-color: #ffe5a0; }
+    .sky-tag { position: absolute; display: block; top: 2px; left: 8px; padding: 3px 5px; border-radius: 4px; background: #041225c9; color: inherit; font-size: 11px; white-space: nowrap; transform: translateY(-50%); }
+    .align-left .sky-tag { left: auto; right: 8px; }
+    .label-below .sky-tag { transform: none; }
     .reticle { width: 44px; height: 44px; border: 1px solid #d4f4ffb0; border-radius: 50%; box-shadow: 0 0 0 22px #e0f6ff12; pointer-events: none; }
     .reticle::before, .reticle::after { position: absolute; top: 50%; left: 50%; background: #d4f4ffb0; content: ""; transform: translate(-50%, -50%); }
     .reticle::before { width: 15px; height: 1px; } .reticle::after { width: 1px; height: 15px; }
@@ -108,6 +115,7 @@
       .viewer, .viewer.has-camera { min-height: 280px; height: 56svh; }
       .reticle { width: 28px; height: 28px; box-shadow: 0 0 0 14px #e0f6ff12; }
       .view-label { top: 6px; left: 6px; padding: 4px 6px; font-size: 9px; }
+      .prediction-note { top: 32px; left: 8px; right: 8px; font-size: 9px; }
       .view-bottom { right: 7px; bottom: 6px; left: 7px; align-items: end; }
       .heading-value { font-size: 23px; }
       .heading-value small { font-size: 9px; }
@@ -161,7 +169,9 @@
         <div class="viewer" id="viewer">
           <video id="camera" autoplay playsinline muted hidden aria-label="Live camera view"></video>
           <div class="shade"></div>
+          <div class="sky-overlay" id="sky-overlay" aria-label="Predicted sky positions"></div>
           <div class="view-label" id="view-label">Sky preview</div>
+          <p class="prediction-note" id="prediction-note">Start camera for predicted sky labels</p>
           <div class="reticle" aria-hidden="true"></div>
           <div class="view-bottom">
             <div class="heading-value"><span id="bearing">—</span><small id="compass-point">DIRECTION</small></div>
@@ -223,7 +233,7 @@
         </details>
       </div>
     </div>
-    <p class="fine-print">Positions are estimates. Browser compass readings vary by device and may differ from true north; use manual direction to calibrate. Voice input may use your browser’s speech service. Never view the Sun through binoculars or a telescope without a purpose-built solar filter.</p>
+    <p class="fine-print">Sky labels are predicted, not visually detected—even under clouds. Alignment uses an estimated 70° diagonal camera field; your lens, compass, magnetic north and phone orientation can shift labels. Keep the phone upright with manual direction. Voice input may use your browser’s speech service. Unclear and unrelated results are ignored; microphone noise suppression depends on your browser, and nearby people’s speech may still be picked up. Never view the Sun through binoculars or a telescope without a purpose-built solar filter.</p>
   </main>
   <script type="module" src="daao-app.js"></script>
 </body>

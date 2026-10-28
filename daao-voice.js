@@ -1,8 +1,10 @@
+import { usableSpeechResult } from "./daao-listening.js";
+
 // Half-duplex speech: recognition must end before any app speech starts.
 // Each recognition turn has its own identity so delayed results are ignored.
 export class VoiceConversation {
-  constructor({ Recognition, synthesis, Utterance, onQuestion, onState, onRecovery, configureUtterance = () => {}, language = "en-US" }) {
-    Object.assign(this, { Recognition, synthesis, Utterance, onQuestion, onState, onRecovery, configureUtterance, language });
+  constructor({ Recognition, synthesis, Utterance, onQuestion, onState, onRecovery, configureUtterance = () => {}, acceptsQuestion = () => true, language = "en-US" }) {
+    Object.assign(this, { Recognition, synthesis, Utterance, onQuestion, onState, onRecovery, configureUtterance, acceptsQuestion, language });
     this.active = false;
     this.speaking = false;
     this.blocked = false;
@@ -106,12 +108,18 @@ export class VoiceConversation {
     recognition.onresult = (event) => {
       if (!turn.accept || this.turn !== turn || !this.active || this.speaking || this.blocked) return;
       const result = event.results[event.resultIndex || 0];
-      const question = result?.[0]?.transcript?.trim();
-      if (!question || result.isFinal === false) return;
+      const question = usableSpeechResult(result);
+      if (!question || !this.acceptsQuestion(question)) {
+        if (result?.isFinal !== false) this.onState("I didn't catch a clear sky question. Listening again…");
+        return;
+      }
       turn.accept = false;
       turn.received = true;
       this.silentTurns = 0;
       this.onQuestion(question);
+    };
+    recognition.onnomatch = () => {
+      if (this.turn === turn && turn.accept && this.active && !this.speaking) this.onState("I didn't catch clear speech. Listening again…");
     };
     recognition.onerror = ({ error }) => {
       clearTimeout(turn.startTimer);

@@ -3,6 +3,8 @@ import { SkyConversation } from "./daao-conversation.js";
 import { VoiceConversation } from "./daao-voice.js";
 import { CameraZoomConversation } from "./daao-zoom.js";
 import { chooseVoice, configureSpeech, experimentVoiceURI, voiceSample } from "./daao-speech.js";
+import { isPredictedSkyQuestion, predictedSkyAnswer, projectSkyObjects, recentDirection, sensorCameraPose } from "./daao-projection.js";
+import { isSkyVoiceRequest } from "./daao-listening.js";
 
 const byId = (id) => document.getElementById(id);
 const viewer = byId("viewer");
@@ -34,6 +36,7 @@ let motionTimer;
 let selectedVoice = null;
 let preferredVoiceURI;
 let sampleUtterance = null;
+let orientationSample = null;
 try { preferredVoiceURI = localStorage.getItem("daao-voice-uri"); } catch { /* Storage may be unavailable. */ }
 const conversation = new SkyConversation();
 const zoom = new CameraZoomConversation({
@@ -41,6 +44,7 @@ const zoom = new CameraZoomConversation({
   applyScale: (scale) => {
     camera.style.transform = `scale(${scale})`;
     if (cameraStream) byId("view-label").textContent = `Live camera · ${scale}× digital · no image analysis`;
+    refreshPredictions();
   },
 });
 const voice = new VoiceConversation({
@@ -51,6 +55,7 @@ const voice = new VoiceConversation({
   onState: (message) => { byId("voice-state").textContent = message; },
   onRecovery: showRecovery,
   configureUtterance: utterance => configureSpeech(utterance, selectedVoice),
+  acceptsQuestion: isSkyVoiceRequest,
 });
 
 function loadVoices() {
@@ -134,7 +139,48 @@ function explain(message) {
 
 function trustedPose() {
   if (manualDirection) return manualPoseConfirmed ? pose() : null;
-  return sensorPose && Date.now() - sensorPose.timestamp < 15000 ? { ...sensorPose } : null;
+  return recentDirection(sensorPose);
+}
+
+function hasLiveCamera() {
+  return Boolean(cameraStream?.getVideoTracks().some(track => track.readyState === "live"));
+}
+
+function cameraGeometry() {
+  return { width: viewer.clientWidth, height: viewer.clientHeight, videoWidth: camera.videoWidth, videoHeight: camera.videoHeight, zoom: zoom.scale };
+}
+
+function refreshPredictions() {
+  const overlay = byId("sky-overlay");
+  const note = byId("prediction-note");
+  overlay.replaceChildren();
+  const direction = trustedPose();
+  let message;
+  if (!hasLiveCamera()) message = "Start camera for predicted sky labels";
+  else if (!location) message = "Predicted labels need your location";
+  else if (!direction) message = "Predicted labels need reliable motion / compass";
+  else if (!camera.videoWidth || !camera.videoHeight) message = "Preparing the camera field…";
+  else {
+    message = `Predicted · approximate${manualDirection ? " · hold phone upright" : ""}`;
+    const geometry = cameraGeometry();
+    const placed = [];
+    for (const object of projectSkyObjects(sky, direction, geometry)) {
+      if (placed.length >= 8) break;
+      if (placed.some(other => Math.abs(other.x - object.x) < 100 && Math.abs(other.y - object.y) < 25)) continue;
+      const target = document.createElement("span");
+      target.className = `sky-target ${object.kind}${object.x > geometry.width - 110 ? " align-left" : ""}${object.y < 20 ? " label-below" : ""}`;
+      target.style.left = `${object.x}px`;
+      target.style.top = `${object.y}px`;
+      const label = document.createElement("span");
+      label.className = "sky-tag";
+      label.textContent = object.name;
+      target.setAttribute("aria-label", `${object.name}, predicted position`);
+      target.append(label);
+      overlay.append(target);
+      placed.push(object);
+    }
+  }
+  if (note.textContent !== message) note.textContent = message;
 }
 
 function notice(message) { status.textContent = message; }
@@ -154,6 +200,7 @@ function refreshSky() {
   byId("elevation").textContent = trusted ? `${Math.round(direction.elevation)}° elevation · ${manualDirection ? "manual" : "phone motion"}` : "Use motion for direction";
   byId("bearing-output").textContent = `${bearingInput.value}°`;
   byId("elevation-output").textContent = `${elevationInput.value}°`;
+  refreshPredictions();
 
   const list = byId("sky-list");
   list.replaceChildren();
@@ -209,6 +256,7 @@ function stopCamera() {
   viewer.classList.remove("has-camera");
   cameraButton.textContent = "Start camera";
   byId("view-label").textContent = "Sky preview";
+  refreshPredictions();
 }
 
 cameraButton.addEventListener("click", async () => {
@@ -250,6 +298,7 @@ cameraButton.addEventListener("click", async () => {
       }
     });
     notice("Camera ready. Location and compass direction are needed to identify a light. Camera images are not analyzed.");
+    refreshPredictions();
   } catch (error) {
     if (generation !== cameraGeneration) return;
     cameraStream?.getTracks().forEach((track) => track.stop());
@@ -293,31 +342,21 @@ byId("set-location").addEventListener("click", () => {
   setLocation(Number(latitudeInput.value), Number(longitudeInput.value), "manual coordinates");
 });
 
-// Device Orientation defines zero rotation with x east, y north, and z up.
-// The rear camera points along device -z; this matrix is Rz(alpha) Rx(beta) Ry(gamma).
+function screenAngle() { return window.screen?.orientation?.angle ?? (Number.isFinite(window.orientation) ? window.orientation : 0); }
+
 function onOrientation(event) {
   if (!motionEnabled) return;
-  if (!event.absolute && !Number.isFinite(event.webkitCompassHeading)) return;
-  if (![event.alpha, event.beta, event.gamma].every(Number.isFinite)) return;
-  if (Number.isFinite(event.webkitCompassAccuracy) && (event.webkitCompassAccuracy < 0 || event.webkitCompassAccuracy > 25)) return;
-  const alpha = event.alpha * Math.PI / 180;
-  const beta = event.beta * Math.PI / 180;
-  const gamma = event.gamma * Math.PI / 180;
-  const east = -Math.cos(alpha) * Math.sin(gamma) - Math.sin(alpha) * Math.sin(beta) * Math.cos(gamma);
-  const north = -Math.sin(alpha) * Math.sin(gamma) + Math.cos(alpha) * Math.sin(beta) * Math.cos(gamma);
-  const up = -Math.cos(beta) * Math.cos(gamma);
-  const horizontal = Math.hypot(east, north);
-  if (horizontal < 0.02) return;
-  let bearing = ((Math.atan2(east, north) * 180 / Math.PI) + 360) % 360;
-  if (Number.isFinite(event.webkitCompassHeading)) {
-    const topEast = -Math.sin(alpha) * Math.cos(beta);
-    const topNorth = Math.cos(alpha) * Math.cos(beta);
-    if (Math.hypot(topEast, topNorth) > 0.02) {
-      const topBearing = ((Math.atan2(topEast, topNorth) * 180 / Math.PI) + 360) % 360;
-      bearing = (bearing + event.webkitCompassHeading - topBearing + 360) % 360;
+  const reading = sensorCameraPose(event, screenAngle());
+  if (!reading) {
+    if (event.absolute || Number.isFinite(event.webkitCompassHeading)) {
+      sensorPose = null;
+      orientationSample = null;
+      refreshPredictions();
     }
+    return;
   }
-  sensorPose = { bearing, elevation: Math.atan2(up, horizontal) * 180 / Math.PI, timestamp: Date.now() };
+  orientationSample = { alpha: event.alpha, beta: event.beta, gamma: event.gamma, absolute: event.absolute, webkitCompassHeading: event.webkitCompassHeading, webkitCompassAccuracy: event.webkitCompassAccuracy, timestamp: reading.timestamp };
+  sensorPose = reading;
   clearTimeout(motionTimer);
   if (manualDirection) {
     manualDirection = false;
@@ -384,8 +423,11 @@ function ask(question) {
   refreshSky();
   byId("heard-question").textContent = `You: ${question}`;
   const zoomReply = zoom.reply(question, conversation.target);
-  let reply = zoomReply ?? conversation.reply(question, sky, trustedPose());
-  if (zoomReply === null && conversation.identifiedThisTurn) reply += zoom.offer(conversation.target);
+  const predicted = zoomReply === null && isPredictedSkyQuestion(question);
+  let reply = zoomReply ?? (predicted
+    ? predictedSkyAnswer({ hasCamera: hasLiveCamera(), hasLocation: Boolean(location), direction: trustedPose(), geometry: cameraGeometry(), objects: sky })
+    : conversation.reply(question, sky, trustedPose()));
+  if (zoomReply === null && !predicted && conversation.identifiedThisTurn) reply += zoom.offer(conversation.target);
   answer.textContent = reply;
   byId("topic").textContent = conversation.target ? `Conversation: ${conversation.target.name} · saved as you move` : "Point, ask, then keep talking.";
   if (voice.active) void voice.say(reply);
@@ -419,9 +461,18 @@ document.addEventListener("visibilitychange", () => {
 });
 
 window.addEventListener("pagehide", stopCamera);
+function refreshScreenOrientation() {
+  if (orientationSample) sensorPose = sensorCameraPose(orientationSample, screenAngle(), orientationSample.timestamp);
+  refreshPredictions();
+}
+window.addEventListener("resize", refreshScreenOrientation);
+window.addEventListener("orientationchange", refreshScreenOrientation);
+window.screen?.orientation?.addEventListener("change", refreshScreenOrientation);
+camera.addEventListener("resize", refreshPredictions);
 if (window.matchMedia("(max-width: 820px)").matches) {
   byId("settings-panel").open = false;
   byId("sky-panel").open = false;
 }
 refreshSky();
 window.setInterval(refreshSky, 30000);
+window.setInterval(refreshPredictions, 1000);
