@@ -1,8 +1,12 @@
 // Browser voices vary by device. Prefer an explicitly named higher-quality
 // English voice when available, while keeping the actual choice visible.
+export const experimentVoiceURI = "Microsoft Susan - English (United Kingdom)";
+
 export function chooseVoice(voices, preferredURI) {
   const preferred = voices.find(voice => voice.voiceURI === preferredURI);
   if (preferred) return preferred;
+  const approvedCandidate = voices.find(voice => voice.voiceURI === experimentVoiceURI || voice.name === experimentVoiceURI);
+  if (approvedCandidate) return approvedCandidate;
   const english = voices.filter(voice => /^en(?:-|_)/i.test(voice.lang));
   const score = voice => {
     const name = voice.name.toLowerCase();

@@ -2,7 +2,7 @@ import { compassPoint, separation, skyObjects } from "./daao-sky.js";
 import { SkyConversation } from "./daao-conversation.js";
 import { VoiceConversation } from "./daao-voice.js";
 import { CameraZoomConversation } from "./daao-zoom.js";
-import { chooseVoice, configureSpeech, voiceSample } from "./daao-speech.js";
+import { chooseVoice, configureSpeech, experimentVoiceURI, voiceSample } from "./daao-speech.js";
 
 const byId = (id) => document.getElementById(id);
 const viewer = byId("viewer");
@@ -72,7 +72,9 @@ function loadVoices() {
   }
   choices.disabled = !voices.length;
   if (selectedVoice) choices.value = selectedVoice.voiceURI;
-  byId("voice-name").textContent = selectedVoice ? `Proposed voice: ${selectedVoice.name}. This same voice will speak all replies on this device.` : "No named voices are exposed yet. Playback will use this browser's default voice. Try your regular phone browser for its available voices.";
+  const availableCandidate = voices.some(item => item.voiceURI === experimentVoiceURI || item.name === experimentVoiceURI);
+  const candidateNote = !availableCandidate && !preferredVoiceURI ? " Microsoft Susan, the experimental voice, is unavailable here; please audition this device's alternative before using it." : "";
+  byId("voice-name").textContent = selectedVoice ? `Voice: ${selectedVoice.name}. This same voice will speak all replies on this device.${candidateNote}` : "No named voices are exposed yet. Playback will use this browser's default voice. Try your regular phone browser for its available voices.";
 }
 
 byId("voice-choice").addEventListener("change", () => {
