@@ -27,7 +27,7 @@
     .intro p:last-child { color: #aebed2; line-height: 1.6; }
     .layout { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(320px, .85fr); gap: 18px; align-items: start; }
     .panel { border: 1px solid #31445b; border-radius: 22px; background: #101b2b; box-shadow: 0 16px 42px #0004; overflow: hidden; }
-    .viewer { position: relative; min-height: clamp(360px, 56vw, 640px); display: grid; place-items: center; isolation: isolate; background: radial-gradient(circle at 52% 42%, #254161, #0d203a 46%, #071322 75%); }
+    .viewer { position: relative; min-height: clamp(360px, 56vw, 640px); display: grid; place-items: center; isolation: isolate; overflow: hidden; background: radial-gradient(circle at 52% 42%, #254161, #0d203a 46%, #071322 75%); }
     .viewer::before { position: absolute; inset: 0; z-index: -1; background-image: radial-gradient(#d5eaff 1px, transparent 1px), radial-gradient(#cfe9ff 1px, transparent 1px); background-size: 91px 84px, 167px 139px; background-position: 12px 29px, 65px 10px; opacity: .36; content: ""; }
     .viewer video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
     .viewer.has-camera::before { opacity: 0; }
@@ -57,7 +57,19 @@
     .suggestions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
     .suggestions button { padding: 7px 9px; border: 1px solid #475e77; border-radius: 999px; background: transparent; color: #c7d9ec; font-size: 11px; }
     .suggestions button:hover, .suggestions button:focus-visible { border-color: #8bd8ee; color: white; }
-    .switch { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: #b9cbda; font-size: 12px; }
+    .conversation { padding: 0 16px 14px; }
+    .voice-state { margin: 0 0 5px; color: #a5e7f3; font-size: 13px; font-weight: 650; }
+    .topic { margin: 0; color: #aebed2; font-size: 12px; }
+    .conversation .answer { min-height: 0; margin: 9px 0 0; padding: 0; border: 0; background: none; }
+    .heard-question:empty { display: none; }
+    .heard-question { margin: 9px 0 0; color: #aebed2; font-size: 12px; }
+    .recovery { margin-top: 12px; padding-top: 10px; border-top: 1px solid #31445b; }
+    .recovery p { color: #d5e9f7; font-size: 13px; line-height: 1.5; }
+    .voice-preview { margin: 0 0 14px; padding: 12px 14px; border: 1px solid #31445b; border-radius: 12px; background: #101b2b; }
+    .voice-preview summary { cursor: pointer; color: #a5e7f3; font-size: 13px; font-weight: 650; }
+    .voice-preview p { margin: 9px 0; }
+    .voice-preview select { max-width: 100%; width: 100%; min-height: 44px; margin: 0 0 9px; padding: 8px; border: 1px solid #6389a5; border-radius: 9px; background: #173047; color: #eef6ff; font: inherit; font-size: 13px; }
+    [hidden] { display: none !important; }
     .location-row, .sliders { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
     label.field { display: grid; gap: 5px; color: #aebed2; font-size: 11px; }
     .field input { width: 100%; height: 39px; padding: 8px 10px; border: 1px solid #516981; border-radius: 9px; background: #0a1523; color: #fff; }
@@ -72,7 +84,14 @@
     .sky-list li span:last-child { color: #a7c3d7; white-space: nowrap; }
     .collapsible-panel > summary { display: none; }
     .fine-print { max-width: 900px; margin-top: 20px; color: #91a6bb; font-size: 11px; line-height: 1.55; }
-    @media (max-width: 820px) { .layout { grid-template-columns: 1fr; } .viewer { min-height: min(62vh, 560px); } }
+    @media (max-width: 820px) {
+      .layout { grid-template-columns: 1fr; }
+      .viewer, .viewer.has-camera { min-height: 300px; height: 58svh; }
+      .sidebar { display: none; }
+      .manual-fallback .sidebar { display: grid; }
+      .viewer-tools { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .viewer-tools .action { min-height: 44px; padding: 8px 3px; }
+    }
     @media (max-width: 520px) {
       .shell { padding: 7px 8px 18px; }
       .topbar { margin-bottom: 6px; }
@@ -86,8 +105,7 @@
       h1 { margin: 0; font-size: 20px; line-height: 1.08; }
       .layout, .sidebar { gap: 7px; }
       .panel { border-radius: 12px; }
-      .viewer { min-height: 0; height: clamp(112px, 18svh, 150px); }
-      .viewer.has-camera { height: clamp(220px, 42svh, 320px); }
+      .viewer, .viewer.has-camera { min-height: 280px; height: 56svh; }
       .reticle { width: 28px; height: 28px; box-shadow: 0 0 0 14px #e0f6ff12; }
       .view-label { top: 6px; left: 6px; padding: 4px 6px; font-size: 9px; }
       .view-bottom { right: 7px; bottom: 6px; left: 7px; align-items: end; }
@@ -95,7 +113,11 @@
       .heading-value small { font-size: 9px; }
       .altitude-value { max-width: 100px; font-size: 9px; text-align: right; }
       .viewer-tools { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 5px; }
-      .viewer-tools .action { min-height: 32px; padding: 4px 2px; font-size: 9px; line-height: 1.1; }
+      .viewer-tools .action { min-height: 44px; padding: 6px 2px; font-size: 11px; line-height: 1.2; }
+      .conversation { padding: 5px 10px 12px; }
+      .conversation .answer { font-size: 13px; line-height: 1.5; }
+      .voice-state { font-size: 13px; }
+      .topic { font-size: 11px; }
       .panel-content { padding: 9px; }
       h2 { font-size: 17px; }
       .sidebar > section .subtle { display: none; }
@@ -125,8 +147,15 @@
     <header class="intro">
       <p class="eyebrow">DIY Astronomical Attic Observatory</p>
       <h1>What would you like to know about the sky?</h1>
-      <p>Explore from your browser. Use your phone’s camera, location, and motion sensors—or choose a direction manually. No desktop receiver or account is needed.</p>
+      <p>Start the camera and talk to DAAO. Point at a light, ask about it, then keep talking—even with your phone lowered.</p>
     </header>
+    <details class="voice-preview" id="voice-preview">
+      <summary>Hear DAAO's voice</summary>
+      <p class="subtle" id="voice-name">Loading the voices available in your browser…</p>
+      <select id="voice-choice" aria-label="DAAO speech voice"></select>
+      <button class="action" id="voice-sample" type="button">Play voice sample</button>
+      <p class="subtle" id="sample-state" role="status">Listen before starting. Voices vary by browser and phone; no camera or microphone is needed for this sample.</p>
+    </details>
     <div class="layout">
       <section class="panel" aria-label="Sky viewer">
         <div class="viewer" id="viewer">
@@ -141,19 +170,29 @@
         </div>
         <div class="viewer-tools">
           <button class="action primary" id="camera-button" type="button">Start camera</button>
-          <button class="action" id="motion-button" type="button">Use phone motion</button>
+          <button class="action" id="motion-button" type="button">Use motion</button>
           <button class="action" id="location-button" type="button">Use my location</button>
+        </div>
+        <div class="conversation">
+          <p class="voice-state" id="voice-state" role="status">Start camera to talk to DAAO</p>
+          <p class="topic" id="topic">Point, ask, then keep talking.</p>
+          <p class="heard-question" id="heard-question"></p>
+          <div class="answer" id="answer" aria-live="polite">Answers play aloud automatically. Allow microphone access when your browser asks.</div>
+          <div class="status" id="status" role="status">For identification, allow location and motion using the buttons above. Camera images are not analyzed.</div>
+          <div class="recovery" id="recovery" hidden>
+            <p id="recovery-message"></p>
+            <button class="action" id="resume-voice" type="button">Resume voice</button>
+            <button class="action" id="manual-recovery" type="button">Use manual controls</button>
+          </div>
         </div>
       </section>
       <div class="sidebar">
         <section class="panel panel-content" aria-labelledby="ask-heading">
           <h2 id="ask-heading">Ask DAAO</h2>
           <p class="subtle">Answers come from an approximate sky map, not image recognition.</p>
-          <div class="answer" id="answer" role="status" aria-live="polite">Enter your location and ask about a star, planet, or this direction.</div>
           <form class="ask-row" id="ask-form">
             <input id="question" aria-label="Your sky question" autocomplete="off" placeholder="Where is Mars?" required>
             <button class="action primary" type="submit">Ask</button>
-            <button class="action" id="voice-button" type="button">🎙 Speak</button>
           </form>
           <div class="suggestions" aria-label="Example questions">
             <button type="button" data-question="What is in front of me?">What is in front of me?</button>
@@ -161,7 +200,6 @@
             <button type="button" data-question="Where is the Moon?">Where is the Moon?</button>
             <button type="button" data-question="Where is Mars?">Where is Mars?</button>
           </div>
-          <label class="switch"><input id="speak-answer" type="checkbox"> Read answers aloud</label>
         </section>
         <details class="panel panel-content collapsible-panel" id="settings-panel" open>
           <summary>Location &amp; manual controls</summary>
@@ -176,7 +214,6 @@
             <label class="field">Bearing <output id="bearing-output">180°</output><input id="bearing-input" type="range" min="0" max="359" value="180"></label>
             <label class="field">Elevation <output id="elevation-output">25°</output><input id="elevation-input" type="range" min="-90" max="90" value="25"></label>
           </div>
-          <div class="status" id="status" role="status" aria-live="polite">Set coordinates or allow location access to begin.</div>
         </details>
         <details class="panel panel-content collapsible-panel" id="sky-panel" open>
           <summary>Above your horizon</summary>
