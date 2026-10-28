@@ -25,6 +25,12 @@
 * narrative slides always belong under the tree icon button, even if a slide name or file name includes "Tiago K"
 * before adding or changing a link, confirm which icon button it belongs to so duplicate paths do not get created
 
+\# homepage app descriptions
+
+* always keep the existing explanatory descriptions for DAAO, TCKO3 Layer Studio, and TCKO2 Synth Modular visible on mobile and desktop
+* never hide or remove those descriptions when changing an app or compact layout; check actual narrow-phone rendering as well as the HTML text
+* preserve the existing app entry links and routes
+
 \# Vercel Blob advanced-operation monitoring
 
 * route every Blob `put()`, `copy()`, `list()`, and multipart operation through `scripts/blob-advanced-operations.mjs`
