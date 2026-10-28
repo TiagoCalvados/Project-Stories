@@ -11,6 +11,8 @@ export function chooseVoice(voices, preferredURI) {
     if (/google uk english female/.test(name)) return 85;
     if (/google us english/.test(name)) return 80;
     if (/samantha|daniel|serena|karen/.test(name)) return 70;
+    if (/microsoft susan/.test(name)) return 65;
+    if (/microsoft hazel/.test(name)) return 60;
     return voice.default ? 20 : 10;
   };
   return english.sort((a, b) => score(b) - score(a))[0] || voices.find(voice => voice.default) || voices[0] || null;

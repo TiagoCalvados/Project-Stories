@@ -184,6 +184,8 @@ test("voice audition and answers use the same real, selected browser voice", () 
   assert.equal(chooseVoice(voices), natural);
   assert.equal(chooseVoice([basic, google]), google);
   assert.equal(chooseVoice(voices, "david"), basic, "explicit preference wins");
+  const susan = { name: "Microsoft Susan - English (United Kingdom)", lang: "en-GB", voiceURI: "susan" };
+  assert.equal(chooseVoice([basic, susan]), susan);
   assert.equal(chooseVoice([]), null);
   const sample = configureSpeech({}, google);
   const reply = configureSpeech({}, google);
