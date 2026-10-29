@@ -12,6 +12,9 @@ const dist = path.join(root, "dist");
 const blobManifestPath = path.join(root, "blob-manifest.json");
 const allowLocalFallback = process.argv.includes("--allow-local-fallback");
 const deploymentOnlySkippedHtmlFiles = new Set(["slide22may.html"]);
+// Share images use stable, absolute URLs on the production domain. Retain the
+// previous image too, since existing social posts may still request it.
+const staticShareImages = ["social-preview.png", "social-preview-2026-10.png"];
 const deploymentOnlyRemovedLinks = new Map([
   ["tiagok.html", ["tiagok2.html"]],
 ]);
@@ -63,6 +66,10 @@ let missingLocalAssetFallbackCount = 0;
 
 await rm(dist, { force: true, recursive: true });
 await mkdir(dist, { recursive: true });
+
+for (const image of staticShareImages) {
+  await copyFile(path.join(root, image), path.join(dist, image));
+}
 
 for (const htmlFile of htmlFiles) {
   const source = removeDeploymentOnlyLinks(await readFile(path.join(root, htmlFile), "utf8"), htmlFile);
