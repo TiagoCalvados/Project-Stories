@@ -3,7 +3,7 @@ import { SkyConversation } from "./daao-conversation.js";
 import { VoiceConversation } from "./daao-voice.js";
 import { CameraZoomConversation } from "./daao-zoom.js";
 import { chooseVoice, configureSpeech, experimentVoiceURI, voiceSample } from "./daao-speech.js";
-import { isPredictedSkyQuestion, predictedSkyAnswer, projectSkyObjects, recentDirection, sensorCameraPose } from "./daao-projection.js";
+import { isPredictedSkyQuestion, predictedSkyAnswer, projectSkyObjects, recentDirection, requestedLabelMode, sensorCameraPose } from "./daao-projection.js";
 import { isSkyVoiceRequest } from "./daao-listening.js";
 
 const byId = (id) => document.getElementById(id);
@@ -21,12 +21,16 @@ const questionInput = byId("question");
 const answer = byId("answer");
 
 let cameraStream = null;
+let cameraZoomBase = 1;
+let cameraZoomRequest = 0;
 let location = null;
 let sensorPose = null;
 let manualDirection = true;
 let motionListenerAdded = false;
 let motionEnabled = false;
 let sky = [];
+let labelMode = "none";
+let labeledTarget = null;
 let manualPoseConfirmed = false;
 let cameraStarting = false;
 let cameraGeneration = 0;
@@ -42,11 +46,48 @@ const conversation = new SkyConversation();
 const zoom = new CameraZoomConversation({
   hasCamera: () => Boolean(cameraStream?.getVideoTracks().some((track) => track.readyState === "live")),
   applyScale: (scale) => {
-    camera.style.transform = `scale(${scale})`;
-    if (cameraStream) byId("view-label").textContent = `Live camera · ${scale}× digital · no image analysis`;
-    refreshPredictions();
+    void applyCameraScale(scale);
+    updateZoomControls();
   },
 });
+
+async function applyCameraScale(scale) {
+  const request = ++cameraZoomRequest;
+  const track = cameraStream?.getVideoTracks()[0];
+  camera.style.transform = `scale(${scale})`;
+  if (track) byId("view-label").textContent = `Live camera · ${scale}× digital · no image analysis`;
+  refreshPredictions();
+  if (!isMobileView()) return;
+  if (!track?.getCapabilities || !track.applyConstraints) return;
+  let capability;
+  try { capability = track.getCapabilities().zoom; } catch { return; }
+  if (!Number.isFinite(capability?.min) || !Number.isFinite(capability?.max) || capability.max <= capability.min) return;
+  const target = Math.min(capability.max, Math.max(capability.min, cameraZoomBase * scale));
+  try {
+    await track.applyConstraints({ advanced: [{ zoom: target }] });
+    if (request !== cameraZoomRequest || cameraStream?.getVideoTracks()[0] !== track) return;
+    const applied = Number(track.getSettings?.().zoom) || target;
+    const cameraFactor = applied / cameraZoomBase;
+    const digitalFactor = scale / cameraFactor;
+    camera.style.transform = `scale(${digitalFactor})`;
+    byId("view-label").textContent = `Live camera · ${scale}× ${digitalFactor > 1.01 ? "camera + digital" : "camera"} zoom · no image analysis`;
+    refreshPredictions();
+  } catch {
+    // The visual crop above remains available if camera zoom is unsupported or denied.
+  }
+}
+
+function isMobileView() { return window.matchMedia("(max-width: 820px)").matches; }
+
+function updateZoomControls() {
+  byId("zoom-controls").hidden = !isMobileView() || !hasLiveCamera();
+  byId("zoom-value").textContent = `${zoom.scale}×`;
+  byId("zoom-out").disabled = zoom.scale <= 1;
+  byId("zoom-in").disabled = zoom.scale >= 3;
+}
+
+byId("zoom-in").addEventListener("click", () => { if (hasLiveCamera()) zoom.setScale(zoom.scale + 1); });
+byId("zoom-out").addEventListener("click", () => { if (hasLiveCamera()) zoom.setScale(zoom.scale - 1); });
 const voice = new VoiceConversation({
   Recognition: window.SpeechRecognition || window.webkitSpeechRecognition,
   synthesis: window.speechSynthesis,
@@ -154,6 +195,9 @@ function refreshPredictions() {
   const overlay = byId("sky-overlay");
   const note = byId("prediction-note");
   overlay.replaceChildren();
+  const mobile = isMobileView();
+  note.hidden = mobile && labelMode === "none";
+  if (note.hidden) return;
   const direction = trustedPose();
   let message;
   if (!hasLiveCamera()) message = "Start camera for predicted sky labels";
@@ -165,7 +209,9 @@ function refreshPredictions() {
     const geometry = cameraGeometry();
     const placed = [];
     for (const object of projectSkyObjects(sky, direction, geometry)) {
-      if (placed.length >= 8) break;
+      if (mobile && labelMode === "single" && object.name !== labeledTarget) continue;
+      if (mobile && labelMode === "stars" && object.kind !== "star") continue;
+      if (placed.length >= (mobile ? (labelMode === "single" ? 1 : 12) : 8)) break;
       if (placed.some(other => Math.abs(other.x - object.x) < 100 && Math.abs(other.y - object.y) < 25)) continue;
       const target = document.createElement("span");
       target.className = `sky-target ${object.kind}${object.x > geometry.width - 110 ? " align-left" : ""}${object.y < 20 ? " label-below" : ""}`;
@@ -179,6 +225,7 @@ function refreshPredictions() {
       overlay.append(target);
       placed.push(object);
     }
+    if (mobile && labelMode === "single" && !placed.length) message = `${labeledTarget} is outside this camera view`;
   }
   if (note.textContent !== message) note.textContent = message;
 }
@@ -204,15 +251,23 @@ function refreshSky() {
 
   const list = byId("sky-list");
   list.replaceChildren();
+  if (isMobileView() && labelMode !== "stars" && labelMode !== "all") {
+    const item = document.createElement("li");
+    item.textContent = "Ask to show the names in this camera view.";
+    list.append(item);
+    return;
+  }
   if (!location) {
     const item = document.createElement("li");
     item.textContent = "Waiting for location";
     list.append(item);
     return;
   }
-  const visible = sky.filter((object) => object.altitude >= 0 && object.kind !== "sun")
+  const visible = (isMobileView()
+    ? projectSkyObjects(sky, trustedPose(), cameraGeometry()).filter(object => labelMode === "all" || object.kind === "star")
+    : sky.filter((object) => object.altitude >= 0 && object.kind !== "sun"))
     .sort((left, right) => separation(direction.elevation, direction.bearing, left.altitude, left.azimuth) - separation(direction.elevation, direction.bearing, right.altitude, right.azimuth))
-    .slice(0, 5);
+    .slice(0, isMobileView() ? 12 : 5);
   if (!visible.length) {
     const item = document.createElement("li");
     item.textContent = "No bright catalog objects above the horizon right now.";
@@ -248,15 +303,21 @@ function stopCamera() {
   clearTimeout(cameraTimer);
   cameraButton.disabled = false;
   voice.stop();
-  zoom.reset();
+  labelMode = "none";
+  labeledTarget = null;
   cameraStream?.getTracks().forEach((track) => track.stop());
   cameraStream = null;
+  cameraZoomRequest += 1;
+  cameraZoomBase = 1;
+  zoom.reset();
   camera.srcObject = null;
   camera.hidden = true;
   viewer.classList.remove("has-camera");
   cameraButton.textContent = "Start camera";
   byId("view-label").textContent = "Sky preview";
+  updateZoomControls();
   refreshPredictions();
+  refreshSky();
 }
 
 cameraButton.addEventListener("click", async () => {
@@ -266,6 +327,9 @@ cameraButton.addEventListener("click", async () => {
     return;
   }
   byId("recovery").hidden = true;
+  labelMode = "none";
+  labeledTarget = null;
+  refreshPredictions();
   stopSample();
   const greeting = "Welcome to DAAO. What would you like to know about the sky? Allow microphone access to talk. To identify a light, first tap Use my location and Use motion. Point, ask, then lower your phone if you like. Our conversation will stay on the same object.";
   answer.textContent = greeting;
@@ -285,12 +349,14 @@ cameraButton.addEventListener("click", async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: "environment" } } });
     if (generation !== cameraGeneration) { stream.getTracks().forEach((track) => track.stop()); return; }
     cameraStream = stream;
+    cameraZoomBase = Number(stream.getVideoTracks()[0]?.getSettings?.().zoom) || 1;
     camera.srcObject = cameraStream;
     camera.hidden = false;
     await camera.play();
     viewer.classList.add("has-camera");
     cameraButton.textContent = "Stop camera";
     byId("view-label").textContent = "Live camera · no image analysis";
+    updateZoomControls();
     stream.getVideoTracks()[0]?.addEventListener("ended", () => {
       if (cameraStream === stream) {
         stopCamera();
@@ -420,16 +486,31 @@ bearingInput.addEventListener("input", chooseManual);
 elevationInput.addEventListener("input", chooseManual);
 
 function ask(question) {
-  refreshSky();
+  sky = location ? skyObjects(location.latitude, location.longitude) : [];
   byId("heard-question").textContent = `You: ${question}`;
   const zoomReply = zoom.reply(question, conversation.target);
-  const predicted = zoomReply === null && isPredictedSkyQuestion(question);
+  const requestedLabels = requestedLabelMode(question);
+  const predicted = zoomReply === null && (requestedLabels !== null || isPredictedSkyQuestion(question));
   let reply = zoomReply ?? (predicted
-    ? predictedSkyAnswer({ hasCamera: hasLiveCamera(), hasLocation: Boolean(location), direction: trustedPose(), geometry: cameraGeometry(), objects: sky })
+    ? predictedSkyAnswer({ hasCamera: hasLiveCamera(), hasLocation: Boolean(location), direction: trustedPose(), geometry: cameraGeometry(), objects: requestedLabels === "stars" ? sky.filter(object => object.kind === "star") : sky })
     : conversation.reply(question, sky, trustedPose()));
   if (zoomReply === null && !predicted && conversation.identifiedThisTurn) reply += zoom.offer(conversation.target);
+  if (isMobileView() && zoomReply === null) {
+    if (requestedLabels !== null) {
+      const geometry = cameraGeometry();
+      labelMode = hasLiveCamera() && location && trustedPose() && geometry.videoWidth && geometry.videoHeight ? requestedLabels : "none";
+      labeledTarget = null;
+    } else if (!predicted && (conversation.identifiedThisTurn || conversation.selectedThisTurn)) {
+      labelMode = "single";
+      labeledTarget = conversation.target.name;
+    } else if (!predicted && conversation.identificationAttemptedThisTurn) {
+      labelMode = "none";
+      labeledTarget = null;
+    }
+  }
   answer.textContent = reply;
   byId("topic").textContent = conversation.target ? `Conversation: ${conversation.target.name} · saved as you move` : "Point, ask, then keep talking.";
+  refreshSky();
   if (voice.active) void voice.say(reply);
 }
 
@@ -463,6 +544,7 @@ document.addEventListener("visibilitychange", () => {
 window.addEventListener("pagehide", stopCamera);
 function refreshScreenOrientation() {
   if (orientationSample) sensorPose = sensorCameraPose(orientationSample, screenAngle(), orientationSample.timestamp);
+  updateZoomControls();
   refreshPredictions();
 }
 window.addEventListener("resize", refreshScreenOrientation);

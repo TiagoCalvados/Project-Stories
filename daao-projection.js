@@ -62,6 +62,15 @@ export function isPredictedSkyQuestion(question) {
   return /cloud|predicted|would.*(?:sky|see|there|stars?|planets?)|(?:which|what).*(?:stars|planets|objects).*(?:direction|front|here|there)/i.test(question);
 }
 
+export function requestedLabelMode(question) {
+  const q = question.toLowerCase().trim();
+  const asksForNames = /\b(?:show|display|list|label)\b.{0,80}\b(?:names?|stars?|planets?|objects?)\b/.test(q)
+    || /\b(?:which|what)\b.{0,40}\b(?:stars?|planets?)\b.{0,60}\b(?:see|view|visible|here|now|clouds?)\b/.test(q)
+    || /\b(?:names? of (?:the )?stars?)\b/.test(q);
+  if (!asksForNames) return null;
+  return /\bplanets?\b/.test(q) ? "all" : "stars";
+}
+
 export function predictedSkyAnswer({ hasCamera, hasLocation, direction, geometry, objects }) {
   if (!hasCamera) return "Start the camera to see predicted sky labels. They come from the sky map, not from seeing through clouds.";
   if (!hasLocation) return "I need your location to predict this sky. Tap Use my location and allow access. I cannot place labels yet.";

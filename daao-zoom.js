@@ -1,4 +1,4 @@
-// Magnifies only the live video. This adds no detail or synthetic sky imagery.
+// Changes the live camera view only; sky identification still depends on the map and sensors.
 export class CameraZoomConversation {
   constructor({ hasCamera, applyScale }) {
     Object.assign(this, { hasCamera, applyScale });
@@ -9,10 +9,20 @@ export class CameraZoomConversation {
   offer(target) {
     if (!this.hasCamera() || this.scale > 1 || !target) return "";
     this.pendingTarget = target.name;
-    return " Would you like me to zoom in on the live camera view? Say yes or no. This is only digital magnification; it does not add telescope detail. Keep the object centered if you choose zoom.";
+    return " Would you like me to zoom in on the live camera view? Say yes or no. Zoom can help frame the light, but it does not improve compass accuracy. Keep the object centered.";
   }
 
   clearOffer() { this.pendingTarget = null; }
+
+  setScale(scale) {
+    if (!this.hasCamera()) return false;
+    const next = Math.max(1, Math.min(3, Math.round(scale)));
+    this.clearOffer();
+    if (next === this.scale) return false;
+    this.scale = next;
+    this.applyScale(next);
+    return true;
+  }
 
   reset() {
     this.clearOffer();
@@ -40,10 +50,9 @@ export class CameraZoomConversation {
     }
     if (zoomIn || (pending && target?.name === pending && yes)) {
       if (!this.hasCamera()) return "The camera is not running, so I cannot magnify a live view. Tap Start camera, then ask me to zoom in.";
-      if (this.scale >= 3) return "The live view is already at the digital magnification limit of three times. This cannot reveal telescope detail. Say zoom out to restore the view.";
-      this.scale = Math.min(3, this.scale + 1);
-      this.applyScale(this.scale);
-      return `The live camera view is now magnified ${this.scale} times digitally. This crops and enlarges the same camera image; it does not add detail or track the object as you move. ${target ? `Our topic is still ${target.name}. ` : ""}Say zoom out or reset zoom to return to the normal view.`;
+      if (this.scale >= 3) return "The live view is already at the zoom limit of three times. Say zoom out to restore the view.";
+      this.setScale(this.scale + 1);
+      return `The live camera view is now zoomed ${this.scale} times. Camera zoom is used when the browser allows it, otherwise the view is enlarged digitally. This does not change compass accuracy. ${target ? `Our topic is still ${target.name}. ` : ""}Say zoom out or reset zoom to return to the normal view.`;
     }
     if (yes || no) return "There is no pending zoom offer. To magnify the live camera, say zoom in. Our conversation topic is unchanged.";
     return null;

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { directionBasis, projectSkyObjects, recentDirection, sensorCameraPose } from "../daao-projection.js";
+import { directionBasis, projectSkyObjects, recentDirection, requestedLabelMode, sensorCameraPose } from "../daao-projection.js";
 
 const geometry = { width: 400, height: 600, videoWidth: 1080, videoHeight: 1920 };
 const object = (azimuth, altitude = 30, name = "Jupiter") => ({ name, azimuth, altitude, kind: "planet", magnitude: -2.7 });
@@ -52,4 +52,12 @@ test("missing, stale, relative or unreliable sensor data cannot fabricate projec
   assert.equal(recentDirection(pose, 2000), pose);
   assert.equal(recentDirection(pose, 16000), null);
   assert.equal(recentDirection(pose, 500), null);
+});
+
+test("star names require an explicit request", () => {
+  assert.equal(requestedLabelMode("Show me the names of the stars I can see now"), "stars");
+  assert.equal(requestedLabelMode("Which stars would be behind these clouds?"), "stars");
+  assert.equal(requestedLabelMode("Show me the stars and planets in view"), "all");
+  assert.equal(requestedLabelMode("What is this star?"), null);
+  assert.equal(requestedLabelMode("Start the camera"), null);
 });
