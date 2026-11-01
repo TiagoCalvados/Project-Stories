@@ -5,6 +5,7 @@ import { CameraZoomConversation } from "./daao-zoom.js";
 import { chooseVoice, configureSpeech, experimentVoiceURI, voiceSample } from "./daao-speech.js";
 import { isPredictedSkyQuestion, predictedSkyAnswer, projectSkyObjects, recentDirection, requestedLabelMode, sensorCameraPose } from "./daao-projection.js";
 import { isSkyVoiceRequest } from "./daao-listening.js";
+import { asksForCameraImage, captureCameraFrame, frameVisibility, LocalCameraVision } from "./daao-vision.js";
 
 const byId = (id) => document.getElementById(id);
 const viewer = byId("viewer");
@@ -41,6 +42,12 @@ let selectedVoice = null;
 let preferredVoiceURI;
 let sampleUtterance = null;
 let orientationSample = null;
+let answerGeneration = 0;
+const localVision = new LocalCameraVision({ Worker: window.Worker, onStatus: message => {
+  if (!voice.processing) return;
+  notice(message);
+  byId("voice-state").textContent = message;
+} });
 try { preferredVoiceURI = localStorage.getItem("daao-voice-uri"); } catch { /* Storage may be unavailable. */ }
 const conversation = new SkyConversation();
 const zoom = new CameraZoomConversation({
@@ -55,7 +62,7 @@ async function applyCameraScale(scale) {
   const request = ++cameraZoomRequest;
   const track = cameraStream?.getVideoTracks()[0];
   camera.style.transform = `scale(${scale})`;
-  if (track) byId("view-label").textContent = `Live camera · ${scale}× digital · no image analysis`;
+  if (track) byId("view-label").textContent = `Live camera · ${scale}× digital`;
   refreshPredictions();
   if (!isMobileView()) return;
   if (!track?.getCapabilities || !track.applyConstraints) return;
@@ -70,7 +77,7 @@ async function applyCameraScale(scale) {
     const cameraFactor = applied / cameraZoomBase;
     const digitalFactor = scale / cameraFactor;
     camera.style.transform = `scale(${digitalFactor})`;
-    byId("view-label").textContent = `Live camera · ${scale}× ${digitalFactor > 1.01 ? "camera + digital" : "camera"} zoom · no image analysis`;
+    byId("view-label").textContent = `Live camera · ${scale}× ${digitalFactor > 1.01 ? "camera + digital" : "camera"} zoom`;
     refreshPredictions();
   } catch {
     // The visual crop above remains available if camera zoom is unsupported or denied.
@@ -298,6 +305,8 @@ function setLocation(latitude, longitude, source) {
 }
 
 function stopCamera() {
+  answerGeneration += 1;
+  localVision.cancel();
   cameraGeneration += 1;
   cameraStarting = false;
   clearTimeout(cameraTimer);
@@ -355,7 +364,7 @@ cameraButton.addEventListener("click", async () => {
     await camera.play();
     viewer.classList.add("has-camera");
     cameraButton.textContent = "Stop camera";
-    byId("view-label").textContent = "Live camera · no image analysis";
+    byId("view-label").textContent = "Live camera · images stay here";
     updateZoomControls();
     stream.getVideoTracks()[0]?.addEventListener("ended", () => {
       if (cameraStream === stream) {
@@ -363,7 +372,7 @@ cameraButton.addEventListener("click", async () => {
         showRecovery("Camera access ended. Tap Start camera to reconnect; your conversation topic is saved.");
       }
     });
-    notice("Camera ready. Location and compass direction are needed to identify a light. Camera images are not analyzed.");
+    notice("Camera ready. Use location and motion for sky names, or ask to describe the view for private on-phone image analysis.");
     refreshPredictions();
   } catch (error) {
     if (generation !== cameraGeneration) return;
@@ -486,6 +495,9 @@ bearingInput.addEventListener("input", chooseManual);
 elevationInput.addEventListener("input", chooseManual);
 
 function ask(question) {
+  const generation = ++answerGeneration;
+  // A new question cancels an unfinished visual answer, including its frame.
+  if (voice.processing) { localVision.cancel(); voice.processing = false; }
   sky = location ? skyObjects(location.latitude, location.longitude) : [];
   byId("heard-question").textContent = `You: ${question}`;
   const zoomReply = zoom.reply(question, conversation.target);
@@ -511,6 +523,55 @@ function ask(question) {
   answer.textContent = reply;
   byId("topic").textContent = conversation.target ? `Conversation: ${conversation.target.name} · saved as you move` : "Point, ask, then keep talking.";
   refreshSky();
+  const imageRequest = zoomReply === null && requestedLabels === null && hasLiveCamera() && isMobileView()
+    && (asksForCameraImage(question) || (!predicted && conversation.identificationAttemptedThisTurn));
+  if (imageRequest && localVision.available) {
+    void answerFromCamera(generation, !predicted && conversation.identifiedThisTurn ? reply : null);
+    return;
+  }
+  if (imageRequest && (predicted || !conversation.identificationAttemptedThisTurn)) {
+    reply = "On-phone camera descriptions are unavailable in this browser. No image was uploaded. Use location and motion for sky-map names.";
+    answer.textContent = reply;
+  }
+  if (voice.active) void voice.say(reply);
+}
+
+async function answerFromCamera(generation, mapReply) {
+  voice.processing = true;
+  answer.textContent = "Checking the camera image on this phone…";
+  let reply;
+  let frame;
+  try {
+    // Snapshot the exact visible crop now, before any model download or phone movement.
+    frame = captureCameraFrame(camera, viewer);
+    const visibility = frameVisibility(frame);
+    if (!(await voice.stopListening()) && voice.active) { frame.data.fill(0); return; }
+    if (generation !== answerGeneration) { frame.data.fill(0); return; }
+    if (visibility !== "usable") {
+      frame.data.fill(0);
+      reply = visibility === "dark" ? "The image is too dark for visual identification." : "The image is washed out. Lower the camera exposure and ask again.";
+    } else {
+      const description = await localVision.analyze(frame);
+      // A small vision model cannot establish the identity of a point of light.
+      const names = skyObjects(0, 0).filter(object => object.kind === "star" || object.kind === "planet");
+      const uncertain = description.split(/(?<=[.!?])\s+/).filter(sentence => !/\bconstellation\b/i.test(sentence)
+        && !names.some(object => new RegExp(`\\b${object.name}\\b`, "i").test(sentence))).join(" ");
+      reply = uncertain ? `On-phone visual estimate: ${uncertain}` : "I cannot name that light from the image alone.";
+    }
+  } catch (error) {
+    if (generation !== answerGeneration || error.message === "vision-cancelled") return;
+    reply = error.message === "webgpu-unavailable"
+      ? "This browser cannot run on-phone vision. Your image was not uploaded. The sky map still works with location and motion."
+      : "On-phone vision could not finish. Your image was not uploaded. Try again with a clear view; location and motion can still provide a sky-map match.";
+  } finally {
+    if (frame?.data.byteLength) frame.data.fill(0);
+    if (generation === answerGeneration) voice.processing = false;
+  }
+  if (generation !== answerGeneration) return;
+  if (mapReply) reply += ` ${mapReply}`;
+  else reply += " Named stars and planets need a sky-map match using location and motion.";
+  answer.textContent = reply;
+  notice("Camera images are processed on this phone and are not uploaded or saved.");
   if (voice.active) void voice.say(reply);
 }
 
@@ -535,7 +596,10 @@ byId("manual-recovery").addEventListener("click", () => {
 document.addEventListener("visibilitychange", () => {
   // Background microphone use is paused; phone movement never triggers this.
   voice.suspended = document.hidden;
-  if (document.hidden) void voice.stopListening();
+  if (document.hidden) {
+    if (voice.processing) { answerGeneration += 1; localVision.cancel(); voice.processing = false; }
+    void voice.stopListening();
+  }
   else if (voice.active && !voice.speaking) {
     voice.recover("Welcome back. Tap Resume voice to continue the same conversation.");
   }

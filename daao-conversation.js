@@ -26,17 +26,18 @@ export class SkyConversation {
     this.selectedThisTurn = false;
     const q = question.toLowerCase().trim();
     const named = objects.find((object) => new RegExp(`\\b${object.name.toLowerCase()}\\b`).test(q));
+    const verifyNamed = named && /\b(?:is|could|can) (?:this|that|it)\b/.test(q);
     const newDirection = /(?:in front|pointing at|looking at|this direction|that direction)/.test(q)
       || /(?:what|which|identify|name).*(?:this|that|another|new|other) (?:bright )?(?:light|star|planet|object|target)/.test(q)
       || /(?:new|another|different|other) (?:one|star|target|object)/.test(q)
       || /^(?:what is|what's) (?:this|that)(?:[?.!]*$| (?:in|up|over|out)\b)/.test(q)
       || /\b(?:identify|name) (?:this|that)\b/.test(q)
       || (!this.target && /what is it\b|bright light|bright star/.test(q));
-    if (named) {
+    if (named && !verifyNamed) {
       this.target = { ...named };
       this.selectedThisTurn = true;
     }
-    if (!named && newDirection) {
+    if ((!named && newDirection) || verifyNamed) {
       this.identificationAttemptedThisTurn = true;
       if (!objects.length) return "I need your location to calculate the sky. Tap Use my location and allow access. I cannot identify that light from the camera image alone.";
       if (!direction) return "I need a recent compass direction. Tap Use motion and allow access, then point at the light and ask again. If motion is unavailable, use the manual controls in recovery. I cannot identify it yet.";

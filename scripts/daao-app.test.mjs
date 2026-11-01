@@ -7,7 +7,7 @@ let appId = 0;
 
 // Boot the real app module, including its real SpeechRecognition -> ask ->
 // camera/astronomy dispatch, with only browser hardware and DOM mocked.
-async function appFixture(t, { cameraAvailable = true, nativeZoom = false, mobileView = true } = {}) {
+async function appFixture(t, { cameraAvailable = true, nativeZoom = false, mobileView = true, vision = false } = {}) {
   t.mock.timers.enable({ apis: ["setTimeout", "setInterval"] });
   class Element {
     constructor(value = "") {
@@ -23,6 +23,7 @@ async function appFixture(t, { cameraAvailable = true, nativeZoom = false, mobil
     get options() { return this.children; }
     focus() {}
     async play() {}
+    getContext() { return { drawImage() {}, getImageData: () => ({ data: new Uint8ClampedArray(this.width * this.height * 4).fill(128), width: this.width, height: this.height }) }; }
   }
   const elements = new Map();
   const element = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
@@ -57,6 +58,12 @@ async function appFixture(t, { cameraAvailable = true, nativeZoom = false, mobil
     matchMedia: () => ({ matches: mobileView }), location: { search: "" }, setInterval,
     DeviceOrientationEvent: class {}, screen: { orientation: Object.assign(new Element(), { angle: 0 }) },
   });
+  const visionWorkers = [];
+  if (vision) window.Worker = class {
+    constructor() { visionWorkers.push(this); }
+    postMessage(message) { this.message = message; }
+    terminate() { this.terminated = true; }
+  };
   const navigator = { mediaDevices: { getUserMedia: async constraints => {
     captureRequests.push(constraints);
     if (!cameraAvailable) throw Object.assign(new Error("No camera"), { name: "NotFoundError" });
@@ -77,7 +84,7 @@ async function appFixture(t, { cameraAvailable = true, nativeZoom = false, mobil
   const speak = async (question, confidence = 0.9) => { recognitions.at(-1).result(question, confidence); await flush(); };
   const start = async () => { await element("camera-button").emit("click"); await flush(); await finishAnswer(); };
   const manualLocation = async () => { element("latitude").value = "52.37"; element("longitude").value = "4.90"; await element("set-location").emit("click"); };
-  return { element, window, spoken, recognitions, captureRequests, tracks, start, finishAnswer, speak, manualLocation };
+  return { element, window, spoken, recognitions, captureRequests, tracks, visionWorkers, start, finishAnswer, speak, manualLocation };
 }
 
 test("reported voice zoom request reaches live camera after failed identification with no location, motion or target", async t => {
@@ -170,6 +177,27 @@ test("mobile zoom uses the camera track when the browser supports it", async t =
   assert.equal(app.tracks[0].zoom, 2);
   assert.equal(app.element("camera").style.transform, "scale(1)");
   assert.equal(app.element("zoom-value").textContent, "2×");
+});
+
+test("camera descriptions pause listening during local analysis and stopping discards a late result", async t => {
+  const app = await appFixture(t, { vision: true });
+  await app.start();
+  await app.speak("Please describe what you see now");
+  const recognitionCount = app.recognitions.length;
+  t.mock.timers.tick(700);
+  await flush();
+  assert.equal(app.recognitions.length, recognitionCount, "microphone must stay closed during inference");
+  app.visionWorkers[0].onmessage({ data: { type: "result", text: "There are clouds above a dark horizon." } });
+  await flush();
+  assert.match(app.element("answer").textContent, /On-phone visual estimate: There are clouds/);
+  await app.finishAnswer();
+  await app.speak("Describe what you see now");
+  const spokenCount = app.spoken.length;
+  await app.element("camera-button").emit("click");
+  app.visionWorkers[0].onmessage({ data: { type: "result", text: "A late description." } });
+  await flush();
+  assert.equal(app.spoken.length, spokenCount);
+  assert.equal(app.visionWorkers[0].terminated, true);
 });
 
 test("desktop keeps its existing automatic sky labels and hides phone zoom controls", async t => {

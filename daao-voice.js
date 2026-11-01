@@ -88,7 +88,7 @@ export class VoiceConversation {
   }
 
   listen() {
-    if (!this.active || this.blocked || this.suspended || this.speaking || this.turn) return;
+    if (!this.active || this.blocked || this.suspended || this.speaking || this.processing || this.turn) return;
     if (!this.Recognition) {
       this.recover("This browser does not support voice questions. Try Safari on iPhone or Chrome on Android with microphone access, or use manual controls here. Support depends on your device and browser settings.");
       return;
@@ -160,7 +160,7 @@ export class VoiceConversation {
   }
 
   resume() {
-    if (this.speaking) return;
+    if (this.speaking || this.processing) return;
     if (this.turn) {
       this.recover("The previous microphone session has not closed. Stop this session and reload the page, or use manual controls.");
       return;
@@ -173,6 +173,7 @@ export class VoiceConversation {
 
   stop() {
     this.active = false;
+    this.processing = false;
     this.generation += 1;
     this.blocked = false;
     clearTimeout(this.timer);
