@@ -20,6 +20,24 @@ if (clock) {
   const minute = clock.querySelector("[data-clock-minute]");
   const second = clock.querySelector("[data-clock-second]");
   const moon = clock.querySelector("[data-clock-moon]");
+  const moonVisual = document.getElementById("lunar-moon-visual");
+  const moonTouch = document.getElementById("lunar-moon-touch");
+  let fading = null;
+  function fadeMoon() {
+    if (fading || !moonVisual?.animate) return;
+    // Keep the circular hit area and the running clock independent of the fade.
+    fading = moonVisual.animate([
+      { opacity: 1 }, { opacity: 0, offset: .18 },
+      { opacity: 0, offset: .65 }, { opacity: 1 },
+    ], { duration: 1000, easing: "ease-in-out" });
+    fading.finished.catch(() => {}).finally(() => { fading = null; });
+  }
+  moonTouch?.addEventListener("click", fadeMoon);
+  moonTouch?.addEventListener("keydown", event => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    if (!event.repeat) fadeMoon();
+  });
   let previous = -Infinity;
   function update(timestamp) {
     if (!document.hidden && timestamp - previous >= (reduced.matches ? 1000 : 40)) {

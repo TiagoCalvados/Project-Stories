@@ -173,6 +173,9 @@
       overflow: visible;
     }
 
+    .lunar-moon-touch { pointer-events: all; cursor: pointer; touch-action: manipulation; outline: none; }
+    .lunar-moon-touch:focus-visible { stroke: #e4faff; stroke-width: 2; }
+
     .story-entry-padel {
       position: relative;
       grid-column: 1;
@@ -452,11 +455,15 @@
         <img class="story-icon story-icon-graphic-novel" src="Tiago%20K/04Tiago%20K%20NGR/tiagokstroryicon.png" alt="">
       </a>
       <span class="story-entry-caption">Tiago K : The story.
-        <svg class="lunar-clock" id="lunar-clock" viewBox="3 19 297 297" role="img" aria-label="Lunar clock showing the current local time">
+        <svg class="lunar-clock" id="lunar-clock" viewBox="3 19 297 297" role="group" aria-label="Lunar clock showing the current local time">
           <defs>
             <image id="lunar-clock-art" href="lunar-clock-face.png" width="303" height="321"/>
             <clipPath id="lunar-clock-outline"><circle cx="151.5" cy="168" r="143"/></clipPath>
             <clipPath id="lunar-clock-moon-disc"><circle cx="151.5" cy="168" r="77.265"/></clipPath>
+            <mask id="lunar-clock-rim" maskUnits="userSpaceOnUse" x="0" y="0" width="303" height="321">
+              <rect width="303" height="321" fill="white"/>
+              <circle cx="151.5" cy="168" r="77.265" fill="black"/>
+            </mask>
             <filter id="lunar-clock-key-mask" color-interpolation-filters="sRGB">
               <feColorMatrix type="luminanceToAlpha"/>
               <feComponentTransfer><feFuncA type="linear" slope="20" intercept="-0.4"/></feComponentTransfer>
@@ -466,14 +473,15 @@
               <circle cx="151.5" cy="168" r="78" fill="white"/>
             </mask>
           </defs>
-          <g clip-path="url(#lunar-clock-outline)" mask="url(#lunar-clock-transparency)"><use href="#lunar-clock-art"/></g>
-          <g clip-path="url(#lunar-clock-moon-disc)"><use href="#lunar-clock-art" data-clock-moon/></g>
+          <g clip-path="url(#lunar-clock-outline)" mask="url(#lunar-clock-transparency)"><g mask="url(#lunar-clock-rim)"><use href="#lunar-clock-art"/></g></g>
+          <g id="lunar-moon-visual" clip-path="url(#lunar-clock-moon-disc)"><use href="#lunar-clock-art" data-clock-moon/></g>
           <g transform="translate(151.5 168)" stroke-linecap="round">
             <line data-clock-hour x1="0" y1="8" x2="0" y2="-55" stroke="#fff6e7" stroke-width="7"/>
             <line data-clock-minute x1="0" y1="10" x2="0" y2="-75" stroke="#e4faff" stroke-width="4.5"/>
             <line data-clock-second x1="0" y1="16" x2="0" y2="-114" stroke="#ff96d5" stroke-width="2.5"/>
             <circle r="5" fill="#e4faff" stroke="#4a3459" stroke-width="1.5"/>
           </g>
+          <circle class="lunar-moon-touch" id="lunar-moon-touch" cx="151.5" cy="168" r="77.265" fill="transparent" role="button" tabindex="0" aria-label="Fade the Moon and bring it back"/>
         </svg>
       </span>
     </div>
