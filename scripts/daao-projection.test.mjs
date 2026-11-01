@@ -61,3 +61,9 @@ test("star names require an explicit request", () => {
   assert.equal(requestedLabelMode("What is this star?"), null);
   assert.equal(requestedLabelMode("Start the camera"), null);
 });
+
+test("the Sun can be labeled when selected explicitly", () => {
+  const sun = { ...object(180, 30, "Sun"), kind: "sun" };
+  assert.equal(projectSkyObjects([sun], { bearing: 180, elevation: 30 }, geometry).length, 0);
+  assert.equal(projectSkyObjects([sun], { bearing: 180, elevation: 30 }, { ...geometry, includeSun: true }).length, 1);
+});

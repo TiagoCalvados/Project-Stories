@@ -188,7 +188,7 @@ function hasLiveCamera() {
 }
 
 function cameraGeometry() {
-  return { width: viewer.clientWidth, height: viewer.clientHeight, videoWidth: camera.videoWidth, videoHeight: camera.videoHeight, zoom: zoom.scale };
+  return { width: viewer.clientWidth, height: viewer.clientHeight, videoWidth: camera.videoWidth, videoHeight: camera.videoHeight, zoom: zoom.scale, includeSun: labelMode === "single" && labeledTarget === "Sun" };
 }
 
 function refreshPredictions() {
@@ -331,7 +331,7 @@ cameraButton.addEventListener("click", async () => {
   labeledTarget = null;
   refreshPredictions();
   stopSample();
-  const greeting = "Welcome to DAAO. What would you like to know about the sky? Allow microphone access to talk. To identify a light, first tap Use my location and Use motion. Point, ask, then lower your phone if you like. Our conversation will stay on the same object.";
+  const greeting = "Welcome to DAAO. Start the camera, use motion, and use location. Then point at the sky and ask me a question.";
   answer.textContent = greeting;
   void voice.start(greeting);
   cameraButton.textContent = "Stop voice";

@@ -38,7 +38,7 @@ export function recentDirection(sensorPose, timestamp = Date.now()) {
 // Browsers do not expose calibrated lens FOV. A stated 70-degree diagonal
 // estimate is projected through the intrinsic video size, object-fit:cover crop
 // and the exact digital zoom applied to the video. No invented image positions.
-export function projectSkyObjects(objects, direction, { width, height, videoWidth, videoHeight, zoom = 1, diagonalFov = 70 } = {}) {
+export function projectSkyObjects(objects, direction, { width, height, videoWidth, videoHeight, zoom = 1, diagonalFov = 70, includeSun = false } = {}) {
   if (!direction || ![direction.bearing, direction.elevation, width, height, videoWidth, videoHeight, zoom, diagonalFov].every(Number.isFinite)
     || Math.min(width, height, videoWidth, videoHeight) <= 0 || zoom < 1 || diagonalFov <= 0 || diagonalFov >= 180) return [];
   const basis = direction.basis || directionBasis(direction);
@@ -46,7 +46,7 @@ export function projectSkyObjects(objects, direction, { width, height, videoWidt
   const scale = Math.max(width / videoWidth, height / videoHeight) * zoom;
   const projected = [];
   for (const object of objects) {
-    if (!Number.isFinite(object.altitude) || !Number.isFinite(object.azimuth) || object.altitude < 0 || object.kind === "sun") continue;
+    if (!Number.isFinite(object.altitude) || !Number.isFinite(object.azimuth) || object.altitude < 0 || (object.kind === "sun" && !includeSun)) continue;
     const skyDirection = vector(object.azimuth, object.altitude);
     const depth = dot(skyDirection, basis.forward);
     if (depth <= 0) continue;

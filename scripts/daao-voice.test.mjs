@@ -49,6 +49,20 @@ test("named object and sky calculations remain available; unknown details are ho
   assert.match(chat.reply("How hot is it?", sky, null), /do not have a verified answer/);
 });
 
+test("pointing questions match the Moon, Sun and planets as well as stars", () => {
+  const sky = skyObjects(52.37, 4.9, Date.UTC(2026, 10, 1, 10));
+  for (const name of ["Moon", "Sun", "Jupiter"]) {
+    const object = { ...sky.find(object => object.name === name), altitude: 35, azimuth: 120 };
+    for (const question of ["What is that up there?", "Identify this", "What is this light?"]) {
+      const chat = new SkyConversation();
+      const reply = chat.reply(question, [object], { bearing: 120, elevation: 35 });
+      assert.equal(chat.identifiedThisTurn, true);
+      assert.equal(chat.target.name, name);
+      assert.ok(reply.includes(`suggests ${name}`));
+    }
+  }
+});
+
 function setup(t, { supported = true, closeMicrophone = true } = {}) {
   t.mock.timers.enable({ apis: ["setTimeout"] });
   const recognitions = [], spoken = [], states = [], recovery = [], questions = [];

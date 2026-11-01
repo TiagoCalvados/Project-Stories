@@ -29,7 +29,8 @@ export class SkyConversation {
     const newDirection = /(?:in front|pointing at|looking at|this direction|that direction)/.test(q)
       || /(?:what|which|identify|name).*(?:this|that|another|new|other) (?:bright )?(?:light|star|planet|object|target)/.test(q)
       || /(?:new|another|different|other) (?:one|star|target|object)/.test(q)
-      || /^(?:what is|what's) (?:this|that)[?.!]*$/.test(q)
+      || /^(?:what is|what's) (?:this|that)(?:[?.!]*$| (?:in|up|over|out)\b)/.test(q)
+      || /\b(?:identify|name) (?:this|that)\b/.test(q)
       || (!this.target && /what is it\b|bright light|bright star/.test(q));
     if (named) {
       this.target = { ...named };
@@ -40,7 +41,7 @@ export class SkyConversation {
       if (!objects.length) return "I need your location to calculate the sky. Tap Use my location and allow access. I cannot identify that light from the camera image alone.";
       if (!direction) return "I need a recent compass direction. Tap Use motion and allow access, then point at the light and ask again. If motion is unavailable, use the manual controls in recovery. I cannot identify it yet.";
       if (direction.elevation < 0) return "Your camera direction is below the horizon. Point above the horizon and ask again. Our previous topic is still saved.";
-      const candidates = objects.filter((object) => object.altitude >= 0 && object.kind !== "sun" && object.magnitude <= 2.5)
+      const candidates = objects.filter((object) => object.altitude >= 0 && object.magnitude <= 2.5)
         .map((object) => ({ ...object, offset: separation(direction.elevation, direction.bearing, object.altitude, object.azimuth) }))
         .filter((object) => object.offset <= 6).sort((a, b) => a.offset - b.offset);
       if (!candidates.length) return "I cannot reliably match a bright catalog object near the center of this direction. The camera image is not analyzed, and the catalog is limited. Check your compass calibration and point closer, then ask again.";
